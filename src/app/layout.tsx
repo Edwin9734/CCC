@@ -8,7 +8,6 @@ const headingFont = Fraunces({ subsets: ["latin"], variable: "--font-heading" })
 export const metadata: Metadata = {
   title: "Control de Colesterol",
   description: "Sistema web en español para adultos mayores con seguimiento de colesterol, alertas y reportes."
-  
 };
 
 export default function RootLayout({
@@ -17,7 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    // Agregamos el atributo aquí para que Next.js maneje bien las transiciones de página
+    <html lang="es" data-scroll-behavior="smooth">
       <body className={`${bodyFont.variable} ${headingFont.variable} antialiased`}>
         {children}
       </body>
