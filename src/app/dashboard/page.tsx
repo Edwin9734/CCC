@@ -4,34 +4,74 @@ import { StatCard } from "@/components/stat-card";
 import { MeasurementChart } from "@/components/charts/measurement-chart";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getMeasurements, type MeasurementWithStatus } from "@/lib/supabase/measurements";
-import { getLipidStatus, getStatusLabel } from "@/lib/ranges";
+import { getNextReminder, type NextReminder } from "@/lib/supabase/medications";
+import { getStatusLabel } from "@/lib/ranges";
 
-export default async function DashboardPage() {            //autentication    
-  const supabase = await createSupabaseServerClient();    //crear conexion  
-  const { data } = await supabase.auth.getUser();         //obtener datos de usuario 
-  
-  let measurements: MeasurementWithStatus[] = [];         //crar lista vacia para almacenar mediciones y con withStatus para obtener propiedades obligatoias
-  let alertCount = 0;                                    //variable para contador 
-  
-  if (data.user) {                                       //si hay usuario logueado se carga informacion 
-    try {                                                //medida de seguirdad si supabase se cae mandara un error a consola
-      measurements = await getMeasurements(supabase, { limit: 50 });   //descarga las ultimas 50 mediciones 
-      alertCount = measurements.filter((m) =>                  //recorre la lista y crea un subgrupo con estados higt
+function getStatusStyle(status?: string) {
+  switch (status) {
+    case "LOW":
+      return { bg: "bg-blue-50", text: "text-blue-700" };
+    case "NORMAL":
+      return { bg: "bg-accentSoft", text: "text-accent" };
+    case "BORDERLINE":
+      return { bg: "bg-amber-50", text: "text-warning" };
+    case "HIGH":
+      return { bg: "bg-orange-50", text: "text-orange-700" };
+    case "VERY_HIGH":
+      return { bg: "bg-rose-50", text: "text-danger" };
+    default:
+      return { bg: "bg-slate-50", text: "text-muted" };
+  }
+}
+
+function formatReminderHelper(reminder: NextReminder) {
+  const when = reminder.dayOffset === 0 ? "hoy" : reminder.dayOffset === 1 ? "mañana" : `en ${reminder.dayOffset} días`;
+  return `${reminder.medicationName} · ${when}`;
+}
+
+export default async function DashboardPage() {
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase.auth.getUser();
+
+  let measurements: MeasurementWithStatus[] = [];
+  let alertCount = 0;
+  let nextReminder: NextReminder | null = null;
+
+  if (data.user) {
+    try {
+      measurements = await getMeasurements(supabase, { limit: 50 });
+      alertCount = measurements.filter((m) =>
         m.status === "HIGH" || m.status === "VERY_HIGH" || m.status === "BORDERLINE"
       ).length;
     } catch (err) {
       console.error("Error loading measurements:", err);
     }
+
+    try {
+      nextReminder = await getNextReminder(supabase);
+    } catch (err) {
+      console.error("Error loading next reminder:", err);
+    }
   }
 
-  return (                                      //estructura visual con componentes anidados
+  const latestByMetric = (metric: string) => measurements.find((m) => m.metric === metric);
+  const latestHDL = latestByMetric("HDL");
+  const latestLDL = latestByMetric("LDL");
+  const latestTriglycerides = latestByMetric("TRIGLYCERIDES");
+
+  return (
     <AppShell
       title="Panel principal"
       description="Resumen rápido de tus mediciones, alertas, medicamentos y reportes."
       userEmail={data.user?.email ?? null}
     >
       <div className="grid gap-4 lg:grid-cols-3">
-        <StatCard label="Próximo recordatorio" value="08:00" helper="Medicamento matutino programado para hoy." tone="good" />
+        <StatCard
+          label="Próximo recordatorio"
+          value={nextReminder ? nextReminder.time : "—"}
+          helper={nextReminder ? formatReminderHelper(nextReminder) : "No tienes medicamentos con horario programado."}
+          tone={nextReminder ? "good" : "neutral"}
+        />
         <StatCard label="Alertas activas" value={alertCount.toString()} helper={alertCount > 0 ? "Hay mediciones que merecen revisión." : "Todo en rango normal."} tone={alertCount > 0 ? "warning" : "good"} />
         <StatCard label="Mediciones registradas" value={measurements.length.toString()} helper="Total de registros en tu historial." />
       </div>
@@ -75,21 +115,26 @@ export default async function DashboardPage() {            //autentication
 
         <SectionCard title="Estado general" description="Vista compacta pensada para adultos mayores.">
           <div className="grid gap-4">
-            <article className="rounded-3xl bg-accentSoft p-5">
-              <p className="text-sm font-semibold text-accent">HDL</p>
-              <p className="mt-2 text-2xl font-semibold text-ink">Normal</p>
-              <p className="mt-1 text-sm leading-6 text-muted">Muestra buena tendencia en el seguimiento más reciente.</p>
-            </article>
-            <article className="rounded-3xl bg-amber-50 p-5">
-              <p className="text-sm font-semibold text-warning">LDL</p>
-              <p className="mt-2 text-2xl font-semibold text-ink">Alerta leve</p>
-              <p className="mt-1 text-sm leading-6 text-muted">Conviene revisar hábitos y continuar con el control.</p>
-            </article>
-            <article className="rounded-3xl bg-rose-50 p-5">
-              <p className="text-sm font-semibold text-danger">Triglicéridos</p>
-              <p className="mt-2 text-2xl font-semibold text-ink">Revisión recomendada</p>
-              <p className="mt-1 text-sm leading-6 text-muted">El sistema marcará esta lectura para notificación.</p>
-            </article>
+            {[
+              { label: "HDL", data: latestHDL },
+              { label: "LDL", data: latestLDL },
+              { label: "Triglicéridos", data: latestTriglycerides }
+            ].map(({ label, data: latest }) => {
+              const style = getStatusStyle(latest?.status);
+              return (
+                <article key={label} className={`rounded-3xl p-5 ${style.bg}`}>
+                  <p className={`text-sm font-semibold ${style.text}`}>{label}</p>
+                  <p className="mt-2 text-2xl font-semibold text-ink">
+                    {latest ? getStatusLabel(latest.status as any) : "Sin datos"}
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-muted">
+                    {latest
+                      ? `${latest.value} mg/dL · ${new Date(latest.measured_at).toLocaleDateString("es-ES")}`
+                      : "Aún no hay una medición registrada para este indicador."}
+                  </p>
+                </article>
+              );
+            })}
           </div>
         </SectionCard>
       </div>

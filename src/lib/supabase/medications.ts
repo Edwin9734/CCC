@@ -4,8 +4,8 @@ export interface MedicationScheduleRow {
   id: string;
   medication_id: string;
   user_id: string;
-  time_of_day: string; // formato "HH:MM:SS"
-  repeat_days: number[]; // 1 = lunes ... 7 = domingo
+  time_of_day: string;
+  repeat_days: number[];
   created_at: string;
 }
 
@@ -24,7 +24,7 @@ export interface MedicationWithSchedules extends MedicationRow {
 }
 
 export interface ScheduleInput {
-  time_of_day: string; // "HH:MM"
+  time_of_day: string;
   repeat_days: number[];
 }
 
@@ -95,7 +95,6 @@ export async function deleteMedication(supabase: SupabaseClient, id: string) {
   const { data: user } = await supabase.auth.getUser();
   if (!user.user) throw new Error("No authenticated user");
 
-  // Los horarios (medication_schedules) se borran solos por el ON DELETE CASCADE
   const { error } = await supabase
     .from("medications")
     .delete()
@@ -103,4 +102,49 @@ export async function deleteMedication(supabase: SupabaseClient, id: string) {
     .eq("user_id", user.user.id);
 
   if (error) throw error;
+}
+
+export interface NextReminder {
+  time: string; // "HH:MM"
+  medicationName: string;
+  dayOffset: number; // 0 = hoy, 1 = mañana, 2+ = en X días
+}
+
+export async function getNextReminder(supabase: SupabaseClient): Promise<NextReminder | null> {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) return null;
+
+  const { data, error } = await supabase
+    .from("medication_schedules")
+    .select("time_of_day, repeat_days, medications(name)")
+    .eq("user_id", user.user.id);
+
+  if (error) throw error;
+  if (!data || data.length === 0) return null;
+
+  const now = new Date();
+  const currentDay = now.getDay() === 0 ? 7 : now.getDay(); // 1 = lunes ... 7 = domingo
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  let best: { totalMinutes: number; time: string; medicationName: string; dayOffset: number } | null = null;
+
+  for (const schedule of data as any[]) {
+    const [h, m] = schedule.time_of_day.split(":").map(Number);
+    const scheduleMinutes = h * 60 + m;
+    const medicationName = schedule.medications?.name ?? "Medicamento";
+
+    for (const day of schedule.repeat_days as number[]) {
+      let dayOffset = (day - currentDay + 7) % 7;
+      if (dayOffset === 0 && scheduleMinutes <= currentMinutes) {
+        dayOffset = 7; // ya pasó hoy, la próxima es en una semana
+      }
+      const totalMinutes = dayOffset * 24 * 60 + scheduleMinutes;
+
+      if (!best || totalMinutes < best.totalMinutes) {
+        best = { totalMinutes, time: schedule.time_of_day.slice(0, 5), medicationName, dayOffset };
+      }
+    }
+  }
+
+  return best;
 }
