@@ -34,13 +34,13 @@ export default async function ReportesPage() {
       <div id="report-content" className="space-y-6">
         {/* Header del Reporte */}
         <div className="rounded-2xl border border-black/10 bg-surface p-8">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-3xl font-semibold text-ink">Reporte de Seguimiento</h2>
-              <p className="mt-2 text-muted">Sistema de Control de Colesterol para Adultos Mayores</p>
-            </div>
-            <PDFExportButton elementId="report-content" fileName="reporte-colesterol" />
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold text-ink sm:text-3xl">Reporte de Seguimiento</h2>
+            <p className="mt-2 text-muted">Sistema de Control de Colesterol para Adultos Mayores</p>
           </div>
+          <PDFExportButton elementId="report-content" fileName="reporte-colesterol" />
+        </div>
           
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-xl bg-background p-4">
