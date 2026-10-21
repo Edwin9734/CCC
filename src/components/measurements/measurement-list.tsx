@@ -3,20 +3,22 @@
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { getMeasurements, deleteMeasurement } from "@/lib/supabase/measurements";
-import { getStatusLabel, type LipidMetric } from "@/lib/ranges";
+import { getMeasurements, deleteMeasurement, type MeasurementWithStatus } from "@/lib/supabase/measurements";
+import { getStatusLabel } from "@/lib/ranges";
+import { formatDate } from "@/lib/date-utils";
 
-interface Measurement {
-  id: string;
-  metric: LipidMetric;
-  value: number;
-  measured_at: string;
-  status: string;
-}
+const STATUS_TEXT: Record<string, string> = {
+  LOW: "text-blue-600",
+  NORMAL: "text-green-600",
+  PROTECTIVE: "text-emerald-700",
+  BORDERLINE: "text-amber-600",
+  HIGH: "text-orange-600",
+  VERY_HIGH: "text-red-600"
+};
 
 export function MeasurementList({ refreshTrigger }: { refreshTrigger?: number }) {
   const supabase = createSupabaseBrowserClient();
-  const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [measurements, setMeasurements] = useState<MeasurementWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -26,7 +28,7 @@ export function MeasurementList({ refreshTrigger }: { refreshTrigger?: number })
     setError(null);
     try {
       const data = await getMeasurements(supabase);
-      setMeasurements(data as any);
+      setMeasurements(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar mediciones");
     } finally {
@@ -65,22 +67,35 @@ export function MeasurementList({ refreshTrigger }: { refreshTrigger?: number })
   return (
     <div className="space-y-3">
       {measurements.map((measurement) => {
-        const statusLabel = getStatusLabel(measurement.status as any);
-        const statusColor = {
-          "LOW": "text-blue-600",
-          "NORMAL": "text-green-600",
-          "BORDERLINE": "text-amber-600",
-          "HIGH": "text-orange-600",
-          "VERY_HIGH": "text-red-600"
-        }[measurement.status] || "text-gray-600";
+        const statusLabel = getStatusLabel(measurement.status);
+        const statusColor = STATUS_TEXT[measurement.status] ?? "text-gray-600";
+        const isCritical = measurement.status === "CRITICAL";
 
         return (
-          <article key={measurement.id} className="flex items-start justify-between rounded-3xl border border-black/5 bg-background p-5">
+          <article
+            key={measurement.id}
+            className={`flex items-start justify-between rounded-3xl border p-5 ${
+              isCritical ? "border-red-300 bg-red-50" : "border-black/5 bg-background"
+            }`}
+          >
             <div className="flex-1">
               <p className="text-sm font-semibold text-ink">{measurement.metric}</p>
               <p className="mt-1 text-sm text-muted">{measurement.value} mg/dL</p>
-              <p className={`mt-1 text-sm font-semibold ${statusColor}`}>{statusLabel}</p>
-              <p className="mt-1 text-xs text-muted">{new Date(measurement.measured_at).toLocaleDateString("es-ES")}</p>
+
+              {isCritical ? (
+                <>
+                  <p className="mt-1 inline-block rounded-full border border-red-700 bg-red-100 px-3 py-1 text-sm font-bold text-red-900">
+                    {statusLabel}
+                  </p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-red-900">
+                    Valor crítico: consulta a un médico lo antes posible.
+                  </p>
+                </>
+              ) : (
+                <p className={`mt-1 text-sm font-semibold ${statusColor}`}>{statusLabel}</p>
+              )}
+
+              <p className="mt-1 text-xs text-muted">{formatDate(measurement.measured_at)}</p>
             </div>
             <button
               onClick={() => handleDelete(measurement.id)}

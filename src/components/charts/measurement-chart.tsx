@@ -2,6 +2,7 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { type MeasurementWithStatus } from "@/lib/supabase/measurements";
+import { formatDate, parseDateOnly } from "@/lib/date-utils";
 
 interface MeasurementChartProps {
   measurements: MeasurementWithStatus[];
@@ -12,16 +13,16 @@ interface MeasurementChartProps {
 export function MeasurementChart({ measurements, metric, title }: MeasurementChartProps) {
   const filteredData = measurements
     .filter((m) => m.metric === metric)
-    .sort((a, b) => new Date(a.measured_at).getTime() - new Date(b.measured_at).getTime())
+    .sort((a, b) => parseDateOnly(a.measured_at).getTime() - parseDateOnly(b.measured_at).getTime())
     .map((m) => ({
-      date: new Date(m.measured_at).toLocaleDateString("es-ES", { month: "short", day: "numeric" }),
+      date: formatDate(m.measured_at, { month: "short", day: "numeric" }),
       value: m.value,
       status: m.status,
     }));
 
   if (filteredData.length === 0) {
     return (
-      <div className="rounded-2xl border border-black/10 bg-surface p-6 text-center">
+      <div className="chart-card rounded-2xl border border-black/10 bg-surface p-6 text-center">
         <p className="text-sm text-muted">No hay mediciones de {title} registradas aún.</p>
       </div>
     );
@@ -41,21 +42,21 @@ export function MeasurementChart({ measurements, metric, title }: MeasurementCha
   };
 
   return (
-    <div className="rounded-2xl border border-black/10 bg-surface p-6">
+    <div className="chart-card rounded-2xl border border-black/10 bg-surface p-6">
       <h3 className="mb-4 text-base font-semibold text-ink">{title}</h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={filteredData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis 
-            dataKey="date" 
+          <XAxis
+            dataKey="date"
             stroke="#5f687c"
             style={{ fontSize: "12px" }}
           />
-          <YAxis 
+          <YAxis
             stroke="#5f687c"
             style={{ fontSize: "12px" }}
           />
-          <Tooltip 
+          <Tooltip
             contentStyle={{
               backgroundColor: "#fffaf2",
               border: "1px solid #e0e0e0",

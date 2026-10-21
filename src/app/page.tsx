@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Bell, FileText, ShieldCheck, Sparkles, Waves } from "lucide-react";
+import { TextSizeControl } from "@/components/text-size-control";
 
 const highlights = [
   {
@@ -23,6 +24,10 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(21,128,61,0.16),_transparent_28%),linear-gradient(180deg,_#fbf7f0_0%,_#f2ede4_100%)] text-ink">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-center px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mb-8 flex justify-end">
+          <TextSizeControl />
+        </div>
+
         <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <section>
             <div className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/80 px-4 py-2 text-sm font-semibold text-accent shadow-soft">

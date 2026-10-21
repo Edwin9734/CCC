@@ -1,7 +1,5 @@
 import { AppShell } from "@/components/app-shell";
-import { SectionCard } from "@/components/section-card";
-import { MeasurementForm } from "@/components/measurements/measurement-form";
-import { MeasurementList } from "@/components/measurements/measurement-list";
+import { MeasurementsManager } from "@/components/measurements/measurements-manager";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function MeasurementsPage() {
@@ -14,15 +12,7 @@ export default async function MeasurementsPage() {
       description="Captura manual de HDL, LDL y triglicéridos con validación y cálculo de rangos."
       userEmail={data.user?.email ?? null}
     >
-      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <SectionCard title="Nueva medición" description="Formulario pensado para ingreso rápido y sin pasos innecesarios.">
-          <MeasurementForm />
-        </SectionCard>
-
-        <SectionCard title="Historial reciente" description="Tu lista de mediciones registradas en orden cronológico.">
-          <MeasurementList />
-        </SectionCard>
-      </div>
+      <MeasurementsManager />
     </AppShell>
   );
 }

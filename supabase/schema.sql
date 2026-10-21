@@ -327,3 +327,190 @@ drop policy if exists "notifications_delete_own" on public.notifications_log;
 create policy "notifications_delete_own"
 on public.notifications_log for delete
 using (user_id = auth.uid());
+
+create table if not exists public.food_diary_entries (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  eaten_on date not null,
+  meal_type text not null check (meal_type in ('desayuno', 'colacion', 'almuerzo', 'cena')),
+  food_ids text[] not null default '{}',
+  notes text,
+  created_at timestamptz not null default now(),
+  constraint food_diary_has_content check (
+    cardinality(food_ids) > 0 or (notes is not null and length(btrim(notes)) > 0)
+  )
+);
+
+create index if not exists idx_food_diary_user_date
+on public.food_diary_entries (user_id, eaten_on desc);
+
+alter table public.food_diary_entries enable row level security;
+
+drop policy if exists "diary_select_own" on public.food_diary_entries;
+create policy "diary_select_own"
+on public.food_diary_entries for select
+using (user_id = auth.uid());
+
+drop policy if exists "diary_insert_own" on public.food_diary_entries;
+create policy "diary_insert_own"
+on public.food_diary_entries for insert
+with check (user_id = auth.uid());
+
+drop policy if exists "diary_update_own" on public.food_diary_entries;
+create policy "diary_update_own"
+on public.food_diary_entries for update
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
+
+drop policy if exists "diary_delete_own" on public.food_diary_entries;
+create policy "diary_delete_own"
+on public.food_diary_entries for delete
+using (user_id = auth.uid());
+
+create extension if not exists pgcrypto;
+
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+-- AGUA Y SUEÑO (una fila por usuario y día)
+create table if not exists public.daily_habits (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  habit_date date not null,
+  water_glasses int not null default 0 check (water_glasses between 0 and 30),
+  sleep_hours numeric(4,1) check (sleep_hours is null or (sleep_hours >= 0 and sleep_hours <= 24)),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (user_id, habit_date)
+);
+
+drop trigger if exists trg_daily_habits_updated_at on public.daily_habits;
+create trigger trg_daily_habits_updated_at
+before update on public.daily_habits
+for each row execute function public.set_updated_at();
+
+create index if not exists idx_daily_habits_user_date
+on public.daily_habits (user_id, habit_date desc);
+
+alter table public.daily_habits enable row level security;
+
+drop policy if exists "habits_select_own" on public.daily_habits;
+create policy "habits_select_own"
+on public.daily_habits for select
+using (user_id = auth.uid());
+
+drop policy if exists "habits_insert_own" on public.daily_habits;
+create policy "habits_insert_own"
+on public.daily_habits for insert
+with check (user_id = auth.uid());
+
+drop policy if exists "habits_update_own" on public.daily_habits;
+create policy "habits_update_own"
+on public.daily_habits for update
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
+
+drop policy if exists "habits_delete_own" on public.daily_habits;
+create policy "habits_delete_own"
+on public.daily_habits for delete
+using (user_id = auth.uid());
+
+-- ACTIVIDAD FÍSICA
+create table if not exists public.physical_activities (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  activity_date date not null,
+  activity_type text not null check (char_length(activity_type) between 1 and 40),
+  minutes int not null check (minutes between 1 and 600),
+  notes text check (notes is null or char_length(notes) <= 300),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_physical_activities_user_date
+on public.physical_activities (user_id, activity_date desc);
+
+alter table public.physical_activities enable row level security;
+
+drop policy if exists "activities_select_own" on public.physical_activities;
+create policy "activities_select_own"
+on public.physical_activities for select
+using (user_id = auth.uid());
+
+drop policy if exists "activities_insert_own" on public.physical_activities;
+create policy "activities_insert_own"
+on public.physical_activities for insert
+with check (user_id = auth.uid());
+
+drop policy if exists "activities_update_own" on public.physical_activities;
+create policy "activities_update_own"
+on public.physical_activities for update
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
+
+drop policy if exists "activities_delete_own" on public.physical_activities;
+create policy "activities_delete_own"
+on public.physical_activities for delete
+using (user_id = auth.uid());
+
+-- TOMAS DE MEDICAMENTOS (tomada u omitida, por horario y día)
+create table if not exists public.medication_intakes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  medication_id uuid not null references public.medications(id) on delete cascade,
+  schedule_id uuid not null references public.medication_schedules(id) on delete cascade,
+  intake_date date not null,
+  status text not null check (status in ('taken', 'skipped')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (schedule_id, intake_date)
+);
+
+drop trigger if exists trg_medication_intakes_updated_at on public.medication_intakes;
+create trigger trg_medication_intakes_updated_at
+before update on public.medication_intakes
+for each row execute function public.set_updated_at();
+
+create index if not exists idx_medication_intakes_user_date
+on public.medication_intakes (user_id, intake_date desc);
+
+alter table public.medication_intakes enable row level security;
+
+drop policy if exists "intakes_select_own" on public.medication_intakes;
+create policy "intakes_select_own"
+on public.medication_intakes for select
+using (user_id = auth.uid());
+
+drop policy if exists "intakes_insert_own" on public.medication_intakes;
+create policy "intakes_insert_own"
+on public.medication_intakes for insert
+with check (
+  user_id = auth.uid()
+  and exists (
+    select 1 from public.medication_schedules s
+    where s.id = medication_intakes.schedule_id and s.user_id = auth.uid()
+  )
+);
+
+drop policy if exists "intakes_update_own" on public.medication_intakes;
+create policy "intakes_update_own"
+on public.medication_intakes for update
+using (user_id = auth.uid())
+with check (
+  user_id = auth.uid()
+  and exists (
+    select 1 from public.medication_schedules s
+    where s.id = medication_intakes.schedule_id and s.user_id = auth.uid()
+  )
+);
+
+drop policy if exists "intakes_delete_own" on public.medication_intakes;
+create policy "intakes_delete_own"
+on public.medication_intakes for delete
+using (user_id = auth.uid());

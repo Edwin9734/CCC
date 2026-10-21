@@ -2,14 +2,24 @@ import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
 import { MeasurementChart } from "@/components/charts/measurement-chart";
 import { PDFExportButton } from "@/components/charts/pdf-export-button";
+import { PrintReportPanel } from "@/components/charts/print-report-panel";
+import { GuideReportSection } from "@/components/diet/guide-report-section";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getMeasurements, type MeasurementWithStatus } from "@/lib/supabase/measurements";
+import { getMedications, type MedicationWithSchedules } from "@/lib/supabase/medications";
+import { getAllergies, type AllergyRow } from "@/lib/supabase/allergies";
+import { buildDietInsights } from "@/lib/diet-insights";
+import { applyAllergyFilter, findAllergenMatches } from "@/lib/diet-allergens";
+import { getStatusLabel } from "@/lib/ranges";
+import { formatDate } from "@/lib/date-utils";
 
 export default async function ReportesPage() {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.auth.getUser();
 
   let measurements: MeasurementWithStatus[] = [];
+  let medications: MedicationWithSchedules[] = [];
+  let allergies: AllergyRow[] = [];
 
   if (data.user) {
     try {
@@ -17,12 +27,29 @@ export default async function ReportesPage() {
     } catch (err) {
       console.error("Error loading measurements:", err);
     }
+
+    try {
+      medications = await getMedications(supabase);
+    } catch (err) {
+      console.error("Error loading medications:", err);
+    }
+
+    try {
+      allergies = await getAllergies(supabase);
+    } catch (err) {
+      console.error("Error loading allergies:", err);
+    }
   }
+
+  const allergyNames = allergies.map((a) => a.allergy_name);
+  const allergyMatches = findAllergenMatches(allergyNames);
+  const blockedIds = new Set(Object.keys(allergyMatches));
+  const insights = applyAllergyFilter(buildDietInsights(measurements, medications), blockedIds);
 
   const totalMeasurements = measurements.length;
   const lastMeasurement = measurements[0];
-  const dateRange = measurements.length > 0 
-    ? `${new Date(measurements[measurements.length - 1].measured_at).toLocaleDateString("es-ES")} - ${new Date(measurements[0].measured_at).toLocaleDateString("es-ES")}`
+  const dateRange = measurements.length > 0
+    ? `${formatDate(measurements[measurements.length - 1].measured_at)} - ${formatDate(measurements[0].measured_at)}`
     : "Sin datos";
 
   return (
@@ -35,13 +62,15 @@ export default async function ReportesPage() {
         {/* Header del Reporte */}
         <div className="rounded-2xl border border-black/10 bg-surface p-8">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-2xl font-semibold text-ink sm:text-3xl">Reporte de Seguimiento</h2>
-            <p className="mt-2 text-muted">Sistema de Control de Colesterol para Adultos Mayores</p>
+            <div>
+              <h2 className="text-2xl font-semibold text-ink sm:text-3xl">Reporte de Seguimiento</h2>
+              <p className="mt-2 text-muted">Sistema de Control de Colesterol para Adultos Mayores</p>
+            </div>
+            <div id="pdf-export-button">
+              <PDFExportButton elementId="report-content" fileName="reporte-colesterol" />
+            </div>
           </div>
-          <PDFExportButton elementId="report-content" fileName="reporte-colesterol" />
-        </div>
-          
+
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-xl bg-background p-4">
               <p className="text-sm text-muted">Período</p>
@@ -54,95 +83,107 @@ export default async function ReportesPage() {
             <div className="rounded-xl bg-background p-4">
               <p className="text-sm text-muted">Última medición</p>
               <p className="mt-1 font-semibold text-ink">
-                {lastMeasurement 
-                  ? new Date(lastMeasurement.measured_at).toLocaleDateString("es-ES")
-                  : "—"}
+                {lastMeasurement ? formatDate(lastMeasurement.measured_at) : "—"}
               </p>
             </div>
           </div>
         </div>
 
+        {/* Panel para elegir qué imprimir del reporte (no se imprime a sí mismo) */}
+        <div id="print-report-panel">
+          <PrintReportPanel />
+        </div>
+
+        {/* Guía de alimentación: encabezado, PDF e impresión (no sale en el reporte de mediciones) */}
+        <GuideReportSection insights={insights} allergyMatches={allergyMatches} allergyNames={allergyNames} />
+
         {/* Gráficas */}
-        <SectionCard 
-          title="Evolución de Indicadores" 
-          description="Tendencia de HDL, LDL y triglicéridos durante el período."
-        >
-          <div className="grid gap-6 lg:grid-cols-3">
-            <MeasurementChart measurements={measurements} metric="HDL" title="Colesterol HDL (Bueno)" />
-            <MeasurementChart measurements={measurements} metric="LDL" title="Colesterol LDL (Malo)" />
-            <MeasurementChart measurements={measurements} metric="TRIGLYCERIDES" title="Triglicéridos" />
-          </div>
-        </SectionCard>
+        <div id="report-evolucion">
+          <SectionCard
+            title="Evolución de Indicadores"
+            description="Tendencia de HDL, LDL y triglicéridos durante el período."
+          >
+            <div className="grid gap-6 lg:grid-cols-3">
+              <MeasurementChart measurements={measurements} metric="HDL" title="Colesterol HDL (Bueno)" />
+              <MeasurementChart measurements={measurements} metric="LDL" title="Colesterol LDL (Malo)" />
+              <MeasurementChart measurements={measurements} metric="TRIGLYCERIDES" title="Triglicéridos" />
+            </div>
+          </SectionCard>
+        </div>
 
         {/* Tabla de Mediciones */}
-        <SectionCard 
-          title="Historial Completo" 
-          description="Todas las mediciones registradas en orden cronológico."
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead className="bg-background text-muted">
-                <tr>
-                  <th className="px-4 py-3 text-left font-semibold">Fecha</th>
-                  <th className="px-4 py-3 text-left font-semibold">Indicador</th>
-                  <th className="px-4 py-3 text-right font-semibold">Valor</th>
-                  <th className="px-4 py-3 text-left font-semibold">Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {measurements.length > 0 ? (
-                  measurements.map((m) => (
-                    <tr key={m.id} className="border-t border-black/5">
-                      <td className="px-4 py-3 text-muted">
-                        {new Date(m.measured_at).toLocaleDateString("es-ES")}
-                      </td>
-                      <td className="px-4 py-3 font-medium text-ink">{m.metric}</td>
-                      <td className="px-4 py-3 text-right font-semibold text-ink">{m.value} mg/dL</td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
-                          m.status === "LOW" ? "bg-blue-100 text-blue-700" :
-                          m.status === "NORMAL" ? "bg-green-100 text-green-700" :
-                          m.status === "BORDERLINE" ? "bg-yellow-100 text-yellow-700" :
-                          m.status === "HIGH" ? "bg-orange-100 text-orange-700" :
-                          "bg-red-100 text-red-700"
-                        }`}>
-                          {m.status}
-                        </span>
+        <div id="report-historial">
+          <SectionCard
+            title="Historial Completo"
+            description="Todas las mediciones registradas en orden cronológico."
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead className="bg-background text-muted">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold">Fecha</th>
+                    <th className="px-4 py-3 text-left font-semibold">Indicador</th>
+                    <th className="px-4 py-3 text-right font-semibold">Valor</th>
+                    <th className="px-4 py-3 text-left font-semibold">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {measurements.length > 0 ? (
+                    measurements.map((m) => (
+                      <tr key={m.id} className="border-t border-black/5">
+                        <td className="px-4 py-3 text-muted">{formatDate(m.measured_at)}</td>
+                        <td className="px-4 py-3 font-medium text-ink">{m.metric}</td>
+                        <td className="px-4 py-3 text-right font-semibold text-ink">{m.value} mg/dL</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
+                            m.status === "LOW" ? "bg-blue-100 text-blue-700" :
+                            m.status === "NORMAL" ? "bg-green-100 text-green-700" :
+                            m.status === "PROTECTIVE" ? "bg-emerald-100 text-emerald-800" :
+                            m.status === "BORDERLINE" ? "bg-yellow-100 text-yellow-700" :
+                            m.status === "HIGH" ? "bg-orange-100 text-orange-700" :
+                            m.status === "CRITICAL" ? "border border-red-700 bg-red-100 font-bold text-red-900" :
+                            "bg-red-100 text-red-700"
+                          }`}>
+                            {getStatusLabel(m.status)}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr className="border-t border-black/5">
+                      <td colSpan={4} className="px-4 py-8 text-center text-muted">
+                        No hay mediciones registradas aún.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr className="border-t border-black/5">
-                    <td colSpan={4} className="px-4 py-8 text-center text-muted">
-                      No hay mediciones registradas aún.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </SectionCard>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </SectionCard>
+        </div>
 
         {/* Notas Médicas */}
-        <SectionCard 
-          title="Recomendaciones" 
-          description="Consejos generales para el control del colesterol."
-        >
-          <div className="space-y-4">
-            <div className="rounded-xl bg-blue-50 p-4">
-              <p className="font-semibold text-blue-900">HDL (Colesterol Bueno)</p>
-              <p className="mt-1 text-sm text-blue-800">Mantener arriba de 40 mg/dL en hombres y 50 mg/dL en mujeres.</p>
+        <div id="report-recomendaciones">
+          <SectionCard
+            title="Recomendaciones"
+            description="Consejos generales para el control del colesterol."
+          >
+            <div className="space-y-4">
+              <div className="rounded-xl bg-blue-50 p-4">
+                <p className="font-semibold text-blue-900">HDL (Colesterol Bueno)</p>
+                <p className="mt-1 text-sm text-blue-800">Mantener arriba de 40 mg/dL en hombres y 50 mg/dL en mujeres.</p>
+              </div>
+              <div className="rounded-xl bg-orange-50 p-4">
+                <p className="font-semibold text-orange-900">LDL (Colesterol Malo)</p>
+                <p className="mt-1 text-sm text-orange-800">Mantener bajo 130 mg/dL. Ideal bajo 100 mg/dL.</p>
+              </div>
+              <div className="rounded-xl bg-purple-50 p-4">
+                <p className="font-semibold text-purple-900">Triglicéridos</p>
+                <p className="mt-1 text-sm text-purple-800">Mantener bajo 150 mg/dL.</p>
+              </div>
             </div>
-            <div className="rounded-xl bg-orange-50 p-4">
-              <p className="font-semibold text-orange-900">LDL (Colesterol Malo)</p>
-              <p className="mt-1 text-sm text-orange-800">Mantener bajo 130 mg/dL. Ideal bajo 100 mg/dL.</p>
-            </div>
-            <div className="rounded-xl bg-purple-50 p-4">
-              <p className="font-semibold text-purple-900">Triglicéridos</p>
-              <p className="mt-1 text-sm text-purple-800">Mantener bajo 150 mg/dL.</p>
-            </div>
-          </div>
-        </SectionCard>
+          </SectionCard>
+        </div>
       </div>
     </AppShell>
   );

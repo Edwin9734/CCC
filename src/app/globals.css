@@ -10,6 +10,27 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Tamaño de letra elegido con el control A− / A+ (nivel 1 = tamaño original) */
+html[data-text-size="1"] {
+  font-size: 100%;
+}
+
+html[data-text-size="2"] {
+  font-size: 112.5%;
+}
+
+html[data-text-size="3"] {
+  font-size: 125%;
+}
+
+html[data-text-size="4"] {
+  font-size: 137.5%;
+}
+
+html[data-text-size="5"] {
+  font-size: 150%;
+}
+
 body {
   margin: 0;
   background: #f4efe7;
@@ -28,4 +49,107 @@ a {
 
 ::selection {
   background: rgba(15, 118, 110, 0.18);
+}
+
+/* Contenido que solo existe para imprimir o generar PDF (oculto en pantalla) */
+.print-only {
+  display: none;
+}
+
+@media print {
+  /* Al imprimir, el tamaño de letra siempre es el original */
+  html {
+    font-size: 100% !important;
+  }
+
+  /* Lo que nunca se imprime */
+  .no-print,
+  #pdf-export-button,
+  #print-report-panel {
+    display: none !important;
+  }
+
+  /* Evita cortar bloques a la mitad cuando se puede */
+  .print-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-keep-with-next {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* La guía solo se imprime cuando se pide desde su botón */
+  #guide-section {
+    display: none !important;
+  }
+
+  /* ---------- Imprimir REPORTE (mediciones) ---------- */
+  body[data-print-target="report"] * {
+    visibility: hidden;
+  }
+
+  body[data-print-target="report"] #report-content,
+  body[data-print-target="report"] #report-content * {
+    visibility: visible;
+  }
+
+  body[data-print-target="report"] #report-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  /* Secciones opcionales: se ocultan si su casilla no estaba marcada */
+  body[data-print-target="report"][data-print-evolucion="false"] #report-evolucion {
+    display: none !important;
+  }
+
+  body[data-print-target="report"][data-print-historial="false"] #report-historial {
+    display: none !important;
+  }
+
+  body[data-print-target="report"][data-print-recomendaciones="false"] #report-recomendaciones {
+    display: none !important;
+  }
+
+  /* Que las tablas quepan completas en el ancho de la hoja */
+  body[data-print-target="report"] .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  body[data-print-target="report"] table {
+    width: 100% !important;
+    table-layout: fixed;
+  }
+
+  body[data-print-target="report"] th,
+  body[data-print-target="report"] td {
+    padding: 4px 6px !important;
+    font-size: 10px !important;
+    word-break: break-word;
+  }
+
+  body[data-print-target="report"] tr {
+    page-break-inside: avoid;
+  }
+
+  /* ---------- Imprimir GUÍA ---------- */
+  body[data-print-target="guide"] #report-content > :not(#guide-section) {
+    display: none !important;
+  }
+
+  body[data-print-target="guide"] #guide-section {
+    display: block !important;
+  }
+
+  body[data-print-target="guide"] .print-only {
+    display: block !important;
+  }
+
+  body[data-print-target="guide"] #guide-print-content {
+    margin-top: 0 !important;
+  }
 }

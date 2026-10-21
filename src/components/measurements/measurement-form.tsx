@@ -1,9 +1,17 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { CalendarIcon, BarChart3 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { createMeasurement } from "@/lib/supabase/measurements";
+import { logCriticalAlert } from "@/lib/supabase/notifications";
+import { CriticalAlert } from "@/components/measurements/critical-alert";
+import {
+  URGENT_CARE_TEXT,
+  buildCriticalMessage,
+  getLipidStatus,
+  type CriticalMessage
+} from "@/lib/ranges";
 
 export function MeasurementForm({ onSuccess }: { onSuccess?: () => void }) {
   const supabase = createSupabaseBrowserClient();
@@ -12,12 +20,22 @@ export function MeasurementForm({ onSuccess }: { onSuccess?: () => void }) {
   const [measuredAt, setMeasuredAt] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [criticalAlert, setCriticalAlert] = useState<CriticalMessage | null>(null);
   const [isPending, startTransition] = useTransition();
+  const alertRef = useRef<HTMLDivElement>(null);
+
+  // Cuando aparece la alerta crítica, llevamos la vista hasta ella.
+  useEffect(() => {
+    if (criticalAlert) {
+      alertRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [criticalAlert]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setMessage(null);
+    setCriticalAlert(null);
 
     if (!value || !measuredAt) {
       setError("Por favor completa todos los campos");
@@ -26,11 +44,30 @@ export function MeasurementForm({ onSuccess }: { onSuccess?: () => void }) {
 
     startTransition(async () => {
       try {
-        await createMeasurement(supabase, {
+        const created = await createMeasurement(supabase, {
           metric,
           value: parseFloat(value),
           measured_at: measuredAt
         });
+
+        const savedValue = Number(created.value);
+        const status = getLipidStatus(created.metric, savedValue);
+
+        if (status === "CRITICAL") {
+          const info = buildCriticalMessage(created.metric, savedValue);
+          setCriticalAlert(info);
+
+          try {
+            await logCriticalAlert(supabase, {
+              title: info.title,
+              body: `${info.message} ${URGENT_CARE_TEXT}`,
+              relatedId: created.id
+            });
+          } catch (logError) {
+            // Si falla el registro, la alerta igual se muestra en pantalla.
+            console.error("No se pudo registrar la alerta crítica:", logError);
+          }
+        }
 
         setMessage("Medición guardada exitosamente");
         setValue("");
@@ -68,7 +105,7 @@ export function MeasurementForm({ onSuccess }: { onSuccess?: () => void }) {
             placeholder="Ej. 120"
             className="w-full bg-transparent text-base outline-none placeholder:text-muted"
             min="0"
-            max="500"
+            max="2000"
             step="0.01"
             required
           />
@@ -103,6 +140,17 @@ export function MeasurementForm({ onSuccess }: { onSuccess?: () => void }) {
       >
         {isPending ? "Guardando..." : "Guardar medición"}
       </button>
+
+      {criticalAlert ? (
+        <div ref={alertRef}>
+          <CriticalAlert
+            title={criticalAlert.title}
+            message={criticalAlert.message}
+            footnote="Si te equivocaste al escribir el valor, puedes borrar la medición en el historial y registrarla de nuevo."
+            onDismiss={() => setCriticalAlert(null)}
+          />
+        </div>
+      ) : null}
     </form>
   );
 }

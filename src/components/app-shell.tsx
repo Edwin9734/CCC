@@ -1,12 +1,27 @@
 import Link from "next/link";
-import { Activity, CircleUserRound, FileText, Pill, Stethoscope } from "lucide-react";
+import {
+  Activity,
+  Apple,
+  BookOpen,
+  CircleUserRound,
+  ClipboardList,
+  FileText,
+  HeartPulse,
+  Pill,
+  Stethoscope
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { TextSizeControl } from "@/components/text-size-control";
 
 const navItems = [
   { href: "/dashboard", label: "Resumen", icon: Activity },
   { href: "/mediciones", label: "Mediciones", icon: Stethoscope },
   { href: "/medicamentos", label: "Medicamentos", icon: Pill },
+  { href: "/dietas", label: "Dietas", icon: Apple },
+  { href: "/diario", label: "Diario", icon: BookOpen },
+  { href: "/habitos", label: "Hábitos", icon: HeartPulse },
+  { href: "/plan", label: "Mi plan", icon: ClipboardList },
   { href: "/reportes", label: "Reportes", icon: FileText }
 ];
 
@@ -23,30 +38,34 @@ export function AppShell({
 }) {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(22,163,74,0.12),_transparent_26%),linear-gradient(180deg,_#f8f4eb_0%,_#f2ede4_100%)] text-ink">
-      <header className="border-b border-black/5 bg-white/70 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8">
+      <header className="no-print border-b border-black/5 bg-white/70 backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
           <div>
             <p className="text-sm font-semibold tracking-[0.24em] text-accent uppercase">Control de colesterol</p>
             <h1 className="mt-1 text-2xl font-semibold text-ink sm:text-3xl">{title}</h1>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-muted sm:text-base">{description}</p>
             {userEmail ? <p className="mt-2 text-sm font-semibold text-accent">Sesión activa: {userEmail}</p> : null}
           </div>
-          {userEmail ? (
-            <SignOutButton />
-          ) : (
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white shadow-soft transition hover:translate-y-[-1px] hover:bg-slate-900"
-            >
-              <CircleUserRound className="h-4 w-4" />
-              Entrar
-            </Link>
-          )}
+
+          <div className="flex flex-wrap items-center gap-3">
+            <TextSizeControl />
+            {userEmail ? (
+              <SignOutButton />
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white shadow-soft transition hover:translate-y-[-1px] hover:bg-slate-900"
+              >
+                <CircleUserRound className="h-4 w-4" />
+                Entrar
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 
       <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
-        <nav className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <nav className="no-print mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (

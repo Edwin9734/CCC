@@ -2,10 +2,12 @@ import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
 import { StatCard } from "@/components/stat-card";
 import { MeasurementChart } from "@/components/charts/measurement-chart";
+import { CriticalAlert } from "@/components/measurements/critical-alert";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getMeasurements, type MeasurementWithStatus } from "@/lib/supabase/measurements";
 import { getNextReminder, type NextReminder } from "@/lib/supabase/medications";
-import { getStatusLabel } from "@/lib/ranges";
+import { METRIC_LABELS, getStatusLabel, isAlertStatus } from "@/lib/ranges";
+import { formatDate } from "@/lib/date-utils";
 
 function getStatusStyle(status?: string) {
   switch (status) {
@@ -13,12 +15,16 @@ function getStatusStyle(status?: string) {
       return { bg: "bg-blue-50", text: "text-blue-700" };
     case "NORMAL":
       return { bg: "bg-accentSoft", text: "text-accent" };
+    case "PROTECTIVE":
+      return { bg: "bg-emerald-50", text: "text-emerald-700" };
     case "BORDERLINE":
       return { bg: "bg-amber-50", text: "text-warning" };
     case "HIGH":
       return { bg: "bg-orange-50", text: "text-orange-700" };
     case "VERY_HIGH":
       return { bg: "bg-rose-50", text: "text-danger" };
+    case "CRITICAL":
+      return { bg: "bg-red-100", text: "text-red-800" };
     default:
       return { bg: "bg-slate-50", text: "text-muted" };
   }
@@ -40,9 +46,7 @@ export default async function DashboardPage() {
   if (data.user) {
     try {
       measurements = await getMeasurements(supabase, { limit: 50 });
-      alertCount = measurements.filter((m) =>
-        m.status === "HIGH" || m.status === "VERY_HIGH" || m.status === "BORDERLINE"
-      ).length;
+      alertCount = measurements.filter((m) => isAlertStatus(m.status)).length;
     } catch (err) {
       console.error("Error loading measurements:", err);
     }
@@ -59,12 +63,29 @@ export default async function DashboardPage() {
   const latestLDL = latestByMetric("LDL");
   const latestTriglycerides = latestByMetric("TRIGLYCERIDES");
 
+  // Mientras la última medición de un indicador siga siendo crítica, se muestra el aviso.
+  const criticalLatest = [latestHDL, latestLDL, latestTriglycerides].filter(
+    (m): m is MeasurementWithStatus => m !== undefined && m.status === "CRITICAL"
+  );
+
   return (
     <AppShell
       title="Panel principal"
       description="Resumen rápido de tus mediciones, alertas, medicamentos y reportes."
       userEmail={data.user?.email ?? null}
     >
+      {criticalLatest.length > 0 ? (
+        <div className="mb-6 space-y-4">
+          {criticalLatest.map((m) => (
+            <CriticalAlert
+              key={m.id}
+              title={`Valor crítico: ${METRIC_LABELS[m.metric]}`}
+              message={`Tu última medición fue ${m.value} mg/dL, registrada el ${formatDate(m.measured_at)}.`}
+            />
+          ))}
+        </div>
+      ) : null}
+
       <div className="grid gap-4 lg:grid-cols-3">
         <StatCard
           label="Próximo recordatorio"
@@ -72,7 +93,18 @@ export default async function DashboardPage() {
           helper={nextReminder ? formatReminderHelper(nextReminder) : "No tienes medicamentos con horario programado."}
           tone={nextReminder ? "good" : "neutral"}
         />
-        <StatCard label="Alertas activas" value={alertCount.toString()} helper={alertCount > 0 ? "Hay mediciones que merecen revisión." : "Todo en rango normal."} tone={alertCount > 0 ? "warning" : "good"} />
+        <StatCard
+          label="Alertas activas"
+          value={alertCount.toString()}
+          helper={
+            criticalLatest.length > 0
+              ? "Hay un valor crítico. Consulta a un médico lo antes posible."
+              : alertCount > 0
+                ? "Hay mediciones que merecen revisión."
+                : "Todo en rango normal."
+          }
+          tone={criticalLatest.length > 0 ? "danger" : alertCount > 0 ? "warning" : "good"}
+        />
         <StatCard label="Mediciones registradas" value={measurements.length.toString()} helper="Total de registros en tu historial." />
       </div>
 
@@ -99,8 +131,10 @@ export default async function DashboardPage() {
                       <tr key={item.id} className="border-t border-black/5 bg-white">
                         <td className="px-4 py-4 font-semibold text-ink">{item.metric}</td>
                         <td className="px-4 py-4 text-muted">{item.value} mg/dL</td>
-                        <td className="px-4 py-4 text-muted">{getStatusLabel(item.status as any)}</td>
-                        <td className="px-4 py-4 text-muted">{new Date(item.measured_at).toLocaleDateString("es-ES")}</td>
+                        <td className={`px-4 py-4 ${item.status === "CRITICAL" ? "font-bold text-red-800" : "text-muted"}`}>
+                          {getStatusLabel(item.status)}
+                        </td>
+                        <td className="px-4 py-4 text-muted">{formatDate(item.measured_at)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -113,11 +147,13 @@ export default async function DashboardPage() {
                   <article key={item.id} className="rounded-2xl border border-black/5 bg-white p-4">
                     <div className="flex items-center justify-between">
                       <p className="font-semibold text-ink">{item.metric}</p>
-                      <p className="text-sm text-muted">{new Date(item.measured_at).toLocaleDateString("es-ES")}</p>
+                      <p className="text-sm text-muted">{formatDate(item.measured_at)}</p>
                     </div>
                     <div className="mt-2 flex items-center justify-between">
                       <p className="text-muted">{item.value} mg/dL</p>
-                      <p className="text-sm font-semibold text-ink">{getStatusLabel(item.status as any)}</p>
+                      <p className={`text-sm ${item.status === "CRITICAL" ? "font-bold text-red-800" : "font-semibold text-ink"}`}>
+                        {getStatusLabel(item.status)}
+                      </p>
                     </div>
                   </article>
                 ))}
@@ -139,14 +175,17 @@ export default async function DashboardPage() {
             ].map(({ label, data: latest }) => {
               const style = getStatusStyle(latest?.status);
               return (
-                <article key={label} className={`rounded-3xl p-5 ${style.bg}`}>
+                <article
+                  key={label}
+                  className={`rounded-3xl p-5 ${style.bg} ${latest?.status === "CRITICAL" ? "border-2 border-red-700" : ""}`}
+                >
                   <p className={`text-sm font-semibold ${style.text}`}>{label}</p>
                   <p className="mt-2 text-2xl font-semibold text-ink">
-                    {latest ? getStatusLabel(latest.status as any) : "Sin datos"}
+                    {latest ? getStatusLabel(latest.status) : "Sin datos"}
                   </p>
                   <p className="mt-1 text-sm leading-6 text-muted">
                     {latest
-                      ? `${latest.value} mg/dL · ${new Date(latest.measured_at).toLocaleDateString("es-ES")}`
+                      ? `${latest.value} mg/dL · ${formatDate(latest.measured_at)}`
                       : "Aún no hay una medición registrada para este indicador."}
                   </p>
                 </article>
