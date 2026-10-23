@@ -1,14 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TEXT_SIZE_MAX, TEXT_SIZE_MIN, applyTextSize, readTextSize } from "@/lib/text-size";
+import {
+  TEXT_SIZE_CHANGE_EVENT,
+  TEXT_SIZE_MAX,
+  TEXT_SIZE_MIN,
+  applyTextSize,
+  readTextSize
+} from "@/lib/text-size";
 
 export function TextSizeControl() {
   // Empieza en null hasta que la página carga, para no mostrar un número equivocado.
   const [level, setLevel] = useState<number | null>(null);
 
   useEffect(() => {
-    setLevel(readTextSize());
+    const sync = () => setLevel(readTextSize());
+    sync();
+    window.addEventListener(TEXT_SIZE_CHANGE_EVENT, sync);
+    return () => window.removeEventListener(TEXT_SIZE_CHANGE_EVENT, sync);
   }, []);
 
   const change = (delta: number) => {

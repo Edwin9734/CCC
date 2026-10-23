@@ -5,6 +5,7 @@ export const TEXT_SIZE_MAX = 5;
 export const TEXT_SIZE_DEFAULT = 2;
 export const TEXT_SIZE_STORAGE_KEY = "ccc-text-size";
 export const TEXT_SIZE_ATTRIBUTE = "data-text-size";
+export const TEXT_SIZE_CHANGE_EVENT = "ccc-text-size-change";
 
 // Script que se ejecuta antes de pintar la página, para aplicar el tamaño guardado
 // sin que se vea un parpadeo. Los tamaños en sí se definen en globals.css.
@@ -28,6 +29,7 @@ export function applyTextSize(level: number): number {
   } catch {
     // Sin almacenamiento disponible: el cambio vale solo mientras la página esté abierta.
   }
+  window.dispatchEvent(new Event(TEXT_SIZE_CHANGE_EVENT));
   return finalLevel;
 }
 
