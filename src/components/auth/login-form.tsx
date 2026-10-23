@@ -102,7 +102,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="mt-2 rounded-full bg-accent px-6 py-4 text-base font-semibold text-white shadow-soft transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-2 rounded-full bg-accent px-6 py-4 text-base font-semibold text-white shadow-soft transition hover:bg-accentDark disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isPending ? (mode === "signup" ? "Creando cuenta..." : "Entrando...") : mode === "signup" ? "Crear cuenta" : "Entrar"}
       </button>

@@ -194,7 +194,7 @@ export function MedicationForm({ onSuccess }: { onSuccess?: () => void }) {
       <button
         type="submit"
         disabled={isPending}
-        className="rounded-full bg-accent px-6 py-4 text-base font-semibold text-white shadow-soft transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="rounded-full bg-accent px-6 py-4 text-base font-semibold text-white shadow-soft transition hover:bg-accentDark disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isPending ? "Guardando..." : "Guardar medicamento"}
       </button>

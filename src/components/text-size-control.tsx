@@ -20,7 +20,7 @@ export function TextSizeControl() {
   const atMax = level !== null && level >= TEXT_SIZE_MAX;
 
   const buttonClass =
-    "flex h-10 w-10 items-center justify-center rounded-full bg-accentSoft font-bold text-accent transition hover:bg-teal-100 focus:outline-none focus:ring-4 focus:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-40";
+    "flex h-10 w-10 items-center justify-center rounded-full bg-accentSoft font-bold text-accent transition hover:bg-accent/20 focus:outline-none focus:ring-4 focus:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-40";
 
   return (
     <div

@@ -37,7 +37,7 @@ export function MeasurementChart({ measurements, metric, title }: MeasurementCha
       case "TRIGLYCERIDES":
         return "#d97706";
       default:
-        return "#0f766e";
+        return "#3730a3";
     }
   };
 

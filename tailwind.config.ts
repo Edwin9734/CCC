@@ -9,8 +9,9 @@ const config: Config = {
         surface: "#fffaf2",
         ink: "#172033",
         muted: "#5f687c",
-        accent: "#0f766e",
-        accentSoft: "#d9f2ef",
+        accent: "#3730a3",
+        accentDark: "#2a2578",
+        accentSoft: "#e6e4f7",
         warning: "#d97706",
         danger: "#b42318",
         success: "#15803d"

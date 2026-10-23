@@ -152,7 +152,7 @@ export function GuideReportSection({
             type="button"
             onClick={handleDownloadPdf}
             disabled={!anySelected || downloading}
-            className="flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-accentDark disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Download className="h-4 w-4" />
             {downloading ? "Generando PDF..." : "Descargar PDF Guía"}
@@ -211,7 +211,7 @@ export function GuideReportSection({
             type="button"
             onClick={handlePrint}
             disabled={!anySelected}
-            className="mt-5 flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-5 flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-accentDark disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Printer className="h-4 w-4" />
             Imprimir

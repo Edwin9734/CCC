@@ -14,7 +14,7 @@ function getStatusStyle(status?: string) {
     case "LOW":
       return { bg: "bg-blue-50", text: "text-blue-700" };
     case "NORMAL":
-      return { bg: "bg-accentSoft", text: "text-accent" };
+      return { bg: "bg-emerald-50", text: "text-emerald-700" };
     case "PROTECTIVE":
       return { bg: "bg-emerald-50", text: "text-emerald-700" };
     case "BORDERLINE":

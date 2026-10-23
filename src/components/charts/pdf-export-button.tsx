@@ -52,7 +52,7 @@ export function PDFExportButton({ elementId, fileName }: PDFExportButtonProps) {
   return (
     <button
       onClick={handleExport}
-      className="flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-teal-700"
+      className="flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-accentDark"
     >
       <Download className="h-4 w-4" />
       Descargar PDF Mediciones

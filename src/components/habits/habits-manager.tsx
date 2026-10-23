@@ -397,7 +397,7 @@ export function HabitsManager({
                   />
                   <button
                     type="submit"
-                    className="rounded-full bg-accent px-6 py-4 text-base font-semibold text-white shadow-soft transition hover:bg-teal-700"
+                    className="rounded-full bg-accent px-6 py-4 text-base font-semibold text-white shadow-soft transition hover:bg-accentDark"
                   >
                     Guardar sueño
                   </button>

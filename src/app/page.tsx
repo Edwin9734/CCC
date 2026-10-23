@@ -22,7 +22,7 @@ const highlights = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(21,128,61,0.16),_transparent_28%),linear-gradient(180deg,_#fbf7f0_0%,_#f2ede4_100%)] text-ink">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(232,173,165,0.30),_transparent_28%),linear-gradient(180deg,_#fbf7f0_0%,_#f2ede4_100%)] text-ink">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-center px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-8 flex justify-end">
           <TextSizeControl />
@@ -47,7 +47,7 @@ export default function HomePage() {
             <div className="mt-8 flex flex-wrap gap-4">
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-4 text-base font-semibold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-teal-700"
+                className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-4 text-base font-semibold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-accentDark"
               >
                 Empezar
                 <ArrowRight className="h-5 w-5" />

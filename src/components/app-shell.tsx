@@ -37,7 +37,7 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(22,163,74,0.12),_transparent_26%),linear-gradient(180deg,_#f8f4eb_0%,_#f2ede4_100%)] text-ink">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(232,173,165,0.28),_transparent_26%),linear-gradient(180deg,_#f8f4eb_0%,_#f2ede4_100%)] text-ink">
       <header className="no-print border-b border-black/5 bg-white/70 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
           <div>
