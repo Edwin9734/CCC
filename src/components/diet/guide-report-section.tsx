@@ -65,11 +65,15 @@ function todayText() {
 export function GuideReportSection({
   insights,
   allergyMatches,
-  allergyNames
+  allergyNames,
+  hiddenIds = [],
+  liquidNotice = null
 }: {
   insights: DietInsights;
   allergyMatches: Record<string, string[]>;
   allergyNames: string[];
+  hiddenIds?: string[];
+  liquidNotice?: string | null;
 }) {
   const [selected, setSelected] = useState<Record<SectionKey, boolean>>({
     insights: true,
@@ -245,9 +249,11 @@ export function GuideReportSection({
           </div>
         </div>
 
-        <p className="mt-3 text-xs leading-5 text-muted">
+       <p className="mt-3 text-xs leading-5 text-muted">
           Esta información es general y no reemplaza la indicación de tu médico o nutricionista.
         </p>
+
+        {liquidNotice ? <p className="mt-2 text-xs font-semibold leading-5">{liquidNotice}</p> : null}
 
         {allergyNames.length > 0 ? (
           <p className="mt-2 text-xs leading-5">
@@ -296,7 +302,9 @@ export function GuideReportSection({
         ) : null}
 
         {CATEGORY_ORDER.filter((cat) => selected[cat]).map((cat) => {
-          const items = DIET_ITEMS.filter((item) => item.category === cat && !allergyMatches[item.id]);
+           const items = DIET_ITEMS.filter(
+            (item) => item.category === cat && !allergyMatches[item.id] && !hiddenIds.includes(item.id)
+          );
           return (
             <section key={cat} className="mt-5">
               <h2 className="print-keep-with-next text-lg font-semibold">{CATEGORY_TITLE[cat]}</h2>

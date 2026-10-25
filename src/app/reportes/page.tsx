@@ -8,10 +8,14 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getMeasurements, type MeasurementWithStatus } from "@/lib/supabase/measurements";
 import { getMedications, type MedicationWithSchedules } from "@/lib/supabase/medications";
 import { getAllergies, type AllergyRow } from "@/lib/supabase/allergies";
+import { loadProfileForShell } from "@/lib/supabase/profile";
 import { buildDietInsights } from "@/lib/diet-insights";
 import { applyAllergyFilter, findAllergenMatches } from "@/lib/diet-allergens";
+import { LIQUID_HIDDEN_IDS, buildProfileExtras } from "@/lib/plan-profile";
+import { buildContacts, type ContactsInfo } from "@/lib/contacts";
 import { getStatusLabel } from "@/lib/ranges";
 import { formatDate } from "@/lib/date-utils";
+import type { ProfileData } from "@/lib/profile";
 
 export default async function ReportesPage() {
   const supabase = await createSupabaseServerClient();
@@ -20,6 +24,8 @@ export default async function ReportesPage() {
   let measurements: MeasurementWithStatus[] = [];
   let medications: MedicationWithSchedules[] = [];
   let allergies: AllergyRow[] = [];
+  let profile: ProfileData | null = null;
+  let conditionNames: string[] = [];
 
   if (data.user) {
     try {
@@ -39,12 +45,26 @@ export default async function ReportesPage() {
     } catch (err) {
       console.error("Error loading allergies:", err);
     }
+
+    const shell = await loadProfileForShell(supabase);
+    profile = shell.profile;
+    conditionNames = shell.conditions;
   }
 
   const allergyNames = allergies.map((a) => a.allergy_name);
   const allergyMatches = findAllergenMatches(allergyNames);
   const blockedIds = new Set(Object.keys(allergyMatches));
-  const insights = applyAllergyFilter(buildDietInsights(measurements, medications), blockedIds);
+
+  // Con restricción de líquidos (enfermedad renal o insuficiencia cardíaca) la guía no sugiere agua ni té verde.
+  const extras = buildProfileExtras(profile, conditionNames);
+  const hiddenLiquidIds: string[] = extras.waterRestricted ? LIQUID_HIDDEN_IDS : [];
+  const insights = applyAllergyFilter(
+    buildDietInsights(measurements, medications),
+    new Set([...Array.from(blockedIds), ...hiddenLiquidIds])
+  );
+
+  // Médico y contacto de emergencia, para el encabezado del reporte
+  const contacts: ContactsInfo | null = buildContacts(profile);
 
   const totalMeasurements = measurements.length;
   const lastMeasurement = measurements[0];
@@ -87,6 +107,33 @@ export default async function ReportesPage() {
               </p>
             </div>
           </div>
+
+          {contacts ? (
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {contacts.doctor ? (
+                <div className="rounded-xl bg-background p-4">
+                  <p className="text-sm text-muted">Médico</p>
+                  <p className="mt-1 font-semibold text-ink">{contacts.doctor.name ?? "—"}</p>
+                  {contacts.doctor.phone ? (
+                    <p className="text-sm text-muted">Tel. {contacts.doctor.phone}</p>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {contacts.emergency ? (
+                <div className="rounded-xl bg-background p-4">
+                  <p className="text-sm text-muted">Contacto de emergencia</p>
+                  <p className="mt-1 font-semibold text-ink">
+                    {contacts.emergency.name ?? "—"}
+                    {contacts.emergency.relationship ? ` (${contacts.emergency.relationship})` : ""}
+                  </p>
+                  {contacts.emergency.phone ? (
+                    <p className="text-sm text-muted">Tel. {contacts.emergency.phone}</p>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         {/* Panel para elegir qué imprimir del reporte (no se imprime a sí mismo) */}
@@ -95,7 +142,13 @@ export default async function ReportesPage() {
         </div>
 
         {/* Guía de alimentación: encabezado, PDF e impresión (no sale en el reporte de mediciones) */}
-        <GuideReportSection insights={insights} allergyMatches={allergyMatches} allergyNames={allergyNames} />
+        <GuideReportSection
+          insights={insights}
+          allergyMatches={allergyMatches}
+          allergyNames={allergyNames}
+          hiddenIds={hiddenLiquidIds}
+          liquidNotice={extras.liquidNotice}
+        />
 
         {/* Gráficas */}
         <div id="report-evolucion">

@@ -6,6 +6,8 @@ import { CriticalAlert } from "@/components/measurements/critical-alert";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getMeasurements, type MeasurementWithStatus } from "@/lib/supabase/measurements";
 import { getNextReminder, type NextReminder } from "@/lib/supabase/medications";
+import { loadProfileForShell } from "@/lib/supabase/profile";
+import { buildContacts, type ContactsInfo } from "@/lib/contacts";
 import { METRIC_LABELS, getStatusLabel, isAlertStatus } from "@/lib/ranges";
 import { formatDate } from "@/lib/date-utils";
 
@@ -42,6 +44,7 @@ export default async function DashboardPage() {
   let measurements: MeasurementWithStatus[] = [];
   let alertCount = 0;
   let nextReminder: NextReminder | null = null;
+  let contacts: ContactsInfo | null = null;
 
   if (data.user) {
     try {
@@ -56,6 +59,9 @@ export default async function DashboardPage() {
     } catch (err) {
       console.error("Error loading next reminder:", err);
     }
+
+    const { profile } = await loadProfileForShell(supabase);
+    contacts = buildContacts(profile);
   }
 
   const latestByMetric = (metric: string) => measurements.find((m) => m.metric === metric);
@@ -81,6 +87,7 @@ export default async function DashboardPage() {
               key={m.id}
               title={`Valor crítico: ${METRIC_LABELS[m.metric]}`}
               message={`Tu última medición fue ${m.value} mg/dL, registrada el ${formatDate(m.measured_at)}.`}
+              contacts={contacts}
             />
           ))}
         </div>

@@ -3,9 +3,12 @@ import { Activity, AlertTriangle, Droplets, Dumbbell, Info, Lightbulb, Moon, Tar
 import { SectionCard } from "@/components/section-card";
 import { CriticalAlert } from "@/components/measurements/critical-alert";
 import { PlanAdjustmentCard } from "@/components/plan/plan-adjustment-card";
+import { PlanAntecedentsCard } from "@/components/plan/plan-antecedents-card";
 import { DIET_ITEMS } from "@/lib/diet-data";
 import { EXERCISE_SAFETY, RISK_DISCLAIMER, type PlanData, type RiskLevel } from "@/lib/plan";
 import type { PlanAdjustment } from "@/lib/plan-adjustment";
+import type { ProfileExtras } from "@/lib/plan-profile";
+import type { ContactsInfo } from "@/lib/contacts";
 
 const NAME_BY_ID = new Map(DIET_ITEMS.map((item) => [item.id, item.name]));
 
@@ -49,13 +52,29 @@ function Chips({ ids, className }: { ids: string[]; className: string }) {
   );
 }
 
-export function PlanView({ plan, adjustment }: { plan: PlanData; adjustment: PlanAdjustment }) {
+export function PlanView({
+  plan,
+  adjustment,
+  extras,
+  contacts
+}: {
+  plan: PlanData;
+  adjustment: PlanAdjustment;
+  extras: ProfileExtras;
+  contacts: ContactsInfo | null;
+}) {
   const levelStyle = LEVEL_STYLE[plan.level];
   const isCritical = plan.level === "CRITICAL";
 
   return (
     <div className="space-y-6">
-      {isCritical ? <CriticalAlert title="Tienes un valor crítico" message={plan.criticalMessages.join(" ")} /> : null}
+      {isCritical ? (
+        <CriticalAlert
+          title="Tienes un valor crítico"
+          message={plan.criticalMessages.join(" ")}
+          contacts={contacts}
+        />
+      ) : null}
 
       <SectionCard title="Mi nivel de riesgo" description="Se calcula con tu último valor de HDL, LDL y triglicéridos.">
         <div className={`rounded-3xl border p-5 ${levelStyle.card}`}>
@@ -85,6 +104,8 @@ export function PlanView({ plan, adjustment }: { plan: PlanData; adjustment: Pla
       </SectionCard>
 
       <PlanAdjustmentCard adjustment={adjustment} />
+
+      <PlanAntecedentsCard extras={extras} />
 
       <SectionCard
         title="Mis metas"
@@ -267,6 +288,12 @@ export function PlanView({ plan, adjustment }: { plan: PlanData; adjustment: Pla
             <AlertTriangle className="h-4 w-4" />
             Antes y durante el ejercicio
           </p>
+          {extras.cardiacClearance ? (
+            <p className="mt-2 font-semibold">
+              Por tus antecedentes ({extras.cardiacConditions.join(", ")}), no empieces ni aumentes esta rutina sin la
+              autorización de tu médico.
+            </p>
+          ) : null}
           <p className="mt-2">
             {isCritical
               ? "Con un valor crítico, consulta a tu médico antes de empezar cualquier rutina."

@@ -1,3 +1,4 @@
+import { AlertTriangle } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { AllergyManager } from "@/components/allergies/allergy-manager";
 import { DietBrowser } from "@/components/diet/diet-browser";
@@ -9,6 +10,7 @@ import { getMedications, type MedicationWithSchedules } from "@/lib/supabase/med
 import { getAllergies, type AllergyRow } from "@/lib/supabase/allergies";
 import { buildDietInsights } from "@/lib/diet-insights";
 import { applyAllergyFilter, findAllergenMatches } from "@/lib/diet-allergens";
+import { LIQUID_HIDDEN_IDS, loadProfileExtras } from "@/lib/plan-profile";
 
 export default async function DietasPage() {
   const supabase = await createSupabaseServerClient();
@@ -41,7 +43,15 @@ export default async function DietasPage() {
   const allergyNames = allergies.map((a) => a.allergy_name);
   const allergyMatches = findAllergenMatches(allergyNames);
   const blockedIds = new Set(Object.keys(allergyMatches));
-  const insights = applyAllergyFilter(buildDietInsights(measurements, medications), blockedIds);
+
+  // Con restricción de líquidos (enfermedad renal o insuficiencia cardíaca) no se sugiere agua ni té verde.
+  const extras = data.user ? await loadProfileExtras(supabase) : null;
+  const hiddenLiquidIds = extras?.waterRestricted ? LIQUID_HIDDEN_IDS : [];
+
+  const insights = applyAllergyFilter(
+    buildDietInsights(measurements, medications),
+    new Set([...Array.from(blockedIds), ...hiddenLiquidIds])
+  );
 
   return (
     <AppShell
@@ -50,6 +60,13 @@ export default async function DietasPage() {
       userEmail={data.user?.email ?? null}
     >
       <div className="space-y-6">
+        {extras?.liquidNotice ? (
+          <div className="flex items-start gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-900">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+            <p>{extras.liquidNotice}</p>
+          </div>
+        ) : null}
+
         <DietInsightsPanel insights={insights} />
         <AllergyManager initialAllergies={allergies} />
         <DietBrowser focusIds={insights.focusIds} allergyMatches={allergyMatches} />

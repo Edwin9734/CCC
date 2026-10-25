@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { LogIn, Menu, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ export function AppChrome({
   initialDismissed: string[];
   children: ReactNode;
 }) {
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(initialProfile);
@@ -64,6 +66,13 @@ export function AppChrome({
     setConditions(nextConditions);
     setPanelOpen(false);
     setSavedMessage(true);
+    // Vuelve a cargar la página con los datos nuevos (por ejemplo, el sexo cambia el estado del HDL).
+    router.refresh();
+  };
+
+  const handleProfileUpdated = (nextProfile: ProfileData) => {
+    setProfile(nextProfile);
+    router.refresh();
   };
 
   const initial = initialOf(profile?.first_name);
@@ -144,7 +153,7 @@ export function AppChrome({
           profile={profile}
           conditions={conditions}
           onSaved={handleSaved}
-          onProfileUpdated={setProfile}
+          onProfileUpdated={handleProfileUpdated}
         />
       ) : null}
 

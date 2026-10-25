@@ -24,10 +24,12 @@ function StatBox({ title, value, lines }: { title: string; value: string; lines:
 
 export function WeekSummaryCard({
   summary,
-  activityGoalMinutes = ACTIVITY_WEEKLY_GOAL_MINUTES
+  activityGoalMinutes = ACTIVITY_WEEKLY_GOAL_MINUTES,
+  waterRestricted = false
 }: {
   summary: WeekSummary;
   activityGoalMinutes?: number;
+  waterRestricted?: boolean;
 }) {
   const { doses, water, sleep, activity } = summary;
   const medPercent = doses.scheduled > 0 ? Math.round((doses.taken / doses.scheduled) * 100) : null;
@@ -50,11 +52,19 @@ export function WeekSummaryCard({
           }
         />
 
-        <StatBox
-          title="Agua"
-          value={`${water.metDays} de 7 días`}
-          lines={[`Con ${WATER_GOAL_GLASSES} vasos o más.`, `Días con registro: ${water.daysWithRecord}.`]}
-        />
+        {waterRestricted ? (
+          <StatBox
+            title="Agua"
+            value="—"
+            lines={["Sin meta: tu médico debe indicarte cuánta agua tomar.", `Días con registro: ${water.daysWithRecord}.`]}
+          />
+        ) : (
+          <StatBox
+            title="Agua"
+            value={`${water.metDays} de 7 días`}
+            lines={[`Con ${WATER_GOAL_GLASSES} vasos o más.`, `Días con registro: ${water.daysWithRecord}.`]}
+          />
+        )}
 
         <StatBox
           title="Sueño"

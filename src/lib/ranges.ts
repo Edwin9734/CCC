@@ -1,3 +1,5 @@
+import type { Sex } from "@/lib/profile";
+
 export type LipidMetric = "HDL" | "LDL" | "TRIGLYCERIDES";
 export type LipidStatus =
   | "LOW"
@@ -22,12 +24,21 @@ export const CRITICAL_THRESHOLDS: Partial<Record<LipidMetric, number>> = {
   TRIGLYCERIDES: 500
 };
 
-export function getLipidStatus(metric: LipidMetric, value: number): LipidStatus {
+// HDL mínimo recomendado: 50 mg/dL en mujeres y 40 en los demás casos
+// (hombres, "Otro" o cuando todavía no hay sexo guardado).
+export const HDL_MINIMUM_GENERAL = 40;
+export const HDL_MINIMUM_FEMALE = 50;
+
+export function hdlMinimumFor(sex: Sex | null | undefined): number {
+  return sex === "female" ? HDL_MINIMUM_FEMALE : HDL_MINIMUM_GENERAL;
+}
+
+export function getLipidStatus(metric: LipidMetric, value: number, sex?: Sex | null): LipidStatus {
   const criticalFrom = CRITICAL_THRESHOLDS[metric];
   if (criticalFrom !== undefined && value >= criticalFrom) return "CRITICAL";
 
   if (metric === "HDL") {
-    if (value < 40) return "LOW";
+    if (value < hdlMinimumFor(sex)) return "LOW";
     if (value < 60) return "NORMAL";
     return "PROTECTIVE"; // HDL de 60 o más es favorable, no una alerta
   }

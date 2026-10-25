@@ -13,6 +13,7 @@ export default async function HabitosPage() {
 
   let medications: MedicationWithSchedules[] = [];
   let activityGoalMinutes: number | undefined;
+  let waterNotice: string | null = null;
 
   if (data.user) {
     const today = todayInAppTimeZone();
@@ -21,9 +22,14 @@ export default async function HabitosPage() {
     const loaded = await loadAdjustmentData(supabase, data.user.id, today);
     medications = loaded.medications;
 
-    // La meta semanal de actividad se ajusta según tu semana anterior (ver Mi plan).
-    const { adjustment } = buildAdjustedPlan(loaded, { blockedIds: new Set<string>(), today, nowMinutes });
+    // La meta de actividad se ajusta según tu semana anterior, y el agua según tus antecedentes (ver Mi plan).
+    const { adjustment, extras } = buildAdjustedPlan(loaded, {
+      blockedIds: new Set<string>(),
+      today,
+      nowMinutes
+    });
     activityGoalMinutes = adjustment.activity.minutes;
+    waterNotice = extras.liquidNotice;
   }
 
   return (
@@ -33,7 +39,11 @@ export default async function HabitosPage() {
       userEmail={data.user?.email ?? null}
     >
       {data.user ? (
-        <HabitsManager medications={medications} activityGoalMinutes={activityGoalMinutes} />
+        <HabitsManager
+          medications={medications}
+          activityGoalMinutes={activityGoalMinutes}
+          waterNotice={waterNotice}
+        />
       ) : (
         <SectionCard title="Inicia sesión" description="Necesitas una sesión activa para usar esta sección.">
           <Link

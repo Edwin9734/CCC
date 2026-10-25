@@ -1,5 +1,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { LipidMetric, getLipidStatus } from "@/lib/ranges";
+import type { Sex } from "@/lib/profile";
 
 export interface MeasurementRow {
   id: string;
@@ -14,6 +15,18 @@ export interface MeasurementRow {
 
 export interface MeasurementWithStatus extends MeasurementRow {
   status: string;
+}
+
+// El sexo del perfil define el HDL mínimo. Si no se puede leer, se usa la regla general.
+async function getUserSex(supabase: SupabaseClient, userId: string): Promise<Sex | null> {
+  try {
+    const { data, error } = await supabase.from("profiles").select("sex").eq("id", userId).maybeSingle();
+    if (error) return null;
+    const sex = (data as { sex?: unknown } | null)?.sex;
+    return sex === "female" || sex === "male" || sex === "other" ? sex : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function createMeasurement(
@@ -65,13 +78,14 @@ export async function getMeasurements(
     query = query.eq("metric", metric);
   }
 
-  const { data, error } = await query;
+  const [result, sex] = await Promise.all([query, getUserSex(supabase, user.user.id)]);
+  const { data, error } = result;
 
   if (error) throw error;
 
   return (data as MeasurementRow[]).map((row) => ({
     ...row,
-    status: getLipidStatus(row.metric, row.value)
+    status: getLipidStatus(row.metric, Number(row.value), sex)
   })) as MeasurementWithStatus[];
 }
 
@@ -91,9 +105,11 @@ export async function getMeasurementById(
 
   if (error) throw error;
 
+  const sex = await getUserSex(supabase, user.user.id);
+
   return {
     ...(data as MeasurementRow),
-    status: getLipidStatus(data!.metric, data!.value)
+    status: getLipidStatus(data!.metric, Number(data!.value), sex)
   } as MeasurementWithStatus;
 }
 
@@ -127,9 +143,11 @@ export async function updateMeasurement(
 
   if (error) throw error;
 
+  const sex = await getUserSex(supabase, user.user.id);
+
   return {
     ...(data as MeasurementRow),
-    status: getLipidStatus(data!.metric, data!.value)
+    status: getLipidStatus(data!.metric, Number(data!.value), sex)
   } as MeasurementWithStatus;
 }
 

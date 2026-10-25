@@ -2,7 +2,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { DIET_ITEMS } from "@/lib/diet-data";
 import { addDays, formatDate } from "@/lib/date-utils";
 import {
-  HDL_GOAL,
   LDL_GOAL,
   TRIGLYCERIDES_GOAL,
   buildPlan,
@@ -12,6 +11,8 @@ import {
   type PlanData,
   type RiskLevel
 } from "@/lib/plan";
+import { applyProfileToPlan, buildProfileExtras, type ProfileExtras } from "@/lib/plan-profile";
+import type { ProfileData } from "@/lib/profile";
 import { METRIC_LABELS, isAlertStatus, type LipidMetric } from "@/lib/ranges";
 import { SLEEP_GOAL_HOURS, WATER_GOAL_GLASSES, computeWeekSummary, formatHours } from "@/lib/habits-config";
 import { getAllergies, type AllergyRow } from "@/lib/supabase/allergies";
@@ -25,6 +26,7 @@ import {
 } from "@/lib/supabase/habits";
 import { getMeasurements, type MeasurementWithStatus } from "@/lib/supabase/measurements";
 import { getMedications, type MedicationWithSchedules } from "@/lib/supabase/medications";
+import { loadProfileForShell } from "@/lib/supabase/profile";
 
 // ---------------------------------------------------------------------------
 // Reglas del ajuste. Para cambiarlas, edita solo estos números.
@@ -123,6 +125,8 @@ export interface AdjustmentData {
   intakes: IntakeRow[];
   diaryEntries: FoodDiaryRow[];
   allergies: AllergyRow[];
+  profile: ProfileData | null;
+  conditionNames: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -217,7 +221,7 @@ function trendDetail(t: TrendInternal): string {
 // Meta del próximo control (un paso intermedio hacia la meta final)
 // ---------------------------------------------------------------------------
 
-function buildNextGoal(t: TrendInternal): NextControlGoal | null {
+function buildNextGoal(t: TrendInternal, hdlMinimum: number): NextControlGoal | null {
   const { metric, latest, previous } = t;
   if (!latest) return null;
 
@@ -230,14 +234,15 @@ function buildNextGoal(t: TrendInternal): NextControlGoal | null {
   const previousText = previous ? `${fmt(previousValue)} mg/dL, ${formatDate(previous.measured_at)}` : "";
 
   if (metric === "HDL") {
-    if (latestValue >= HDL_GOAL) return null;
+    // hdlMinimum: 50 en mujeres y 40 en los demás casos
+    if (latestValue >= hdlMinimum) return null;
 
     if (worsening) {
-      if (previousValue >= HDL_GOAL) {
+      if (previousValue >= hdlMinimum) {
         return {
           metric,
           label,
-          targetText: `${HDL_GOAL} mg/dL o más`,
+          targetText: `${hdlMinimum} mg/dL o más`,
           reason: `Tu medición anterior estaba dentro de la meta; la idea es volver a ese nivel.${criticalNote}`
         };
       }
@@ -249,15 +254,15 @@ function buildNextGoal(t: TrendInternal): NextControlGoal | null {
       };
     }
 
-    const target = Math.min(HDL_GOAL, Math.ceil(latestValue * (1 + NEXT_STEP_PERCENT)));
+    const target = Math.min(hdlMinimum, Math.ceil(latestValue * (1 + NEXT_STEP_PERCENT)));
     return {
       metric,
       label,
       targetText: `${fmt(target)} mg/dL o más`,
       reason:
-        (target === HDL_GOAL
+        (target === hdlMinimum
           ? "Estás cerca de tu meta final."
-          : `Un paso intermedio: subir cerca de 10% desde tu valor actual (${fmt(latestValue)} mg/dL) hasta llegar a ${HDL_GOAL}.`) +
+          : `Un paso intermedio: subir cerca de 10% desde tu valor actual (${fmt(latestValue)} mg/dL) hasta llegar a ${hdlMinimum}.`) +
         criticalNote
     };
   }
@@ -401,9 +406,15 @@ interface ComplianceResult {
 
 function buildCompliance(
   data: AdjustmentData,
-  context: { today: string; nowMinutes: number; weekFrom: string; goalMinutes: number }
+  context: {
+    today: string;
+    nowMinutes: number;
+    weekFrom: string;
+    goalMinutes: number;
+    waterRestricted: boolean;
+  }
 ): ComplianceResult {
-  const { today, nowMinutes, weekFrom, goalMinutes } = context;
+  const { today, nowMinutes, weekFrom, goalMinutes, waterRestricted } = context;
 
   const habitsByDay: Record<string, DailyHabitValues> = {};
   for (const row of data.habitRows) {
@@ -499,6 +510,12 @@ function buildCompliance(
       : { key: "food", label: "Alimentación", status: "no_data", value: "Sin alimentos de la guía en el diario", goal: foodGoal }
   );
 
+  // Con restricción de líquidos, el agua no se evalúa: el médico indica la cantidad.
+  if (waterRestricted) {
+    const waterIndex = areas.findIndex((area) => area.key === "water");
+    if (waterIndex >= 0) areas.splice(waterIndex, 1);
+  }
+
   const recordedDays = countRecordedDays(data, weekFrom, today);
   const evaluable = recordedDays >= MIN_RECORDED_DAYS;
 
@@ -543,8 +560,11 @@ function buildCompliance(
 export function buildAdjustedPlan(
   data: AdjustmentData,
   context: { blockedIds: Set<string>; today: string; nowMinutes: number }
-): { plan: PlanData; adjustment: PlanAdjustment } {
+): { plan: PlanData; adjustment: PlanAdjustment; extras: ProfileExtras } {
   const { blockedIds, today, nowMinutes } = context;
+
+  // Reglas que salen de los datos del perfil (sexo, enfermedades, peso y estatura)
+  const extras = buildProfileExtras(data.profile, data.conditionNames);
 
   const latest = getLatestByMetric(data.measurements);
   const level = computeRiskLevel(latest);
@@ -566,7 +586,7 @@ export function buildAdjustedPlan(
   }));
 
   const nextGoals = internalTrends.flatMap((t) => {
-    const goal = buildNextGoal(t);
+    const goal = buildNextGoal(t, extras.hdlMinimum);
     return goal ? [goal] : [];
   });
 
@@ -590,18 +610,20 @@ export function buildAdjustedPlan(
   const previousRecordedDays = countRecordedDays(data, previousFrom, previousTo);
   const activity = computeActivityAdjustment(baseMinutes, previousWeekMinutes, previousRecordedDays);
 
-  // 4) Plan base con los ajustes aplicados
-  const plan = buildPlan(data.measurements, blockedIds, {
+  // 4) Plan base con los ajustes aplicados, y luego con los datos del perfil
+  const basePlan = buildPlan(data.measurements, blockedIds, {
     dietLevel,
     activityGoalMinutes: activity.minutes
   });
+  const plan = applyProfileToPlan(basePlan, extras, data.measurements);
 
   // 5) Cumplimiento de los últimos 7 días
   const { compliance, weekSummary, food } = buildCompliance(data, {
     today,
     nowMinutes,
     weekFrom,
-    goalMinutes: activity.minutes
+    goalMinutes: activity.minutes,
+    waterRestricted: extras.waterRestricted
   });
 
   // 6) Qué cambió en tu plan
@@ -698,7 +720,8 @@ export function buildAdjustedPlan(
       compliance,
       changes,
       recommendations
-    }
+    },
+    extras
   };
 }
 
@@ -722,7 +745,7 @@ export async function loadAdjustmentData(
 ): Promise<AdjustmentData> {
   const from = addDays(today, -13);
 
-  const [measurements, medications, habitsData, diary, allergies] = await Promise.all([
+  const [measurements, medications, habitsData, diary, allergies, shell] = await Promise.all([
     safe(getMeasurements(supabase, { limit: 100 }), [] as MeasurementWithStatus[], "measurements"),
     safe(getMedications(supabase), [] as MedicationWithSchedules[], "medications"),
     safe(
@@ -731,7 +754,12 @@ export async function loadAdjustmentData(
       "habits"
     ),
     safe(getDiaryEntries(supabase, 300), [] as FoodDiaryRow[], "diary entries"),
-    safe(getAllergies(supabase), [] as AllergyRow[], "allergies")
+    safe(getAllergies(supabase), [] as AllergyRow[], "allergies"),
+    safe(
+      loadProfileForShell(supabase),
+      { profile: null as ProfileData | null, conditions: [] as string[] },
+      "profile"
+    )
   ]);
 
   return {
@@ -741,6 +769,8 @@ export async function loadAdjustmentData(
     activities: habitsData.activities,
     intakes: habitsData.intakes,
     diaryEntries: diary.filter((entry) => entry.eaten_on >= from && entry.eaten_on <= today),
-    allergies
+    allergies,
+    profile: shell.profile,
+    conditionNames: shell.conditions
   };
 }

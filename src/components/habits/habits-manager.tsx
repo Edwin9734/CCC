@@ -36,10 +36,12 @@ const EMPTY_HABIT: DailyHabitValues = { water_glasses: 0, sleep_hours: null };
 
 export function HabitsManager({
   medications,
-  activityGoalMinutes
+  activityGoalMinutes,
+  waterNotice
 }: {
   medications: MedicationWithSchedules[];
   activityGoalMinutes?: number;
+  waterNotice?: string | null;
 }) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
@@ -357,22 +359,34 @@ export function HabitsManager({
                   </button>
                 </div>
 
-                <p
-                  className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-semibold ${
-                    current.water_glasses >= WATER_GOAL_GLASSES
-                      ? "bg-emerald-100 text-emerald-800"
-                      : "bg-slate-100 text-muted"
-                  }`}
-                >
-                  {current.water_glasses >= WATER_GOAL_GLASSES
-                    ? "Meta cumplida"
-                    : `Meta: ${WATER_RANGE_TEXT} al día`}
-                </p>
+                {waterNotice ? (
+                  <>
+                    <p className="mt-3 inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">
+                      Sin meta: consulta a tu médico
+                    </p>
 
-                <p className="mt-3 text-xs leading-5 text-muted">
-                  Si tu médico te limitó los líquidos (por ejemplo, por problemas del corazón o de los riñones), sigue
-                  su indicación y no uses esta meta.
-                </p>
+                    <p className="mt-3 text-xs leading-5 text-amber-900">{waterNotice}</p>
+                  </>
+                ) : (
+                  <>
+                    <p
+                      className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-semibold ${
+                        current.water_glasses >= WATER_GOAL_GLASSES
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-slate-100 text-muted"
+                      }`}
+                    >
+                      {current.water_glasses >= WATER_GOAL_GLASSES
+                        ? "Meta cumplida"
+                        : `Meta: ${WATER_RANGE_TEXT} al día`}
+                    </p>
+
+                    <p className="mt-3 text-xs leading-5 text-muted">
+                      Si tu médico te limitó los líquidos (por ejemplo, por problemas del corazón o de los riñones),
+                      sigue su indicación y no uses esta meta.
+                    </p>
+                  </>
+                )}
               </div>
 
               <div>
@@ -429,7 +443,13 @@ export function HabitsManager({
         </>
       ) : null}
 
-            {summary ? <WeekSummaryCard summary={summary} activityGoalMinutes={activityGoalMinutes} /> : null}
+      {summary ? (
+        <WeekSummaryCard
+          summary={summary}
+          activityGoalMinutes={activityGoalMinutes}
+          waterRestricted={Boolean(waterNotice)}
+        />
+      ) : null}
     </div>
   );
 }

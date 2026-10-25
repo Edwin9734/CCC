@@ -6,6 +6,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { createMeasurement } from "@/lib/supabase/measurements";
 import { logCriticalAlert } from "@/lib/supabase/notifications";
 import { CriticalAlert } from "@/components/measurements/critical-alert";
+import type { ContactsInfo } from "@/lib/contacts";
 import {
   URGENT_CARE_TEXT,
   buildCriticalMessage,
@@ -13,7 +14,13 @@ import {
   type CriticalMessage
 } from "@/lib/ranges";
 
-export function MeasurementForm({ onSuccess }: { onSuccess?: () => void }) {
+export function MeasurementForm({
+  onSuccess,
+  contacts
+}: {
+  onSuccess?: () => void;
+  contacts?: ContactsInfo | null;
+}) {
   const supabase = createSupabaseBrowserClient();
   const [metric, setMetric] = useState<"HDL" | "LDL" | "TRIGLYCERIDES">("HDL");
   const [value, setValue] = useState("");
@@ -146,6 +153,7 @@ export function MeasurementForm({ onSuccess }: { onSuccess?: () => void }) {
           <CriticalAlert
             title={criticalAlert.title}
             message={criticalAlert.message}
+            contacts={contacts}
             footnote="Si te equivocaste al escribir el valor, puedes borrar la medición en el historial y registrarla de nuevo."
             onDismiss={() => setCriticalAlert(null)}
           />

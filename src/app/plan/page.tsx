@@ -6,6 +6,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { findAllergenMatches } from "@/lib/diet-allergens";
 import { minutesNowInAppTimeZone, todayInAppTimeZone } from "@/lib/date-utils";
 import { buildAdjustedPlan, loadAdjustmentData, type PlanAdjustment } from "@/lib/plan-adjustment";
+import { buildContacts, type ContactsInfo } from "@/lib/contacts";
+import type { ProfileExtras } from "@/lib/plan-profile";
 import type { PlanData } from "@/lib/plan";
 
 export default async function PlanPage() {
@@ -14,6 +16,8 @@ export default async function PlanPage() {
 
   let plan: PlanData | null = null;
   let adjustment: PlanAdjustment | null = null;
+  let extras: ProfileExtras | null = null;
+  let contacts: ContactsInfo | null = null;
 
   if (data.user) {
     const today = todayInAppTimeZone();
@@ -26,6 +30,8 @@ export default async function PlanPage() {
     const result = buildAdjustedPlan(loaded, { blockedIds, today, nowMinutes });
     plan = result.plan;
     adjustment = result.adjustment;
+    extras = result.extras;
+    contacts = buildContacts(loaded.profile);
   }
 
   return (
@@ -34,8 +40,8 @@ export default async function PlanPage() {
       description="Tu nivel, tus metas y tu plan, que se ajustan según tu evolución y tu cumplimiento."
       userEmail={data.user?.email ?? null}
     >
-      {data.user && plan && adjustment ? (
-        <PlanView plan={plan} adjustment={adjustment} />
+      {data.user && plan && adjustment && extras ? (
+        <PlanView plan={plan} adjustment={adjustment} extras={extras} contacts={contacts} />
       ) : (
         <SectionCard title="Inicia sesión" description="Necesitas una sesión activa para ver tu plan.">
           <Link
