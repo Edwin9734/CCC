@@ -2,15 +2,13 @@ import Link from "next/link";
 import { Activity, AlertTriangle, Droplets, Dumbbell, Info, Lightbulb, Moon, Target } from "lucide-react";
 import { SectionCard } from "@/components/section-card";
 import { CriticalAlert } from "@/components/measurements/critical-alert";
+import { FoodTiles } from "@/components/diet/food-tiles";
 import { PlanAdjustmentCard } from "@/components/plan/plan-adjustment-card";
 import { PlanAntecedentsCard } from "@/components/plan/plan-antecedents-card";
-import { DIET_ITEMS } from "@/lib/diet-data";
 import { EXERCISE_SAFETY, RISK_DISCLAIMER, type PlanData, type RiskLevel } from "@/lib/plan";
 import type { PlanAdjustment } from "@/lib/plan-adjustment";
 import type { ProfileExtras } from "@/lib/plan-profile";
 import type { ContactsInfo } from "@/lib/contacts";
-
-const NAME_BY_ID = new Map(DIET_ITEMS.map((item) => [item.id, item.name]));
 
 const LEVEL_STYLE: Record<RiskLevel, { badge: string; card: string }> = {
   NONE: { badge: "bg-slate-200 text-slate-800", card: "border-slate-200 bg-slate-50" },
@@ -36,32 +34,18 @@ const HABIT_ICON = {
   activity: Activity
 } as const;
 
-function Chips({ ids, className }: { ids: string[]; className: string }) {
-  if (ids.length === 0) {
-    return <p className="mt-2 text-sm text-muted">—</p>;
-  }
-
-  return (
-    <div className="mt-2 flex flex-wrap gap-2">
-      {ids.map((id) => (
-        <span key={id} className={`rounded-full px-3 py-1 text-xs font-semibold ${className}`}>
-          {NAME_BY_ID.get(id) ?? id}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 export function PlanView({
   plan,
   adjustment,
   extras,
-  contacts
+  contacts,
+  allergyMatches
 }: {
   plan: PlanData;
   adjustment: PlanAdjustment;
   extras: ProfileExtras;
   contacts: ContactsInfo | null;
+  allergyMatches: Record<string, string[]>;
 }) {
   const levelStyle = LEVEL_STYLE[plan.level];
   const isCritical = plan.level === "CRITICAL";
@@ -194,7 +178,10 @@ export function PlanView({
         </div>
       </SectionCard>
 
-      <SectionCard title="Mi plan de alimentación" description="Se ajusta a tu nivel de riesgo y a tu evolución.">
+      <SectionCard
+        title="Mi plan de alimentación"
+        description="Se ajusta a tu nivel de riesgo y a tu evolución. Toca un alimento para ver su detalle."
+      >
         <h3 className="text-lg font-semibold text-ink">{plan.diet.headline}</h3>
 
         {adjustment.dietEscalated && adjustment.dietNote ? (
@@ -216,7 +203,7 @@ export function PlanView({
         </div>
 
         <p className="mt-5 text-sm font-semibold text-ink">Conviene priorizar:</p>
-        <Chips ids={plan.diet.goodIds} className="bg-emerald-100 text-emerald-800" />
+        <FoodTiles ids={plan.diet.goodIds} tone="good" allergyMatches={allergyMatches} />
         {plan.diet.omittedCount > 0 ? (
           <p className="mt-2 text-xs leading-5 text-muted">
             Se omitieron {plan.diet.omittedCount} alimento(s) de esta lista por tus alergias registradas.
@@ -224,7 +211,7 @@ export function PlanView({
         ) : null}
 
         <p className="mt-5 text-sm font-semibold text-ink">Conviene evitar o limitar:</p>
-        <Chips ids={plan.diet.limitIds} className="bg-rose-100 text-rose-800" />
+        <FoodTiles ids={plan.diet.limitIds} tone="avoid" allergyMatches={allergyMatches} />
 
         <ul className="mt-5 list-disc space-y-1 pl-5 text-base leading-7 text-ink">
           {plan.diet.tips.map((tip) => (

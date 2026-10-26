@@ -18,13 +18,14 @@ export default async function PlanPage() {
   let adjustment: PlanAdjustment | null = null;
   let extras: ProfileExtras | null = null;
   let contacts: ContactsInfo | null = null;
+  let allergyMatches: Record<string, string[]> = {};
 
   if (data.user) {
     const today = todayInAppTimeZone();
     const nowMinutes = minutesNowInAppTimeZone();
 
     const loaded = await loadAdjustmentData(supabase, data.user.id, today);
-    const allergyMatches = findAllergenMatches(loaded.allergies.map((a) => a.allergy_name));
+    allergyMatches = findAllergenMatches(loaded.allergies.map((a) => a.allergy_name));
     const blockedIds = new Set(Object.keys(allergyMatches));
 
     const result = buildAdjustedPlan(loaded, { blockedIds, today, nowMinutes });
@@ -41,7 +42,13 @@ export default async function PlanPage() {
       userEmail={data.user?.email ?? null}
     >
       {data.user && plan && adjustment && extras ? (
-        <PlanView plan={plan} adjustment={adjustment} extras={extras} contacts={contacts} />
+        <PlanView
+          plan={plan}
+          adjustment={adjustment}
+          extras={extras}
+          contacts={contacts}
+          allergyMatches={allergyMatches}
+        />
       ) : (
         <SectionCard title="Inicia sesión" description="Necesitas una sesión activa para ver tu plan.">
           <Link

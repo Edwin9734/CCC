@@ -67,7 +67,7 @@ export default async function DietasPage() {
           </div>
         ) : null}
 
-        <DietInsightsPanel insights={insights} />
+        <DietInsightsPanel insights={insights} allergyMatches={allergyMatches} />
         <AllergyManager initialAllergies={allergies} />
         <DietBrowser focusIds={insights.focusIds} allergyMatches={allergyMatches} />
         <DietMenu allergyNames={allergyNames} />

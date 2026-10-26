@@ -1,4 +1,4 @@
-export type DietCategory = "foods-good" | "foods-avoid" | "drinks-good" | "drinks-avoid";
+export type DietCategory = "foods-good" | "foods-avoid" | "drinks-good" | "drinks-avoid" | "others";
 export type TrafficLight = "green" | "yellow" | "red";
 
 export interface DietItem {
@@ -11,8 +11,18 @@ export interface DietItem {
   warning?: string;
 }
 
+export const TRAFFIC_LABEL: Record<TrafficLight, string> = {
+  green: "Consumir con frecuencia",
+  yellow: "Con moderación",
+  red: "Evitar"
+};
+
+const ALCOHOL_WHY = "El alcohol en exceso sube los triglicéridos.";
+const ALCOHOL_PORTION = "Evitar, o consultar a tu médico si se puede en pequeñas cantidades.";
+const FLAVOR_PORTION = "Para sazonar, al gusto.";
+
 export const DIET_ITEMS: DietItem[] = [
-  // ALIMENTOS RECOMENDADOS
+  // ---------------------------------------------------------------- ALIMENTOS RECOMENDADOS
   {
     id: "avena",
     name: "Avena",
@@ -22,20 +32,36 @@ export const DIET_ITEMS: DietItem[] = [
     portion: "1 taza cocida al día, sin azúcar añadida."
   },
   {
-    id: "legumbres",
-    name: "Frijoles, lentejas y garbanzos",
+    id: "frijoles",
+    name: "Frijoles",
     category: "foods-good",
     level: "green",
     why: "Tienen mucha fibra soluble y proteína vegetal, y pueden sustituir a las carnes grasosas.",
-    portion: "½ a 1 taza, 3 a 4 veces por semana."
+    portion: "½ a 1 taza, 3 a 4 veces por semana. Mejor cocidos en casa que refritos con manteca."
   },
   {
-    id: "pescados-grasos",
-    name: "Pescados grasos (salmón, sardina, atún)",
+    id: "lentejas",
+    name: "Lentejas",
     category: "foods-good",
     level: "green",
-    why: "Aportan omega-3, que ayuda a bajar los triglicéridos.",
-    portion: "2 porciones por semana, al horno, a la plancha o hervidos."
+    why: "Aportan fibra soluble y proteína vegetal, y no tienen colesterol.",
+    portion: "½ a 1 taza, 2 a 3 veces por semana."
+  },
+  {
+    id: "salmon",
+    name: "Salmón",
+    category: "foods-good",
+    level: "green",
+    why: "Aporta omega-3, que ayuda a bajar los triglicéridos.",
+    portion: "2 porciones por semana, al horno, a la plancha o hervido."
+  },
+  {
+    id: "sardina",
+    name: "Sardina",
+    category: "foods-good",
+    level: "green",
+    why: "Aporta omega-3, que ayuda a bajar los triglicéridos, y es una opción económica.",
+    portion: "2 porciones por semana, al horno o hervida. Si es enlatada, escúrrela: puede tener mucha sal."
   },
   {
     id: "aguacate",
@@ -46,44 +72,76 @@ export const DIET_ITEMS: DietItem[] = [
     portion: "¼ a ½ unidad al día."
   },
   {
-    id: "nueces",
-    name: "Nueces y almendras",
+    id: "mani",
+    name: "Maní",
+    category: "foods-good",
+    level: "green",
+    why: "Aporta grasas saludables y fibra, y puede ayudar a reducir el LDL cuando reemplaza alimentos con grasa saturada.",
+    portion: "Un puñado pequeño (unos 30 g) al día, sin sal ni azúcar. Es calórico, no conviene pasarse."
+  },
+  {
+    id: "almendras",
+    name: "Almendras",
     category: "foods-good",
     level: "green",
     why: "Tienen grasas saludables y fibra, y pueden ayudar a reducir el LDL.",
-    portion: "Un puñado pequeño (unos 30 g) al día, sin sal ni azúcar. Son calóricas, no conviene pasarse."
+    portion: "Un puñado pequeño (unas 10 almendras) al día, sin sal ni azúcar. Son calóricas, no conviene pasarse."
   },
   {
     id: "aceite-oliva",
     name: "Aceite de oliva",
     category: "foods-good",
     level: "green",
-    why: "Sustituye a la mantequilla y la manteca por grasas insaturadas.",
+    why: "Sustituye a la margarina y la manteca por grasas insaturadas.",
     portion: "1 a 2 cucharadas al día."
   },
   {
-    id: "frutas-pectina",
-    name: "Manzana, naranja y pera",
+    id: "manzana",
+    name: "Manzana",
     category: "foods-good",
     level: "green",
-    why: "Tienen pectina, una fibra soluble que ayuda a reducir el colesterol.",
-    portion: "2 a 3 porciones de fruta al día, enteras y mejor con cáscara cuando se pueda."
+    why: "Tiene pectina, una fibra soluble que ayuda a reducir el colesterol.",
+    portion: "1 a 2 al día, entera y con cáscara si se puede."
   },
   {
-    id: "verduras",
-    name: "Verduras de hoja verde, berenjena y okra",
+    id: "naranja",
+    name: "Naranja",
     category: "foods-good",
     level: "green",
-    why: "Aportan mucha fibra, pocas calorías y nada de colesterol.",
-    portion: "Al menos 1 plato al día."
+    why: "Tiene pectina, una fibra soluble que ayuda a reducir el colesterol, y vitamina C.",
+    portion: "1 a 2 al día, mejor entera que en jugo."
   },
   {
-    id: "soya",
-    name: "Soya y tofu",
+    id: "pera",
+    name: "Pera",
     category: "foods-good",
     level: "green",
-    why: "Es proteína vegetal que puede reemplazar carnes con grasa saturada.",
-    portion: "Algunas veces por semana."
+    why: "Tiene pectina, una fibra soluble que ayuda a reducir el colesterol.",
+    portion: "1 a 2 al día, entera y con cáscara si se puede."
+  },
+  {
+    id: "lechuga",
+    name: "Lechuga",
+    category: "foods-good",
+    level: "green",
+    why: "Aporta fibra y agua con muy pocas calorías, y no tiene colesterol.",
+    portion: "Al menos 1 plato al día, en ensalada. Aliña con limón y un poco de aceite de oliva, no con aderezos cremosos."
+  },
+  {
+    id: "ayote",
+    name: "Ayote",
+    category: "foods-good",
+    level: "green",
+    why: "Aporta fibra y vitaminas con pocas calorías, y no tiene colesterol.",
+    portion: "½ a 1 taza, varias veces por semana, en sopa, crema o al vapor, sin mantequilla ni crema."
+  },
+  {
+    id: "platano",
+    name: "Plátano",
+    category: "foods-good",
+    level: "green",
+    why: "Aporta fibra y potasio, y es una buena fruta para la colación.",
+    portion: "1 pequeño, hervido o al horno. No frito."
   },
   {
     id: "pollo-sin-piel",
@@ -102,15 +160,15 @@ export const DIET_ITEMS: DietItem[] = [
     portion: "Pregunta a tu médico cuántos por semana. Mejor cocidos o pochados que fritos."
   },
   {
-    id: "lacteos-descremados",
-    name: "Lácteos descremados",
+    id: "leche",
+    name: "Leche descremada",
     category: "foods-good",
     level: "yellow",
-    why: "Dan calcio con menos grasa saturada que los lácteos enteros.",
-    portion: "1 a 2 porciones al día."
+    why: "Da calcio con menos grasa saturada que la leche entera.",
+    portion: "1 a 2 vasos al día."
   },
 
-  // ALIMENTOS A EVITAR
+  // ---------------------------------------------------------------- ALIMENTOS A EVITAR
   {
     id: "frituras",
     name: "Frituras",
@@ -120,95 +178,176 @@ export const DIET_ITEMS: DietItem[] = [
     portion: "Evitar. Preferir horno, plancha o vapor."
   },
   {
-    id: "embutidos",
-    name: "Embutidos (salchicha, tocino, jamón, chorizo)",
+    id: "salchicha",
+    name: "Salchicha",
     category: "foods-avoid",
     level: "red",
-    why: "Son altos en grasa saturada y en sal.",
-    portion: "Evitar, o dejarlos como excepción ocasional."
+    why: "Es alta en grasa saturada y en sal.",
+    portion: "Evitar, o dejarla como excepción ocasional."
   },
   {
-    id: "visceras",
-    name: "Vísceras (hígado, riñón, menudencias)",
+    id: "tocino",
+    name: "Tocino",
+    category: "foods-avoid",
+    level: "red",
+    why: "Es alto en grasa saturada y en sal.",
+    portion: "Evitar, o dejarlo como excepción ocasional."
+  },
+  {
+    id: "jamon",
+    name: "Jamón",
+    category: "foods-avoid",
+    level: "red",
+    why: "Es alto en sal y suele tener grasa saturada.",
+    portion: "Evitar, o dejarlo como excepción ocasional."
+  },
+  {
+    id: "chorizo",
+    name: "Chorizo",
+    category: "foods-avoid",
+    level: "red",
+    why: "Es alto en grasa saturada y en sal.",
+    portion: "Evitar, o dejarlo como excepción ocasional."
+  },
+  {
+    id: "higado",
+    name: "Hígado",
+    category: "foods-avoid",
+    level: "red",
+    why: "Tiene cantidades muy altas de colesterol.",
+    portion: "Evitar."
+  },
+  {
+    id: "rinon",
+    name: "Riñón",
+    category: "foods-avoid",
+    level: "red",
+    why: "Tiene cantidades muy altas de colesterol.",
+    portion: "Evitar."
+  },
+  {
+    id: "menudencias",
+    name: "Menudencias",
     category: "foods-avoid",
     level: "red",
     why: "Tienen cantidades muy altas de colesterol.",
     portion: "Evitar."
   },
   {
-    id: "mantequilla-manteca",
-    name: "Mantequilla, manteca y crema",
+    id: "margarina",
+    name: "Margarina",
     category: "foods-avoid",
     level: "red",
-    why: "Son grasas saturadas que elevan el LDL.",
+    why: "Muchas margarinas en barra tienen grasas saturadas o trans, que suben el LDL.",
+    portion: "Evitar. Sustituir por aceite de oliva. Si la usas, elige una sin grasas trans (revisa la etiqueta)."
+  },
+  {
+    id: "manteca",
+    name: "Manteca",
+    category: "foods-avoid",
+    level: "red",
+    why: "Es una grasa saturada que eleva el LDL.",
     portion: "Evitar. Sustituir por aceite de oliva."
   },
   {
-    id: "carnes-grasosas",
-    name: "Carnes grasosas y chicharrón",
+    id: "crema",
+    name: "Crema",
     category: "foods-avoid",
     level: "red",
-    why: "Tienen mucha grasa saturada.",
+    why: "Es una grasa saturada que eleva el LDL.",
+    portion: "Evitar. Para dar cremosidad, usa leche descremada."
+  },
+  {
+    id: "chicharron",
+    name: "Chicharrón",
+    category: "foods-avoid",
+    level: "red",
+    why: "Tiene mucha grasa saturada.",
     portion: "Evitar."
   },
   {
     id: "reposteria",
-    name: "Repostería industrial, galletas y pasteles",
+    name: "Repostería industrial",
     category: "foods-avoid",
     level: "red",
-    why: "Pueden tener grasas trans y mucha azúcar, que sube los triglicéridos.",
+    why: "Puede tener grasas trans y mucha azúcar, que sube los triglicéridos.",
     portion: "Evitar."
   },
   {
-    id: "comida-rapida",
-    name: "Comida rápida",
+    id: "galletas",
+    name: "Galletas",
     category: "foods-avoid",
     level: "red",
-    why: "Combina fritura, grasa saturada, sal y azúcar.",
-    portion: "Evitar, o dejarla como excepción poco frecuente."
+    why: "Las industriales suelen tener grasas trans, azúcar y harina refinada.",
+    portion: "Evitar, o dejarlas como excepción ocasional."
+  },
+  {
+    id: "pasteles",
+    name: "Pasteles",
+    category: "foods-avoid",
+    level: "red",
+    why: "Tienen mucha azúcar y grasa saturada.",
+    portion: "Evitar."
+  },
+  {
+    id: "pupusas",
+    name: "Pupusas",
+    category: "foods-avoid",
+    level: "yellow",
+    why: "Son de maíz, pero se hacen en comal con aceite o manteca y suelen llevar queso o chicharrón, que aportan grasa saturada.",
+    portion:
+      "Con moderación: 1 o 2, de frijol o de verduras, hechas con poco aceite y sin chicharrón ni mucho queso. Acompáñalas con ensalada."
   },
   {
     id: "helados",
-    name: "Helados y postres con crema",
+    name: "Helados",
     category: "foods-avoid",
     level: "red",
     why: "Tienen grasa saturada y mucha azúcar.",
     portion: "Evitar."
   },
   {
-    id: "carne-roja-magra",
-    name: "Carne roja magra",
-    category: "foods-avoid",
-    level: "yellow",
-    why: "Tiene menos grasa que las carnes grasosas, pero aún aporta grasa saturada.",
-    portion: "Pocas veces por semana y en porciones pequeñas."
-  },
-  {
-    id: "quesos-maduros",
-    name: "Quesos maduros",
-    category: "foods-avoid",
-    level: "yellow",
-    why: "Son altos en grasa saturada y en sal.",
-    portion: "Porciones pequeñas. Preferir quesos frescos bajos en grasa."
-  },
-  {
-    id: "mariscos",
-    name: "Camarones y mariscos",
+    id: "camarones",
+    name: "Camarones",
     category: "foods-avoid",
     level: "yellow",
     why: "Tienen colesterol, aunque poca grasa saturada.",
     portion: "Con moderación y sin freír."
   },
   {
-    id: "refinados",
-    name: "Pan blanco, arroz blanco y azúcar",
+    id: "mariscos",
+    name: "Mariscos",
+    category: "foods-avoid",
+    level: "yellow",
+    why: "Tienen colesterol, aunque poca grasa saturada.",
+    portion: "Con moderación y sin freír."
+  },
+  {
+    id: "pan-blanco",
+    name: "Pan blanco",
     category: "foods-avoid",
     level: "yellow",
     why: "Los carbohidratos refinados pueden subir los triglicéridos.",
-    portion: "Moderar. Preferir versiones integrales."
+    portion: "Moderar. Preferir pan integral."
+  },
+  {
+    id: "arroz-blanco",
+    name: "Arroz blanco",
+    category: "foods-avoid",
+    level: "yellow",
+    why: "Los carbohidratos refinados pueden subir los triglicéridos.",
+    portion: "Moderar (3 a 4 cucharadas). Preferir arroz integral."
+  },
+  {
+    id: "azucar",
+    name: "Azúcar",
+    category: "foods-avoid",
+    level: "yellow",
+    why: "El azúcar añadida puede subir los triglicéridos.",
+    portion: "Moderar. Endulza poco y prefiere las bebidas sin azúcar."
   },
 
-  // BEBIDAS RECOMENDADAS
+  // ---------------------------------------------------------------- BEBIDAS RECOMENDADAS
   {
     id: "agua",
     name: "Agua natural",
@@ -247,15 +386,7 @@ export const DIET_ITEMS: DietItem[] = [
     category: "drinks-good",
     level: "green",
     why: "Aporta potasio y antioxidantes con pocas calorías.",
-    portion: "1 vaso pequeño al día. Revisar que no tenga sal añadida."
-  },
-  {
-    id: "leche-vegetal",
-    name: "Leche de soya o almendra sin azúcar",
-    category: "drinks-good",
-    level: "green",
-    why: "Es una alternativa sin colesterol a la leche entera.",
-    portion: "1 a 2 vasos al día, sin azúcar añadida."
+    portion: "1 vaso pequeño al día. Revisa que no tenga sal añadida."
   },
   {
     id: "jugo-naranja",
@@ -275,7 +406,7 @@ export const DIET_ITEMS: DietItem[] = [
     warning: "Puede bajar la presión arterial. Si tomas medicamentos para la presión, consulta a tu médico."
   },
 
-  // BEBIDAS A EVITAR
+  // ---------------------------------------------------------------- BEBIDAS A EVITAR
   {
     id: "gaseosas",
     name: "Gaseosas",
@@ -301,28 +432,52 @@ export const DIET_ITEMS: DietItem[] = [
     portion: "Evitar."
   },
   {
-    id: "alcohol",
-    name: "Alcohol (cerveza, ron, licores)",
+    id: "cerveza",
+    name: "Cerveza",
     category: "drinks-avoid",
     level: "red",
-    why: "El alcohol en exceso sube los triglicéridos.",
-    portion: "Evitar, o consultar a tu médico si se puede en pequeñas cantidades."
+    why: ALCOHOL_WHY,
+    portion: ALCOHOL_PORTION
+  },
+  {
+    id: "ron",
+    name: "Ron",
+    category: "drinks-avoid",
+    level: "red",
+    why: ALCOHOL_WHY,
+    portion: ALCOHOL_PORTION
+  },
+  {
+    id: "licores",
+    name: "Licores",
+    category: "drinks-avoid",
+    level: "red",
+    why: ALCOHOL_WHY,
+    portion: ALCOHOL_PORTION
   },
   {
     id: "frappes",
-    name: "Frappés y café con crema y azúcar",
+    name: "Frappés",
     category: "drinks-avoid",
     level: "red",
     why: "Combinan azúcar, calorías y grasa saturada.",
     portion: "Evitar. El café solo o con leche descremada sin azúcar es mejor opción."
   },
   {
+    id: "cafe-crema",
+    name: "Café con crema y azúcar",
+    category: "drinks-avoid",
+    level: "red",
+    why: "Combina azúcar y grasa saturada.",
+    portion: "Evitar. El café solo o con leche descremada sin azúcar es mejor opción."
+  },
+  {
     id: "leche-entera",
-    name: "Leche entera y bebidas con crema",
+    name: "Leche entera",
     category: "drinks-avoid",
     level: "yellow",
-    why: "Tienen más grasa saturada que las versiones descremadas.",
-    portion: "Preferir leche descremada o vegetal sin azúcar."
+    why: "Tiene más grasa saturada que la leche descremada.",
+    portion: "Preferir leche descremada."
   },
   {
     id: "toronja",
@@ -333,5 +488,181 @@ export const DIET_ITEMS: DietItem[] = [
     portion: "Consultar antes de tomarlo.",
     warning:
       "Puede interactuar con algunos medicamentos para el colesterol, como atorvastatina o simvastatina. Consulta a tu médico o farmacéutico antes de tomarlo."
+  },
+
+  // ---------------------------------------------------------------- VERDURAS, CEREALES Y CONDIMENTOS
+  {
+    id: "arroz-integral",
+    name: "Arroz integral",
+    category: "others",
+    level: "green",
+    why: "Tiene más fibra que el arroz blanco.",
+    portion: "3 a 4 cucharadas por comida."
+  },
+  {
+    id: "tortilla-maiz",
+    name: "Tortilla de maíz",
+    category: "others",
+    level: "green",
+    why: "Aporta fibra y no tiene colesterol.",
+    portion: "1 a 2 tortillas por comida."
+  },
+  {
+    id: "pan-integral",
+    name: "Pan integral",
+    category: "others",
+    level: "green",
+    why: "Tiene más fibra que el pan blanco.",
+    portion: "1 a 2 rebanadas por comida."
+  },
+  {
+    id: "papa",
+    name: "Papa",
+    category: "others",
+    level: "yellow",
+    why: "Aporta energía y potasio, pero es rica en almidón.",
+    portion: "1 papa mediana, cocida o al horno. Evita freírla."
+  },
+  {
+    id: "tomate",
+    name: "Tomate",
+    category: "others",
+    level: "green",
+    why: "Aporta vitaminas y antioxidantes con muy pocas calorías.",
+    portion: "1 a 2 al día, en ensalada o cocido."
+  },
+  {
+    id: "pepino",
+    name: "Pepino",
+    category: "others",
+    level: "green",
+    why: "Aporta agua y fibra con muy pocas calorías.",
+    portion: "En ensalada o en licuados, cuando quieras."
+  },
+  {
+    id: "zanahoria",
+    name: "Zanahoria",
+    category: "others",
+    level: "green",
+    why: "Aporta fibra y vitamina A con pocas calorías.",
+    portion: "1 a 2 al día, cruda o cocida."
+  },
+  {
+    id: "guisquil",
+    name: "Güisquil",
+    category: "others",
+    level: "green",
+    why: "Aporta fibra y agua con pocas calorías.",
+    portion: "½ a 1 taza, cocido en sopa o al vapor."
+  },
+  {
+    id: "ejote",
+    name: "Ejote",
+    category: "others",
+    level: "green",
+    why: "Aporta fibra y vitaminas con pocas calorías.",
+    portion: "½ a 1 taza, al vapor o en sopa."
+  },
+  {
+    id: "brocoli",
+    name: "Brócoli",
+    category: "others",
+    level: "green",
+    why: "Aporta fibra y vitaminas con pocas calorías.",
+    portion: "½ a 1 taza, al vapor o en sopa.",
+    warning: "Si tomas warfarina o acenocumarol, come cantidades constantes y avisa a tu médico: tiene vitamina K."
+  },
+  {
+    id: "cebolla",
+    name: "Cebolla",
+    category: "others",
+    level: "green",
+    why: "Da sabor sin sal ni grasa.",
+    portion: "Cruda o cocida, al gusto."
+  },
+  {
+    id: "apio",
+    name: "Apio",
+    category: "others",
+    level: "green",
+    why: "Aporta agua y fibra con muy pocas calorías.",
+    portion: "En sopas, licuados o ensaladas."
+  },
+  {
+    id: "espinaca",
+    name: "Espinaca",
+    category: "others",
+    level: "green",
+    why: "Aporta fibra, hierro y vitaminas con muy pocas calorías.",
+    portion: "1 plato en ensalada o ½ taza cocida.",
+    warning: "Si tomas warfarina o acenocumarol, come cantidades constantes y avisa a tu médico: tiene vitamina K."
+  },
+  {
+    id: "limon",
+    name: "Limón",
+    category: "others",
+    level: "green",
+    why: "Da sabor sin sal ni grasa y aporta vitamina C.",
+    portion: "Para aliñar ensaladas y pescados, en lugar de aderezos cremosos."
+  },
+  {
+    id: "ajo",
+    name: "Ajo",
+    category: "others",
+    level: "green",
+    why: "Da sabor sin sal.",
+    portion: FLAVOR_PORTION
+  },
+  {
+    id: "cilantro",
+    name: "Cilantro",
+    category: "others",
+    level: "green",
+    why: "Da sabor sin sal ni grasa.",
+    portion: FLAVOR_PORTION
+  },
+  {
+    id: "perejil",
+    name: "Perejil",
+    category: "others",
+    level: "green",
+    why: "Da sabor sin sal ni grasa.",
+    portion: FLAVOR_PORTION
+  },
+  {
+    id: "canela",
+    name: "Canela",
+    category: "others",
+    level: "green",
+    why: "Da un sabor dulce sin necesidad de azúcar.",
+    portion: "Una pizca en avena, frutas o infusiones."
+  },
+  {
+    id: "laurel",
+    name: "Hoja de laurel",
+    category: "others",
+    level: "green",
+    why: "Da sabor sin sal ni grasa.",
+    portion: "1 hoja al cocinar frijoles, lentejas o sopas. Se retira antes de servir."
+  },
+  {
+    id: "oregano",
+    name: "Orégano",
+    category: "others",
+    level: "green",
+    why: "Da sabor sin sal ni grasa.",
+    portion: FLAVOR_PORTION
+  },
+  {
+    id: "pimienta",
+    name: "Pimienta",
+    category: "others",
+    level: "green",
+    why: "Da sabor sin sal.",
+    portion: FLAVOR_PORTION
   }
 ];
+
+export const DIET_ITEM_BY_ID = new Map<string, DietItem>(
+  DIET_ITEMS.map((item) => [item.id, item] as [string, DietItem])
+);

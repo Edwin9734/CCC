@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { Apple, Moon, Plus, Search, ShieldAlert, Sunrise, Trash2, Utensils } from "lucide-react";
 import { SectionCard } from "@/components/section-card";
+import { FoodImage } from "@/components/diet/food-image";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
   createDiaryEntry,
@@ -276,7 +277,7 @@ export function FoodDiaryManager({
               />
             </div>
 
-            <div className="max-h-56 overflow-y-auto rounded-2xl border border-black/10 bg-white p-3">
+            <div className="max-h-72 overflow-y-auto rounded-2xl border border-black/10 bg-white p-3">
               {filteredItems.length === 0 ? (
                 <p className="text-sm text-muted">No encontramos resultados.</p>
               ) : (
@@ -290,7 +291,7 @@ export function FoodDiaryManager({
                         type="button"
                         onClick={() => toggleItem(item.id)}
                         aria-pressed={selected}
-                        className={`flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-semibold transition ${
+                        className={`flex items-center gap-2 rounded-full border py-1.5 pl-1.5 pr-3 text-sm font-semibold transition ${
                           selected
                             ? "border-accent bg-accent text-white"
                             : flagged
@@ -298,12 +299,18 @@ export function FoodDiaryManager({
                               : "border-black/10 bg-white text-ink hover:bg-slate-50"
                         }`}
                       >
+                        <FoodImage
+                          id={item.id}
+                          size={28}
+                          rounded="rounded-full"
+                          className={selected ? "bg-white" : "bg-slate-50"}
+                        />
+                        {item.name}
                         {flagged ? (
                           <ShieldAlert className="h-3.5 w-3.5" />
                         ) : (
                           <span className={`h-2.5 w-2.5 rounded-full ${LIGHT_DOT[item.level]}`} />
                         )}
-                        {item.name}
                       </button>
                     );
                   })}
@@ -427,10 +434,11 @@ export function FoodDiaryManager({
                             {items.map((item) => (
                               <span
                                 key={item.id}
-                                className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-3 py-1.5 text-sm text-ink"
+                                className="flex items-center gap-2 rounded-full border border-black/10 bg-white py-1 pl-1 pr-3 text-sm text-ink"
                               >
-                                <span className={`h-2.5 w-2.5 rounded-full ${LIGHT_DOT[item.level]}`} />
+                                <FoodImage id={item.id} size={24} rounded="rounded-full" className="bg-slate-50" />
                                 {item.name}
+                                <span className={`h-2.5 w-2.5 rounded-full ${LIGHT_DOT[item.level]}`} />
                               </span>
                             ))}
                           </div>

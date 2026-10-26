@@ -1,39 +1,40 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertTriangle, Apple, Ban, CupSoda, GlassWater, Info, Search, ShieldAlert } from "lucide-react";
+import { AlertTriangle, Apple, Ban, CupSoda, GlassWater, Info, Leaf, Search, ShieldAlert } from "lucide-react";
 import { SectionCard } from "@/components/section-card";
-import { DIET_ITEMS, type DietCategory, type TrafficLight } from "@/lib/diet-data";
+import { FoodImage } from "@/components/diet/food-image";
+import { FOOD_IMAGE_CREDIT } from "@/lib/food-images";
+import { DIET_ITEMS, TRAFFIC_LABEL, type DietCategory, type TrafficLight } from "@/lib/diet-data";
 
 const TABS: { key: DietCategory; label: string; icon: typeof Apple }[] = [
   { key: "foods-good", label: "Alimentos recomendados", icon: Apple },
   { key: "foods-avoid", label: "Alimentos a evitar", icon: Ban },
   { key: "drinks-good", label: "Bebidas recomendadas", icon: GlassWater },
-  { key: "drinks-avoid", label: "Bebidas a evitar", icon: CupSoda }
+  { key: "drinks-avoid", label: "Bebidas a evitar", icon: CupSoda },
+  { key: "others", label: "Verduras, cereales y condimentos", icon: Leaf }
 ];
 
 const CATEGORY_LABEL: Record<DietCategory, string> = {
   "foods-good": "Alimento recomendado",
   "foods-avoid": "Alimento a evitar",
   "drinks-good": "Bebida recomendada",
-  "drinks-avoid": "Bebida a evitar"
+  "drinks-avoid": "Bebida a evitar",
+  others: "Verdura, cereal o condimento"
 };
 
-const LIGHTS: Record<TrafficLight, { label: string; card: string; badge: string; dot: string }> = {
+const LIGHTS: Record<TrafficLight, { card: string; badge: string; dot: string }> = {
   green: {
-    label: "Consumir con frecuencia",
     card: "border-emerald-200 bg-emerald-50",
     badge: "bg-emerald-100 text-emerald-800",
     dot: "bg-emerald-500"
   },
   yellow: {
-    label: "Con moderación",
     card: "border-amber-200 bg-amber-50",
     badge: "bg-amber-100 text-amber-800",
     dot: "bg-amber-500"
   },
   red: {
-    label: "Evitar",
     card: "border-rose-200 bg-rose-50",
     badge: "bg-rose-100 text-rose-800",
     dot: "bg-rose-500"
@@ -98,7 +99,7 @@ export function DietBrowser({
           />
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
           {TABS.map((t) => {
             const Icon = t.icon;
             const active = !searching && tab === t.key;
@@ -127,7 +128,7 @@ export function DietBrowser({
           {(Object.keys(LIGHTS) as TrafficLight[]).map((key) => (
             <span key={key} className="flex items-center gap-2">
               <span className={`h-3 w-3 rounded-full ${LIGHTS[key].dot}`} />
-              {LIGHTS[key].label}
+              {TRAFFIC_LABEL[key]}
             </span>
           ))}
         </div>
@@ -171,28 +172,36 @@ export function DietBrowser({
                   key={item.id}
                   className={`rounded-3xl border p-5 ${light.card} ${forYou ? "ring-2 ring-accent" : ""}`}
                 >
-                  {forYou ? (
-                    <span className="mb-2 inline-block rounded-full bg-accent px-3 py-1 text-xs font-semibold text-white">
-                      Para ti
-                    </span>
-                  ) : null}
+                  <div className="flex items-start gap-4">
+                    <FoodImage id={item.id} size={64} rounded="rounded-2xl" className="bg-white p-1" />
+
+                    <div className="min-w-0 flex-1">
+                      {forYou ? (
+                        <span className="mb-2 inline-block rounded-full bg-accent px-3 py-1 text-xs font-semibold text-white">
+                          Para ti
+                        </span>
+                      ) : null}
+
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <h3 className="text-lg font-semibold text-ink">{item.name}</h3>
+                        <span
+                          className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${light.badge}`}
+                        >
+                          {TRAFFIC_LABEL[item.level]}
+                        </span>
+                      </div>
+
+                      {searching ? (
+                        <p className="mt-1 text-xs font-semibold text-muted">{CATEGORY_LABEL[item.category]}</p>
+                      ) : null}
+                    </div>
+                  </div>
 
                   {flagged ? (
-                    <div className="mb-3 flex items-start gap-2 rounded-2xl bg-rose-100 p-3 text-sm font-semibold text-rose-900">
+                    <div className="mt-3 flex items-start gap-2 rounded-2xl bg-rose-100 p-3 text-sm font-semibold text-rose-900">
                       <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
                       <p>Posible alergia: {flagged.join(", ")}</p>
                     </div>
-                  ) : null}
-
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-lg font-semibold text-ink">{item.name}</h3>
-                    <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${light.badge}`}>
-                      {light.label}
-                    </span>
-                  </div>
-
-                  {searching ? (
-                    <p className="mt-1 text-xs font-semibold text-muted">{CATEGORY_LABEL[item.category]}</p>
                   ) : null}
 
                   <p className="mt-3 text-base leading-7 text-ink">{item.why}</p>
@@ -212,6 +221,8 @@ export function DietBrowser({
             })}
           </div>
         )}
+
+        {FOOD_IMAGE_CREDIT ? <p className="mt-6 text-xs leading-5 text-muted">{FOOD_IMAGE_CREDIT}</p> : null}
       </SectionCard>
     </div>
   );

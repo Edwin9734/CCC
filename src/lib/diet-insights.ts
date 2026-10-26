@@ -83,8 +83,20 @@ export function buildDietInsights(
         ldl.measured_at
       )}). Conviene reducir las grasas saturadas y aumentar la fibra soluble.`,
       tone: ldl.status === "BORDERLINE" ? "warning" : "danger",
-      goodIds: ["avena", "legumbres", "frutas-pectina", "nueces", "aceite-oliva", "soya"],
-      avoidIds: ["embutidos", "mantequilla-manteca", "carnes-grasosas", "frituras", "visceras"]
+      goodIds: ["avena", "frijoles", "lentejas", "manzana", "naranja", "pera", "mani", "almendras", "aceite-oliva"],
+      avoidIds: [
+        "salchicha",
+        "tocino",
+        "jamon",
+        "chorizo",
+        "margarina",
+        "manteca",
+        "chicharron",
+        "frituras",
+        "higado",
+        "rinon",
+        "menudencias"
+      ]
     });
   }
 
@@ -97,8 +109,19 @@ export function buildDietInsights(
         tg.measured_at
       )}). Conviene reducir azúcares, harinas refinadas y alcohol, y comer pescado.`,
       tone: tg.status === "BORDERLINE" ? "warning" : "danger",
-      goodIds: ["pescados-grasos", "verduras", "agua", "te-verde"],
-      avoidIds: ["gaseosas", "jugos-industriales", "alcohol", "reposteria", "refinados", "helados"]
+      goodIds: ["salmon", "sardina", "lechuga", "ayote", "agua", "te-verde"],
+      avoidIds: [
+        "gaseosas",
+        "jugos-industriales",
+        "cerveza",
+        "ron",
+        "licores",
+        "reposteria",
+        "pan-blanco",
+        "arroz-blanco",
+        "azucar",
+        "helados"
+      ]
     });
   }
 
@@ -111,7 +134,7 @@ export function buildDietInsights(
         hdl.measured_at
       )}). Las grasas saludables ayudan a mejorarlo; conviene evitar frituras y repostería industrial. La actividad física también ayuda, si tu médico la autoriza.`,
       tone: "warning",
-      goodIds: ["aceite-oliva", "aguacate", "nueces", "pescados-grasos"],
+      goodIds: ["aceite-oliva", "aguacate", "mani", "almendras", "salmon", "sardina"],
       avoidIds: ["frituras", "reposteria"]
     });
   }

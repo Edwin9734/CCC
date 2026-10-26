@@ -1,0 +1,14 @@
+Ilustraciones provisionales de alimentos
+========================================
+
+Estos archivos (.svg) son gráficos de Twemoji:
+  Twemoji graphics © Twitter, Inc. y colaboradores
+  Licencia: Creative Commons Attribution 4.0 (CC BY 4.0)
+  https://creativecommons.org/licenses/by/4.0/
+  Fuente: https://github.com/jdecked/twemoji
+
+Se pueden usar y modificar, dando este crédito (la app lo muestra al pie de la guía de alimentación).
+
+Cómo reemplazar una ilustración por una foto real:
+  1. Guarda la foto como "<id>.webp" en esta misma carpeta (public/foods).
+  2. Avísame para actualizar la lista de fotos (archivo src/lib/food-images.ts).

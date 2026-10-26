@@ -1,28 +1,20 @@
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, Pill } from "lucide-react";
 import { SectionCard } from "@/components/section-card";
-import { DIET_ITEMS } from "@/lib/diet-data";
+import { FoodTiles } from "@/components/diet/food-tiles";
 import type { DietInsights } from "@/lib/diet-insights";
 
-const NAME_BY_ID = new Map(DIET_ITEMS.map((item) => [item.id, item.name]));
-
-function Chips({ ids, className }: { ids: string[]; className: string }) {
-  return (
-    <div className="mt-2 flex flex-wrap gap-2">
-      {ids.map((id) => (
-        <span key={id} className={`rounded-full px-3 py-1 text-xs font-semibold ${className}`}>
-          {NAME_BY_ID.get(id) ?? id}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-export function DietInsightsPanel({ insights }: { insights: DietInsights }) {
+export function DietInsightsPanel({
+  insights,
+  allergyMatches = {}
+}: {
+  insights: DietInsights;
+  allergyMatches?: Record<string, string[]>;
+}) {
   return (
     <SectionCard
       title="Para ti"
-      description="Sugerencias según tus últimas mediciones y los medicamentos que tienes registrados."
+      description="Sugerencias según tus últimas mediciones y los medicamentos que tienes registrados. Toca un alimento para ver su detalle."
     >
       <div className="space-y-4">
         {!insights.hasMeasurements ? (
@@ -55,10 +47,10 @@ export function DietInsightsPanel({ insights }: { insights: DietInsights }) {
             <p className="mt-2 text-sm leading-6 text-ink">{insight.message}</p>
 
             <p className="mt-4 text-sm font-semibold text-ink">Conviene priorizar:</p>
-            <Chips ids={insight.goodIds} className="bg-emerald-100 text-emerald-800" />
+            <FoodTiles ids={insight.goodIds} tone="good" allergyMatches={allergyMatches} />
 
             <p className="mt-4 text-sm font-semibold text-ink">Conviene evitar:</p>
-            <Chips ids={insight.avoidIds} className="bg-rose-100 text-rose-800" />
+            <FoodTiles ids={insight.avoidIds} tone="avoid" allergyMatches={allergyMatches} />
           </article>
         ))}
 

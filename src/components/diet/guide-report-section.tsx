@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 import { Download, Printer } from "lucide-react";
 import { SectionCard } from "@/components/section-card";
+import { FoodImage } from "@/components/diet/food-image";
 import { DIET_ITEMS, type DietCategory, type TrafficLight } from "@/lib/diet-data";
 import type { DietInsights } from "@/lib/diet-insights";
+import { FOOD_IMAGE_CREDIT } from "@/lib/food-images";
 import { MENU_DAYS, RECIPES, getAllergyMatches, type MealType } from "@/lib/diet-menu-data";
 import { printWithTarget } from "@/lib/print-utils";
 import { withDefaultTextSize } from "@/lib/text-size";
@@ -18,17 +20,19 @@ const OPTIONS: { key: SectionKey; label: string }[] = [
   { key: "foods-avoid", label: "Alimentos a evitar" },
   { key: "drinks-good", label: "Bebidas recomendadas" },
   { key: "drinks-avoid", label: "Bebidas a evitar" },
+  { key: "others", label: "Verduras, cereales y condimentos" },
   { key: "menu", label: "Menú de ejemplo (semana completa)" },
   { key: "recipes", label: "Recetas sencillas" }
 ];
 
-const CATEGORY_ORDER: DietCategory[] = ["foods-good", "foods-avoid", "drinks-good", "drinks-avoid"];
+const CATEGORY_ORDER: DietCategory[] = ["foods-good", "foods-avoid", "drinks-good", "drinks-avoid", "others"];
 
 const CATEGORY_TITLE: Record<DietCategory, string> = {
   "foods-good": "Alimentos recomendados",
   "foods-avoid": "Alimentos a evitar",
   "drinks-good": "Bebidas recomendadas",
-  "drinks-avoid": "Bebidas a evitar"
+  "drinks-avoid": "Bebidas a evitar",
+  others: "Verduras, cereales y condimentos"
 };
 
 const LIGHT_LABEL: Record<TrafficLight, string> = {
@@ -81,6 +85,7 @@ export function GuideReportSection({
     "foods-avoid": true,
     "drinks-good": true,
     "drinks-avoid": true,
+    others: false,
     menu: false,
     recipes: false
   });
@@ -134,7 +139,7 @@ export function GuideReportSection({
         pagebreak: { mode: ["css", "legacy"], avoid: [".print-avoid-break"] }
       };
 
-            await withDefaultTextSize(() => html2pdf().set(options).from(clone).save());
+      await withDefaultTextSize(() => html2pdf().set(options).from(clone).save());
     } catch (error) {
       console.error("Error al generar el PDF de la guía:", error);
       setPdfError("No se pudo generar el PDF. Inténtalo de nuevo.");
@@ -249,7 +254,7 @@ export function GuideReportSection({
           </div>
         </div>
 
-       <p className="mt-3 text-xs leading-5 text-muted">
+        <p className="mt-3 text-xs leading-5 text-muted">
           Esta información es general y no reemplaza la indicación de tu médico o nutricionista.
         </p>
 
@@ -302,7 +307,7 @@ export function GuideReportSection({
         ) : null}
 
         {CATEGORY_ORDER.filter((cat) => selected[cat]).map((cat) => {
-           const items = DIET_ITEMS.filter(
+          const items = DIET_ITEMS.filter(
             (item) => item.category === cat && !allergyMatches[item.id] && !hiddenIds.includes(item.id)
           );
           return (
@@ -312,6 +317,7 @@ export function GuideReportSection({
                 {items.map((item) => (
                   <article key={item.id} className="print-avoid-break border-b border-black/10 pb-2">
                     <div className="flex flex-wrap items-center gap-2">
+                      <FoodImage id={item.id} size={24} eager rounded="rounded-md" />
                       <span className={`inline-block h-2.5 w-2.5 rounded-full ${LIGHT_DOT[item.level]}`} />
                       <p className="text-sm font-semibold">{item.name}</p>
                       <span className="text-xs text-muted">· {LIGHT_LABEL[item.level]}</span>
@@ -414,6 +420,8 @@ export function GuideReportSection({
             </div>
           </section>
         ) : null}
+
+        {FOOD_IMAGE_CREDIT ? <p className="mt-6 text-xs leading-5 text-muted">{FOOD_IMAGE_CREDIT}</p> : null}
       </div>
     </div>
   );

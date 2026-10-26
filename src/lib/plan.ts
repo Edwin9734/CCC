@@ -265,21 +265,58 @@ export interface DietPlan {
 
 type DietTemplate = Omit<DietPlan, "omittedCount">;
 
+const GENERAL_GOOD_IDS = [
+  "avena",
+  "frijoles",
+  "lentejas",
+  "salmon",
+  "lechuga",
+  "ayote",
+  "manzana",
+  "naranja",
+  "pera",
+  "aceite-oliva",
+  "agua"
+];
+
+const STRICT_LIMIT_IDS = [
+  "frituras",
+  "salchicha",
+  "tocino",
+  "jamon",
+  "chorizo",
+  "higado",
+  "rinon",
+  "menudencias",
+  "margarina",
+  "manteca",
+  "crema",
+  "chicharron",
+  "reposteria",
+  "pupusas",
+  "helados",
+  "gaseosas",
+  "jugos-industriales",
+  "cerveza",
+  "ron",
+  "licores"
+];
+
 const DIET_PLANS: Record<RiskLevel, DietTemplate> = {
   NONE: {
     headline: "Alimentación general",
     redRule: "Los alimentos en rojo, solo de forma ocasional.",
     yellowRule: "Los alimentos en amarillo, con moderación.",
-    goodIds: ["avena", "legumbres", "pescados-grasos", "verduras", "frutas-pectina", "aceite-oliva", "agua"],
-    limitIds: ["frituras", "embutidos", "gaseosas", "reposteria"],
+    goodIds: GENERAL_GOOD_IDS,
+    limitIds: ["frituras", "salchicha", "tocino", "gaseosas", "reposteria"],
     tips: ["Registra tus mediciones para recibir un plan ajustado a tu nivel."]
   },
   LOW: {
     headline: "Mantén una alimentación balanceada",
     redRule: "Los alimentos en rojo, solo de forma ocasional y en porciones pequeñas.",
     yellowRule: "Los alimentos en amarillo, con moderación.",
-    goodIds: ["avena", "legumbres", "pescados-grasos", "verduras", "frutas-pectina", "aceite-oliva", "agua"],
-    limitIds: ["frituras", "embutidos", "gaseosas", "reposteria"],
+    goodIds: GENERAL_GOOD_IDS,
+    limitIds: ["frituras", "salchicha", "tocino", "gaseosas", "reposteria"],
     tips: ["Incluye pescado 2 veces por semana.", "Elige panes y arroz integrales cuando puedas."]
   },
   MODERATE: {
@@ -288,26 +325,36 @@ const DIET_PLANS: Record<RiskLevel, DietTemplate> = {
     yellowRule: "Los alimentos en amarillo, con moderación y sin repetirlos todos los días.",
     goodIds: [
       "avena",
-      "legumbres",
-      "pescados-grasos",
-      "verduras",
-      "frutas-pectina",
-      "nueces",
+      "frijoles",
+      "lentejas",
+      "salmon",
+      "sardina",
+      "lechuga",
+      "ayote",
+      "manzana",
+      "naranja",
+      "pera",
+      "mani",
+      "almendras",
       "aceite-oliva",
       "aguacate",
       "agua"
     ],
     limitIds: [
       "frituras",
-      "embutidos",
-      "mantequilla-manteca",
+      "salchicha",
+      "tocino",
+      "jamon",
+      "chorizo",
+      "margarina",
+      "manteca",
       "reposteria",
       "gaseosas",
       "jugos-industriales",
-      "comida-rapida"
+      "pupusas"
     ],
     tips: [
-      "Cambia la mantequilla y la manteca por aceite de oliva.",
+      "Cambia la margarina y la manteca por aceite de oliva.",
       "Prefiere carnes magras, como pollo sin piel, y cocina al horno, a la plancha o hervido.",
       "Anota tus comidas en el Diario para ver cuánto comes de cada color."
     ]
@@ -318,29 +365,22 @@ const DIET_PLANS: Record<RiskLevel, DietTemplate> = {
     yellowRule: "Los alimentos en amarillo, solo en porciones pequeñas y pocas veces por semana.",
     goodIds: [
       "avena",
-      "legumbres",
-      "pescados-grasos",
-      "verduras",
-      "frutas-pectina",
-      "nueces",
+      "frijoles",
+      "lentejas",
+      "salmon",
+      "sardina",
+      "lechuga",
+      "ayote",
+      "manzana",
+      "naranja",
+      "pera",
+      "mani",
+      "almendras",
       "aceite-oliva",
-      "soya",
       "agua",
       "te-verde"
     ],
-    limitIds: [
-      "frituras",
-      "embutidos",
-      "visceras",
-      "mantequilla-manteca",
-      "carnes-grasosas",
-      "reposteria",
-      "comida-rapida",
-      "helados",
-      "gaseosas",
-      "jugos-industriales",
-      "alcohol"
-    ],
+    limitIds: STRICT_LIMIT_IDS,
     tips: [
       "Haz que la mitad de tu plato sean verduras.",
       "Evita el alcohol, sobre todo si tus triglicéridos están altos.",
@@ -351,20 +391,8 @@ const DIET_PLANS: Record<RiskLevel, DietTemplate> = {
     headline: "Alimentación muy estricta, con apoyo de tu médico",
     redRule: "Evita los alimentos en rojo.",
     yellowRule: "Limita los alimentos en amarillo al mínimo.",
-    goodIds: ["avena", "legumbres", "pescados-grasos", "verduras", "frutas-pectina", "aceite-oliva", "agua"],
-    limitIds: [
-      "frituras",
-      "embutidos",
-      "visceras",
-      "mantequilla-manteca",
-      "carnes-grasosas",
-      "reposteria",
-      "comida-rapida",
-      "helados",
-      "gaseosas",
-      "jugos-industriales",
-      "alcohol"
-    ],
+    goodIds: GENERAL_GOOD_IDS,
+    limitIds: STRICT_LIMIT_IDS,
     tips: [
       "Consulta a un médico lo antes posible: esta guía no sustituye su tratamiento.",
       "Sigue la dieta que te indique tu médico o nutricionista; si es distinta a esta, sigue la de ellos."
@@ -394,7 +422,7 @@ const LIFESTYLE: LifestyleTemplate[] = [
   {
     id: "alimentacion",
     title: "Alimentación",
-    text: "Prefiere grasas saludables (aceite de oliva, aguacate, nueces) en lugar de mantequilla y manteca, y come más fibra: avena, legumbres, frutas y verduras.",
+    text: "Prefiere grasas saludables (aceite de oliva, aguacate, maní o almendras) en lugar de margarina y manteca, y come más fibra: avena, frijoles, frutas y verduras.",
     metrics: ["LDL"]
   },
   {

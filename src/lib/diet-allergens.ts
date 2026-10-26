@@ -2,41 +2,86 @@ import { DIET_ITEMS } from "@/lib/diet-data";
 import type { DietInsights } from "@/lib/diet-insights";
 
 // Palabras (sin tildes y en minúscula) que, si aparecen en el nombre de una alergia,
-// marcan ese alimento o bebida como "posible alergia".
+// marcan ese alimento o bebida como "posible alergia". La clave es el id del alimento.
 const ALLERGEN_KEYWORDS: Record<string, string[]> = {
+  // Recomendados
   avena: ["avena", "gluten"],
-  legumbres: ["frijol", "lenteja", "garbanzo", "legumbre"],
-  "pescados-grasos": ["pescado", "salmon", "sardina", "atun"],
+  frijoles: ["frijol", "legumbre"],
+  lentejas: ["lenteja", "legumbre"],
+  salmon: ["pescado", "salmon"],
+  sardina: ["pescado", "sardina"],
   aguacate: ["aguacate", "palta"],
-  nueces: ["nuez", "nueces", "almendra", "frutos secos", "fruto seco"],
+  mani: ["mani", "cacahuate", "cacahuete"],
+  almendras: ["almendra", "nuez", "nueces", "frutos secos", "fruto seco"],
   "aceite-oliva": ["oliva", "aceituna"],
-  "frutas-pectina": ["manzana", "naranja", "pera", "citrico"],
-  verduras: ["espinaca", "berenjena", "okra", "acelga", "verdura"],
-  soya: ["soya", "soja", "tofu"],
+  manzana: ["manzana"],
+  naranja: ["naranja", "citrico"],
+  pera: ["pera"],
+  lechuga: ["lechuga"],
+  ayote: ["ayote", "calabaza"],
+  platano: ["platano", "banano", "guineo"],
   "pollo-sin-piel": ["pollo", "aves"],
   huevo: ["huevo"],
-  "lacteos-descremados": ["lactosa", "lacteo", "leche", "queso", "yogur"],
-  embutidos: ["cerdo", "embutido", "salchicha", "jamon", "tocino", "chorizo"],
-  visceras: ["higado", "visceras", "menudencia"],
-  "mantequilla-manteca": ["mantequilla", "manteca", "crema", "lacteo", "lactosa", "leche"],
-  "carnes-grasosas": ["cerdo", "carne", "chicharron"],
+  leche: ["lactosa", "lacteo", "leche"],
+
+  // A evitar
+  salchicha: ["cerdo", "embutido", "salchicha"],
+  tocino: ["cerdo", "embutido", "tocino"],
+  jamon: ["cerdo", "embutido", "jamon"],
+  chorizo: ["cerdo", "embutido", "chorizo"],
+  higado: ["higado", "visceras", "menudencia"],
+  rinon: ["rinon", "visceras", "menudencia"],
+  menudencias: ["visceras", "menudencia"],
+  margarina: ["margarina", "lacteo", "lactosa", "leche"],
+  manteca: ["manteca", "cerdo"],
+  crema: ["crema", "lacteo", "lactosa", "leche"],
+  chicharron: ["cerdo", "chicharron"],
   reposteria: ["gluten", "trigo", "harina", "huevo", "lacteo", "lactosa", "leche"],
+  galletas: ["gluten", "trigo", "harina", "huevo", "lacteo", "lactosa", "leche"],
+  pasteles: ["gluten", "trigo", "harina", "huevo", "lacteo", "lactosa", "leche"],
+  pupusas: ["pupusa", "maiz", "queso", "lacteo", "lactosa", "cerdo", "frijol", "chicharron"],
   helados: ["helado", "lacteo", "lactosa", "leche", "huevo"],
-  "carne-roja-magra": ["carne roja", "carne de res", "ternera", "vacuno"],
-  "quesos-maduros": ["queso", "lacteo", "lactosa", "leche"],
-  mariscos: ["marisco", "camaron", "crustaceo", "molusco"],
-  refinados: ["gluten", "trigo", "harina"],
+  camarones: ["marisco", "camaron", "crustaceo"],
+  mariscos: ["marisco", "crustaceo", "molusco", "camaron"],
+  "pan-blanco": ["gluten", "trigo", "harina"],
+  "arroz-blanco": ["arroz"],
+
+  // Bebidas
   "te-verde": ["te verde", "cafeina"],
-  "licuado-verde": ["pepino", "apio", "espinaca"],
+  "licuado-verde": ["pepino", "apio", "espinaca", "lechuga"],
   "licuado-avena": ["avena", "gluten"],
   "jugo-tomate": ["tomate"],
-  "leche-vegetal": ["soya", "soja", "almendra", "nuez", "nueces", "frutos secos"],
   "jugo-naranja": ["naranja", "citrico"],
   "agua-jamaica": ["jamaica", "hibisco"],
   energeticas: ["cafeina", "taurina"],
+  cerveza: ["cerveza", "gluten", "cebada"],
   frappes: ["cafe", "leche", "lactosa", "lacteo", "crema"],
+  "cafe-crema": ["cafe", "leche", "lactosa", "lacteo", "crema"],
   "leche-entera": ["leche", "lactosa", "lacteo"],
-  toronja: ["toronja", "pomelo", "citrico"]
+  toronja: ["toronja", "pomelo", "citrico"],
+
+  // Verduras, cereales y condimentos
+  "arroz-integral": ["arroz"],
+  "tortilla-maiz": ["maiz"],
+  "pan-integral": ["gluten", "trigo", "harina"],
+  papa: ["papa"],
+  tomate: ["tomate"],
+  pepino: ["pepino"],
+  zanahoria: ["zanahoria"],
+  guisquil: ["guisquil", "chayote"],
+  ejote: ["ejote"],
+  brocoli: ["brocoli"],
+  cebolla: ["cebolla"],
+  apio: ["apio"],
+  espinaca: ["espinaca"],
+  limon: ["limon", "citrico"],
+  ajo: ["ajo"],
+  cilantro: ["cilantro"],
+  perejil: ["perejil"],
+  canela: ["canela"],
+  laurel: ["laurel"],
+  oregano: ["oregano"],
+  pimienta: ["pimienta"]
 };
 
 function normalize(text: string) {
@@ -47,7 +92,7 @@ function normalize(text: string) {
     .trim();
 }
 
-// Devuelve, por cada alimento/bebida afectado, la lista de alergias que coinciden.
+// Devuelve, por cada alimento afectado, la lista de alergias que coinciden.
 export function findAllergenMatches(allergyNames: string[]): Record<string, string[]> {
   const allergies = allergyNames
     .map((name) => ({ original: name, norm: normalize(name) }))
