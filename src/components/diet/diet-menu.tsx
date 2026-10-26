@@ -1,8 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import { Apple, ChefHat, ChevronDown, ChevronUp, Clock, Lightbulb, Moon, ShieldAlert, Sunrise, Users, Utensils } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import {
+  Apple,
+  ChefHat,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Lightbulb,
+  Moon,
+  ShieldAlert,
+  Sunrise,
+  Users,
+  Utensils
+} from "lucide-react";
 import { SectionCard } from "@/components/section-card";
+import { FoodDialog } from "@/components/diet/food-dialog";
+import { FoodImage } from "@/components/diet/food-image";
+import { FoodTiles } from "@/components/diet/food-tiles";
+import { findAllergenMatches } from "@/lib/diet-allergens";
 import { MENU_DAYS, RECIPES, getAllergyMatches, type MealType } from "@/lib/diet-menu-data";
 
 const MEAL_META: Record<MealType, { label: string; icon: typeof Apple }> = {
@@ -12,11 +28,16 @@ const MEAL_META: Record<MealType, { label: string; icon: typeof Apple }> = {
   cena: { label: "Cena", icon: Moon }
 };
 
-const RECIPE_BY_ID = new Map(RECIPES.map((r) => [r.id, r]));
+const RECIPE_BY_ID = new Map(RECIPES.map((recipe) => [recipe.id, recipe]));
 
 export function DietMenu({ allergyNames = [] }: { allergyNames?: string[] }) {
   const [dayKey, setDayKey] = useState(MENU_DAYS[0].key);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [foodId, setFoodId] = useState<string | null>(null);
+  const returnRef = useRef<HTMLElement | null>(null);
+
+  // Alergias por alimento (para marcar cada ficha e ingrediente)
+  const foodMatches = useMemo(() => findAllergenMatches(allergyNames), [allergyNames]);
 
   const day = MENU_DAYS.find((d) => d.key === dayKey) ?? MENU_DAYS[0];
 
@@ -31,7 +52,7 @@ export function DietMenu({ allergyNames = [] }: { allergyNames?: string[] }) {
     <div className="space-y-6">
       <SectionCard
         title="Menú de ejemplo"
-        description="Una semana de ideas para comer con menos grasa saturada y más fibra. Elige un día para verlo."
+        description="Una semana de ideas para comer con menos grasa saturada y más fibra. Elige un día y toca un alimento para ver su detalle."
       >
         <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
           {MENU_DAYS.map((d) => (
@@ -53,15 +74,15 @@ export function DietMenu({ allergyNames = [] }: { allergyNames?: string[] }) {
         <h3 className="mt-5 text-lg font-semibold text-ink">Menú del {day.label.toLowerCase()}</h3>
 
         <div className="mt-3 grid gap-4 md:grid-cols-2">
-          {day.meals.map((meal) => {
-            const meta = MEAL_META[meal.type];
+          {day.meals.map((item) => {
+            const meta = MEAL_META[item.type];
             const Icon = meta.icon;
-            const recipe = meal.recipeId ? RECIPE_BY_ID.get(meal.recipeId) : undefined;
-            const flagged = getAllergyMatches(allergyNames, [...meal.keywords, ...(recipe?.keywords ?? [])]);
+            const recipe = item.recipeId ? RECIPE_BY_ID.get(item.recipeId) : undefined;
+            const flagged = getAllergyMatches(allergyNames, [...item.keywords, ...(recipe?.keywords ?? [])]);
 
             return (
               <article
-                key={meal.type}
+                key={item.type}
                 className={`rounded-3xl border p-5 ${
                   flagged.length > 0 ? "border-rose-200 bg-rose-50" : "border-black/5 bg-background"
                 }`}
@@ -70,7 +91,9 @@ export function DietMenu({ allergyNames = [] }: { allergyNames?: string[] }) {
                   <Icon className="h-4 w-4" />
                   {meta.label}
                 </div>
-                <p className="mt-2 text-base leading-7 text-ink">{meal.text}</p>
+                <p className="mt-2 text-base leading-7 text-ink">{item.text}</p>
+
+                <FoodTiles ids={item.foodIds} tone="neutral" allergyMatches={foodMatches} limit={12} />
 
                 {flagged.length > 0 ? (
                   <div className="mt-3 flex items-start gap-2 rounded-2xl bg-rose-100 p-3 text-sm font-semibold leading-6 text-rose-900">
@@ -81,10 +104,10 @@ export function DietMenu({ allergyNames = [] }: { allergyNames?: string[] }) {
                   </div>
                 ) : null}
 
-                {meal.recipeId ? (
+                {item.recipeId ? (
                   <button
                     type="button"
-                    onClick={() => openRecipe(meal.recipeId as string)}
+                    onClick={() => openRecipe(item.recipeId as string)}
                     className="mt-3 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-slate-50"
                   >
                     <ChefHat className="h-4 w-4" />
@@ -153,10 +176,41 @@ export function DietMenu({ allergyNames = [] }: { allergyNames?: string[] }) {
                   <div className="space-y-5 border-t border-black/5 p-5">
                     <div>
                       <p className="text-sm font-semibold text-ink">Ingredientes</p>
-                      <ul className="mt-2 list-disc space-y-1 pl-5 text-base leading-7 text-ink">
-                        {recipe.ingredients.map((ingredient) => (
-                          <li key={ingredient}>{ingredient}</li>
-                        ))}
+                      <ul className="mt-2 space-y-2">
+                        {recipe.ingredientItems.map((ingredient) => {
+                          const allergic = ingredient.foodId ? foodMatches[ingredient.foodId] : undefined;
+
+                          if (!ingredient.foodId) {
+                            return (
+                              <li key={ingredient.text} className="text-base leading-7 text-ink">
+                                {ingredient.text}
+                              </li>
+                            );
+                          }
+
+                          const id = ingredient.foodId;
+                          return (
+                            <li key={ingredient.text}>
+                              <button
+                                type="button"
+                                aria-haspopup="dialog"
+                                onClick={(event) => {
+                                  returnRef.current = event.currentTarget;
+                                  setFoodId(id);
+                                }}
+                                className={`flex w-full items-center gap-3 rounded-2xl border px-3 py-2 text-left transition focus:outline-none focus:ring-4 focus:ring-accent/15 ${
+                                  allergic
+                                    ? "border-rose-300 bg-rose-50 hover:bg-rose-100"
+                                    : "border-black/5 bg-white hover:bg-slate-50"
+                                }`}
+                              >
+                                <FoodImage id={id} size={36} rounded="rounded-xl" className="bg-slate-50" />
+                                <span className="flex-1 text-base leading-7 text-ink">{ingredient.text}</span>
+                                {allergic ? <ShieldAlert className="h-4 w-4 shrink-0 text-rose-700" /> : null}
+                              </button>
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
 
@@ -182,6 +236,13 @@ export function DietMenu({ allergyNames = [] }: { allergyNames?: string[] }) {
           })}
         </div>
       </SectionCard>
+
+      <FoodDialog
+        foodId={foodId}
+        allergies={foodId ? foodMatches[foodId] : undefined}
+        onClose={() => setFoodId(null)}
+        returnFocusRef={returnRef}
+      />
     </div>
   );
 }

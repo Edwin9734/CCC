@@ -9,7 +9,8 @@ import { FoodImage } from "@/components/diet/food-image";
 
 const TONE = {
   good: "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100",
-  avoid: "border-rose-200 bg-rose-50 text-rose-900 hover:bg-rose-100"
+  avoid: "border-rose-200 bg-rose-50 text-rose-900 hover:bg-rose-100",
+  neutral: "border-black/10 bg-white text-ink hover:bg-slate-50"
 } as const;
 
 // Lista de alimentos como fichas pequeñas (imagen + nombre). Al tocar una se abre su detalle.
@@ -21,7 +22,7 @@ export function FoodTiles({
   limit = 8
 }: {
   ids: string[];
-  tone: "good" | "avoid";
+  tone: "good" | "avoid" | "neutral";
   allergyMatches?: Record<string, string[]>;
   limit?: number;
 }) {
@@ -60,7 +61,7 @@ export function FoodTiles({
               }}
               className={cn(
                 "flex items-center gap-2 rounded-full border py-1.5 pl-1.5 pr-4 text-sm font-semibold transition focus:outline-none focus:ring-4 focus:ring-accent/15",
-                TONE[tone]
+                flagged ? "border-rose-300 bg-rose-50 text-rose-900 hover:bg-rose-100" : TONE[tone]
               )}
             >
               <FoodImage id={item.id} size={32} rounded="rounded-full" className="bg-white" />

@@ -92,6 +92,11 @@ function normalize(text: string) {
     .trim();
 }
 
+// Palabras clave de un alimento (las usan el menú de ejemplo y las recetas para detectar alergias).
+export function getFoodKeywords(id: string): string[] {
+  return ALLERGEN_KEYWORDS[id] ?? [];
+}
+
 // Devuelve, por cada alimento afectado, la lista de alergias que coinciden.
 export function findAllergenMatches(allergyNames: string[]): Record<string, string[]> {
   const allergies = allergyNames
