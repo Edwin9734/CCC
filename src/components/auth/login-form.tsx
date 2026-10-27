@@ -2,8 +2,10 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+
+const step = (i: number) => ({ "--i": i }) as React.CSSProperties;
 
 export function LoginForm() {
   const router = useRouter();
@@ -11,6 +13,7 @@ export function LoginForm() {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +34,22 @@ export function LoginForm() {
         });
 
         if (signUpError) {
-          setError(signUpError.message);
+          const msg = signUpError.message.toLowerCase();
+
+          if (msg.includes("already registered")) {
+            setError("EL USUARIO YA EXISTE");
+          } else if (msg.includes("password")) {
+            setError("La contraseña debe tener al menos 6 caracteres.");
+          } else {
+            setError(signUpError.message);
+          }
+          return;
+        }
+
+        // Si "Confirm email" está activado, Supabase no da error con un correo
+        // existente: devuelve un usuario sin identidades.
+        if (data.user && data.user.identities?.length === 0) {
+          setError("EL USUARIO YA EXISTE");
           return;
         }
 
@@ -52,7 +70,15 @@ export function LoginForm() {
       });
 
       if (signInError) {
-        setError(signInError.message);
+        const msg = signInError.message.toLowerCase();
+
+        if (msg.includes("invalid login credentials")) {
+          setError("Correo o contraseña incorrectos.");
+        } else if (msg.includes("email not confirmed")) {
+          setError("Falta confirmar tu correo. Revisa tu bandeja de entrada.");
+        } else {
+          setError(signInError.message);
+        }
         return;
       }
 
@@ -62,59 +88,68 @@ export function LoginForm() {
   };
 
   return (
-    <form className="mt-8 grid gap-4" onSubmit={handleSubmit}>
-      <label className="grid gap-2">
-        <span className="text-sm font-semibold text-ink">Correo</span>
-        <div className="flex items-center gap-3 rounded-2xl border border-black/10 bg-background px-4 py-4">
-          <Mail className="h-5 w-5 text-muted" />
+    <form className="l-form" onSubmit={handleSubmit}>
+      <div className="l-in" style={step(3)}>
+        <label className="l-label" htmlFor="login-email">
+          Correo
+        </label>
+        <div className="l-field">
+          <Mail className="h-5 w-5" />
           <input
+            id="login-email"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="correo@ejemplo.com"
             autoComplete="email"
-            className="w-full bg-transparent text-base outline-none placeholder:text-muted"
             required
           />
         </div>
-      </label>
+      </div>
 
-      <label className="grid gap-2">
-        <span className="text-sm font-semibold text-ink">Contraseña</span>
-        <div className="flex items-center gap-3 rounded-2xl border border-black/10 bg-background px-4 py-4">
-          <Lock className="h-5 w-5 text-muted" />
+      <div className="l-in" style={step(4)}>
+        <label className="l-label" htmlFor="login-password">
+          Contraseña
+        </label>
+        <div className="l-field">
+          <Lock className="h-5 w-5" />
           <input
-            type="password"
+            id="login-password"
+            type={showPassword ? "text" : "password"}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Tu contraseña"
             autoComplete={mode === "signup" ? "new-password" : "current-password"}
-            className="w-full bg-transparent text-base outline-none placeholder:text-muted"
             minLength={6}
             required
           />
+          <button
+            type="button"
+            className="l-eye"
+            onClick={() => setShowPassword((value) => !value)}
+            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+          >
+            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </button>
         </div>
-      </label>
+      </div>
 
-      {error ? <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm font-semibold text-danger">{error}</p> : null}
-      {message ? <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-success">{message}</p> : null}
+      {error ? <p className="l-msg err">{error}</p> : null}
+      {message ? <p className="l-msg ok">{message}</p> : null}
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="mt-2 rounded-full bg-accent px-6 py-4 text-base font-semibold text-white shadow-soft transition hover:bg-accentDark disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {isPending ? (mode === "signup" ? "Creando cuenta..." : "Entrando...") : mode === "signup" ? "Crear cuenta" : "Entrar"}
+      <button type="submit" disabled={isPending} className="l-btn l-in" style={step(5)}>
+        {isPending ? (mode === "signup" ? "Creando cuenta..." : "Entrando...") : mode === "signup" ? "Crear cuenta" : "Entrar →"}
       </button>
 
       <button
         type="button"
+        className="l-btn2 l-in"
+        style={step(6)}
         onClick={() => {
           setMode(mode === "signin" ? "signup" : "signin");
           setError(null);
           setMessage(null);
         }}
-        className="rounded-full border border-black/10 bg-white px-6 py-4 text-base font-semibold text-ink shadow-soft transition hover:bg-slate-50"
       >
         {mode === "signin" ? "Necesito crear la cuenta" : "Ya tengo cuenta, iniciar sesión"}
       </button>

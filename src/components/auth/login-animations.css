@@ -1,0 +1,161 @@
+/* Estilos y animaciones de la pantalla de login */
+.login-page{--l-ink:#1e2a3f;--l-muted:#5b6678;--l-accent:#e11d48;--l-field:#fff5f6;--l-line:#fbd5dc;
+  position:relative;min-height:100vh;display:grid;place-items:center;padding:1.5rem 1rem;overflow:hidden;color:var(--l-ink);
+  background:linear-gradient(160deg,#fff1f3,#ffe0e6)}
+.login-blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.45;z-index:0;animation:l-float 14s ease-in-out infinite}
+.login-blob.b1{width:340px;height:340px;background:#fb7185;top:-80px;left:-80px}
+.login-blob.b2{width:300px;height:300px;background:#f43f5e;bottom:-90px;right:-60px;animation-duration:18s;animation-delay:-5s}
+.login-blob.b3{width:240px;height:240px;background:#fda4af;top:45%;left:55%;animation-duration:22s;animation-delay:-9s}
+@keyframes l-float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,30px) scale(1.12)}66%{transform:translate(-30px,50px) scale(.94)}}
+
+.l-fl{position:absolute;bottom:-90px;left:var(--x);z-index:0;opacity:0;pointer-events:none;animation:l-rise var(--d) linear infinite;animation-delay:var(--dl)}
+.l-fl i{display:block;font-style:normal;line-height:1;color:var(--l-accent);animation:l-pulse var(--p) ease-in-out infinite;animation-delay:var(--dl)}
+.l-fl svg{width:.55em;height:1em;display:block;overflow:visible}
+@keyframes l-rise{0%{transform:translate(0,0);opacity:0}8%{opacity:.9}50%{transform:translate(26px,-55vh)}92%{opacity:.85}100%{transform:translate(-20px,-125vh);opacity:0}}
+@keyframes l-pulse{0%,100%{transform:scale(1) rotate(-4deg)}50%{transform:scale(1.28) rotate(5deg)}75%{transform:scale(.88) rotate(0)}}
+
+.login-card{position:relative;z-index:1;width:100%;max-width:27.5rem;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
+  border:1px solid var(--l-line);border-radius:1.75rem;padding:2rem;box-shadow:0 20px 50px rgba(225,29,72,.18)}
+.l-in{opacity:0;transform:translateY(16px);animation:l-in .7s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--i)*110ms)}
+@keyframes l-in{to{opacity:1;transform:none}}
+.l-top{display:flex;justify-content:space-between;align-items:center}
+.l-badge{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--l-accent);border:1px solid var(--l-line);background:var(--l-field);padding:.45rem .75rem;border-radius:999px}
+.l-logo{position:relative;width:3.25rem;height:3.25rem;border-radius:1rem;background:linear-gradient(135deg,#f43f5e,#e11d48);display:grid;place-items:center;color:#fff;font-size:1.6rem;box-shadow:0 8px 20px rgba(225,29,72,.4)}
+.l-logo span{display:block;animation:l-beat 1.6s ease-in-out infinite}
+.l-logo::after{content:"";position:absolute;inset:0;border-radius:1rem;border:2px solid #f43f5e;animation:l-halo 1.6s ease-out infinite}
+@keyframes l-beat{0%,40%,100%{transform:scale(1)}15%{transform:scale(1.18)}30%{transform:scale(.96)}}
+@keyframes l-halo{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.6);opacity:0}}
+.l-title{font-size:1.75rem;line-height:1.15;font-weight:700;margin:1.5rem 0 .5rem}
+.l-sub{margin:0;color:var(--l-muted);font-size:.95rem;line-height:1.6}
+.l-ecg{margin:.9rem 0 .25rem;width:100%;height:2.25rem;display:block}
+.l-ecg path{fill:none;stroke:var(--l-accent);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:l-draw 3.4s ease-in-out infinite}
+@keyframes l-draw{0%{stroke-dashoffset:1;opacity:1}60%{stroke-dashoffset:0;opacity:1}85%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+
+.l-form{display:grid;margin-top:.5rem}
+.l-label{display:block;font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin:1.1rem 0 .5rem}
+.l-field{display:flex;align-items:center;gap:.65rem;background:var(--l-field);border:1.5px solid var(--l-line);border-radius:1rem;padding:0 .9rem;color:var(--l-muted);transition:border-color .25s,box-shadow .25s}
+.l-field:focus-within{border-color:var(--l-accent);box-shadow:0 0 0 4px rgba(244,63,94,.18)}
+.l-field input{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:1rem;color:var(--l-ink);padding:1rem 0;outline:0}
+.l-field input::placeholder{color:var(--l-muted);opacity:.7}
+.l-eye{border:0;background:none;cursor:pointer;color:var(--l-muted);display:grid;place-items:center;padding:.25rem}
+.l-msg{margin:1rem 0 0;padding:.75rem 1rem;border-radius:1rem;font-size:.875rem;font-weight:600}
+.l-msg.err{background:#fff1f2;color:#be123c}
+.l-msg.ok{background:#ecfdf5;color:#047857}
+.l-btn{position:relative;overflow:hidden;width:100%;margin-top:1.4rem;padding:1.05rem;border:0;border-radius:1.1rem;font:inherit;font-weight:700;font-size:1rem;color:#fff;cursor:pointer;
+  background:linear-gradient(90deg,#f43f5e,#e11d48 60%,#f97316);box-shadow:0 10px 24px rgba(225,29,72,.35);transition:transform .2s}
+.l-btn:hover{transform:translateY(-2px)}
+.l-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.l-btn::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:l-shine 3.2s ease-in-out infinite}
+@keyframes l-shine{0%,55%{left:-60%}100%{left:130%}}
+.l-btn2{display:block;width:100%;margin-top:.75rem;padding:1rem;text-align:center;border-radius:1.1rem;border:1.5px solid var(--l-line);background:transparent;color:var(--l-accent);font:inherit;font-weight:700;font-size:.95rem;cursor:pointer;transition:background .2s}
+.l-btn2:hover{background:var(--l-field)}
+.l-foot{margin:1.4rem 0 0;padding-top:1rem;border-top:1px solid var(--l-line);text-align:center;font-size:.75rem;color:var(--l-muted)}
+.l-foot a{color:var(--l-accent);font-weight:600;text-decoration:none}
+.l-tools{position:absolute;top:1rem;right:1rem;z-index:2}
+
+@media (prefers-reduced-motion:reduce){
+  .login-page *,.login-page *::before,.login-page *::after{animation:none!important}
+  .l-in{opacity:1;transform:none}.l-ecg path{stroke-dashoffset:0}.l-fl{display:none}
+}
+
+/* ---------- Responsive ---------- */
+.login-page{
+  min-height:100vh;
+  min-height:100dvh;                 /* alto real en móvil */
+  grid-template-columns:minmax(0,1fr); /* evita que el contenido ensanche la columna */
+}
+.login-card{-webkit-backdrop-filter:blur(8px)}
+.l-field input{font-size:max(16px,1rem)} /* evita el zoom automático de iOS */
+
+/* tamaño de los emojis controlado por CSS */
+.l-fl i{font-size:calc(var(--fs) * var(--fs-k,1))}
+
+@media (max-width:480px){
+  .login-page{
+    padding:4rem .75rem 1.5rem;  /* espacio arriba para el control de texto */
+    --fs-k:.6;                   /* emojis más pequeños */
+  }
+  .l-tools{top:.75rem;right:.75rem}
+
+  .login-card{padding:1.5rem 1.25rem;border-radius:1.5rem}
+  .l-title{font-size:1.4rem;margin:1.1rem 0 .4rem}
+  .l-sub{font-size:.9rem}
+  .l-logo{width:2.75rem;height:2.75rem;font-size:1.3rem;border-radius:.9rem}
+  .l-badge{font-size:.68rem;padding:.4rem .6rem}
+  .l-label{margin:.9rem 0 .4rem}
+  .l-field{padding:0 .75rem}
+  .l-field input{padding:.9rem 0}
+  .l-btn{margin-top:1.1rem;padding:.95rem}
+  .l-foot{font-size:.7rem}
+
+  /* menos desorden y menos carga: la mitad de los íconos flotantes */
+  .l-fl:nth-of-type(even){display:none}
+
+  /* blobs más chicos */
+  .login-blob.b1{width:220px;height:220px}
+  .login-blob.b2{width:200px;height:200px}
+  .login-blob.b3{width:160px;height:160px}
+}
+
+/* pantallas muy bajas (móvil en horizontal) */
+@media (max-height:520px){
+  .login-page{align-content:start}
+}
+
+/* ---------- Fix: formulario y botones en móvil ---------- */
+.login-page *,
+.login-page *::before,
+.login-page *::after{box-sizing:border-box}
+
+.l-form{grid-template-columns:minmax(0,1fr);width:100%}
+.l-form > *{min-width:0}          /* deja que cada bloque se encoja */
+
+.l-field{width:100%;max-width:100%}
+.l-field input{width:100%;min-width:0}
+
+.l-btn,
+.l-btn2{width:100%;max-width:100%}
+
+.login-card{min-width:0}
+
+/* ---------- Compactar verticalmente en móvil ---------- */
+@media (max-width:480px){
+  .login-page{padding:3.25rem .75rem 1rem}   /* menos espacio arriba y abajo */
+  .l-tools{top:.5rem;right:.5rem}
+
+  .login-card{padding:1.1rem 1rem;border-radius:1.25rem}
+
+  .l-logo{width:2.4rem;height:2.4rem;font-size:1.1rem;border-radius:.75rem}
+  .l-badge{font-size:.62rem;padding:.3rem .55rem}
+
+  .l-title{font-size:1.2rem;line-height:1.2;margin:.8rem 0 .25rem}
+  .l-sub{font-size:.82rem;line-height:1.4}
+
+  .l-ecg{height:1.4rem;margin:.5rem 0 0}      /* el ECG ocupa menos alto */
+
+  .l-form{margin-top:.1rem}
+  .l-label{margin:.65rem 0 .3rem;font-size:.68rem}
+  .l-field{border-radius:.85rem}
+  .l-field input{padding:.7rem 0}
+
+  .l-msg{margin:.7rem 0 0;padding:.55rem .75rem;font-size:.8rem}
+
+  .l-btn{margin-top:.85rem;padding:.8rem;border-radius:.9rem}
+  .l-btn2{margin-top:.5rem;padding:.7rem;border-radius:.9rem;font-size:.88rem}
+
+  .l-foot{margin-top:.85rem;padding-top:.65rem;font-size:.66rem}
+}
+
+/* Celulares bajitos o en horizontal: aún más compacto */
+@media (max-height:700px) and (max-width:480px){
+  .l-ecg{display:none}
+  .l-sub{display:none}
+}
+
+/* ---------- Subir la tarjeta cerca de A- / A+ ---------- */
+@media (max-width:480px){
+  .login-page{
+    align-content:start;           /* pega la tarjeta arriba en vez de centrarla */
+    padding-top:2.75rem;           /* distancia respecto a los botones A- / A+ */
+  }
+}
