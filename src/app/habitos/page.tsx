@@ -5,9 +5,17 @@ import { HabitsManager } from "@/components/habits/habits-manager";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { minutesNowInAppTimeZone, todayInAppTimeZone } from "@/lib/date-utils";
 import { buildAdjustedPlan, loadAdjustmentData } from "@/lib/plan-adjustment";
+import { HABIT_TABS, normalizeTab } from "@/lib/section-tabs";
 import type { MedicationWithSchedules } from "@/lib/supabase/medications";
 
-export default async function HabitosPage() {
+export default async function HabitosPage({
+  searchParams
+}: {
+  searchParams: Promise<{ tab?: string | string[] }>;
+}) {
+  const { tab } = await searchParams;
+  const initialTab = normalizeTab(tab, HABIT_TABS, "medicamentos");
+
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.auth.getUser();
 
@@ -43,6 +51,7 @@ export default async function HabitosPage() {
           medications={medications}
           activityGoalMinutes={activityGoalMinutes}
           waterNotice={waterNotice}
+          initialTab={initialTab}
         />
       ) : (
         <SectionCard title="Inicia sesión" description="Necesitas una sesión activa para usar esta sección.">

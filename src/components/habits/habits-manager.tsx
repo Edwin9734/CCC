@@ -6,6 +6,7 @@ import { SectionCard } from "@/components/section-card";
 import { MedicationIntakeCard } from "@/components/habits/medication-intake-card";
 import { ActivityCard } from "@/components/habits/activity-card";
 import { WeekSummaryCard } from "@/components/habits/week-summary-card";
+import { SectionTabs } from "@/components/shell/section-tabs";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
   addActivity,
@@ -31,17 +32,20 @@ import {
   type Dose
 } from "@/lib/habits-config";
 import { addDays, formatDate, toDateString } from "@/lib/date-utils";
+import { HABIT_TABS } from "@/lib/section-tabs";
 
 const EMPTY_HABIT: DailyHabitValues = { water_glasses: 0, sleep_hours: null };
 
 export function HabitsManager({
   medications,
   activityGoalMinutes,
-  waterNotice
+  waterNotice,
+  initialTab
 }: {
   medications: MedicationWithSchedules[];
   activityGoalMinutes?: number;
   waterNotice?: string | null;
+  initialTab: string;
 }) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
@@ -263,11 +267,122 @@ export function HabitsManager({
       : formatDate(date, { weekday: "long", day: "numeric", month: "long" })
     : "";
 
+  const loading = loadError ? null : <p className="text-center text-sm text-muted">Cargando tus hábitos...</p>;
+
+  const waterSleepCard = (
+    <SectionCard title="Agua y sueño" description="Cuenta los vasos de agua que tomas y anota cuántas horas dormiste.">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div>
+          <p className="flex items-center gap-2 text-sm font-semibold text-ink">
+            <Droplets className="h-4 w-4 text-sky-600" />
+            Vasos de agua
+          </p>
+
+          <div className="mt-3 flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => changeWater(-1)}
+              disabled={current.water_glasses <= 0}
+              aria-label="Quitar un vaso"
+              className="flex h-14 w-14 items-center justify-center rounded-full border border-black/10 bg-white text-ink shadow-soft transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Minus className="h-6 w-6" />
+            </button>
+
+            <div className="min-w-[5rem] text-center">
+              <p className="text-4xl font-semibold text-ink">{current.water_glasses}</p>
+              <p className="text-sm text-muted">{current.water_glasses === 1 ? "vaso" : "vasos"}</p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => changeWater(1)}
+              disabled={current.water_glasses >= WATER_MAX_GLASSES}
+              aria-label="Agregar un vaso"
+              className="flex h-14 w-14 items-center justify-center rounded-full border border-black/10 bg-white text-ink shadow-soft transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Plus className="h-6 w-6" />
+            </button>
+          </div>
+
+          {waterNotice ? (
+            <>
+              <p className="mt-3 inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">
+                Sin meta: consulta a tu médico
+              </p>
+
+              <p className="mt-3 text-xs leading-5 text-amber-900">{waterNotice}</p>
+            </>
+          ) : (
+            <>
+              <p
+                className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-semibold ${
+                  current.water_glasses >= WATER_GOAL_GLASSES
+                    ? "bg-emerald-100 text-emerald-800"
+                    : "bg-slate-100 text-muted"
+                }`}
+              >
+                {current.water_glasses >= WATER_GOAL_GLASSES ? "Meta cumplida" : `Meta: ${WATER_RANGE_TEXT} al día`}
+              </p>
+
+              <p className="mt-3 text-xs leading-5 text-muted">
+                Si tu médico te limitó los líquidos (por ejemplo, por problemas del corazón o de los riñones), sigue su
+                indicación y no uses esta meta.
+              </p>
+            </>
+          )}
+        </div>
+
+        <div>
+          <p className="flex items-center gap-2 text-sm font-semibold text-ink">
+            <Moon className="h-4 w-4 text-indigo-600" />
+            Horas de sueño
+          </p>
+          <p className="mt-1 text-xs leading-5 text-muted">Horas que dormiste la noche anterior a este día.</p>
+
+          <form onSubmit={handleSaveSleep} className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
+            <input
+              type="number"
+              inputMode="decimal"
+              value={sleepInput}
+              onChange={(e) => setSleepInput(e.target.value)}
+              min="0"
+              max="24"
+              step="any"
+              placeholder="Ej. 7.5"
+              aria-label="Horas de sueño"
+              className="rounded-2xl border border-black/10 bg-background px-4 py-4 text-base outline-none placeholder:text-muted"
+            />
+            <button
+              type="submit"
+              className="rounded-full bg-accent px-6 py-4 text-base font-semibold text-white shadow-soft transition hover:bg-accentDark"
+            >
+              Guardar sueño
+            </button>
+          </form>
+
+          {sleepError ? (
+            <p className="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-semibold text-danger">{sleepError}</p>
+          ) : null}
+
+          <p className="mt-3 text-sm text-muted">
+            {current.sleep_hours === null
+              ? "Sin registrar."
+              : `Guardado: ${formatHours(current.sleep_hours)} h · ${
+                  current.sleep_hours >= SLEEP_GOAL_HOURS ? "Meta cumplida" : `Meta: ${SLEEP_GOAL_HOURS} horas o más`
+                }`}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-muted">Para borrar el dato, deja el campo vacío y guarda.</p>
+        </div>
+      </div>
+    </SectionCard>
+  );
+
   return (
     <div className="space-y-6">
       <SectionCard
         title="Registro del día"
-        description="Elige el día que quieres registrar. Todo lo de abajo se guarda en ese día."
+        description="Elige el día que quieres registrar. Lo de las pestañas de abajo se guarda en ese día."
       >
         <div className="flex flex-wrap items-end gap-3">
           <label className="grid gap-2">
@@ -315,141 +430,32 @@ export function HabitsManager({
         </div>
       ) : null}
 
-      {!ready && !loadError ? <p className="text-center text-sm text-muted">Cargando tus hábitos...</p> : null}
-
-      {ready ? (
-        <>
-          <MedicationIntakeCard doses={doses} hasMedications={medications.length > 0} onMark={handleMark} />
-
-          <SectionCard
-            title="Agua y sueño"
-            description="Cuenta los vasos de agua que tomas y anota cuántas horas dormiste."
-          >
-            <div className="grid gap-6 lg:grid-cols-2">
-              <div>
-                <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-                  <Droplets className="h-4 w-4 text-sky-600" />
-                  Vasos de agua
-                </p>
-
-                <div className="mt-3 flex items-center gap-4">
-                  <button
-                    type="button"
-                    onClick={() => changeWater(-1)}
-                    disabled={current.water_glasses <= 0}
-                    aria-label="Quitar un vaso"
-                    className="flex h-14 w-14 items-center justify-center rounded-full border border-black/10 bg-white text-ink shadow-soft transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    <Minus className="h-6 w-6" />
-                  </button>
-
-                  <div className="min-w-[5rem] text-center">
-                    <p className="text-4xl font-semibold text-ink">{current.water_glasses}</p>
-                    <p className="text-sm text-muted">{current.water_glasses === 1 ? "vaso" : "vasos"}</p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => changeWater(1)}
-                    disabled={current.water_glasses >= WATER_MAX_GLASSES}
-                    aria-label="Agregar un vaso"
-                    className="flex h-14 w-14 items-center justify-center rounded-full border border-black/10 bg-white text-ink shadow-soft transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    <Plus className="h-6 w-6" />
-                  </button>
-                </div>
-
-                {waterNotice ? (
-                  <>
-                    <p className="mt-3 inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">
-                      Sin meta: consulta a tu médico
-                    </p>
-
-                    <p className="mt-3 text-xs leading-5 text-amber-900">{waterNotice}</p>
-                  </>
-                ) : (
-                  <>
-                    <p
-                      className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-semibold ${
-                        current.water_glasses >= WATER_GOAL_GLASSES
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-slate-100 text-muted"
-                      }`}
-                    >
-                      {current.water_glasses >= WATER_GOAL_GLASSES
-                        ? "Meta cumplida"
-                        : `Meta: ${WATER_RANGE_TEXT} al día`}
-                    </p>
-
-                    <p className="mt-3 text-xs leading-5 text-muted">
-                      Si tu médico te limitó los líquidos (por ejemplo, por problemas del corazón o de los riñones),
-                      sigue su indicación y no uses esta meta.
-                    </p>
-                  </>
-                )}
-              </div>
-
-              <div>
-                <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-                  <Moon className="h-4 w-4 text-indigo-600" />
-                  Horas de sueño
-                </p>
-                <p className="mt-1 text-xs leading-5 text-muted">Horas que dormiste la noche anterior a este día.</p>
-
-                <form onSubmit={handleSaveSleep} className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    value={sleepInput}
-                    onChange={(e) => setSleepInput(e.target.value)}
-                    min="0"
-                    max="24"
-                    step="any"
-                    placeholder="Ej. 7.5"
-                    aria-label="Horas de sueño"
-                    className="rounded-2xl border border-black/10 bg-background px-4 py-4 text-base outline-none placeholder:text-muted"
-                  />
-                  <button
-                    type="submit"
-                    className="rounded-full bg-accent px-6 py-4 text-base font-semibold text-white shadow-soft transition hover:bg-accentDark"
-                  >
-                    Guardar sueño
-                  </button>
-                </form>
-
-                {sleepError ? (
-                  <p className="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-semibold text-danger">
-                    {sleepError}
-                  </p>
-                ) : null}
-
-                <p className="mt-3 text-sm text-muted">
-                  {current.sleep_hours === null
-                    ? "Sin registrar."
-                    : `Guardado: ${formatHours(current.sleep_hours)} h · ${
-                        current.sleep_hours >= SLEEP_GOAL_HOURS
-                          ? "Meta cumplida"
-                          : `Meta: ${SLEEP_GOAL_HOURS} horas o más`
-                      }`}
-                </p>
-                <p className="mt-1 text-xs leading-5 text-muted">
-                  Para borrar el dato, deja el campo vacío y guarda.
-                </p>
-              </div>
-            </div>
-          </SectionCard>
-
-          <ActivityCard activities={dayActivities} onAdd={handleAddActivity} onDelete={handleDeleteActivity} />
-        </>
-      ) : null}
-
-      {summary ? (
-        <WeekSummaryCard
-          summary={summary}
-          activityGoalMinutes={activityGoalMinutes}
-          waterRestricted={Boolean(waterNotice)}
-        />
-      ) : null}
+      <SectionTabs
+        tabs={HABIT_TABS}
+        initialTab={initialTab}
+        panels={{
+          medicamentos: ready ? (
+            <MedicationIntakeCard doses={doses} hasMedications={medications.length > 0} onMark={handleMark} />
+          ) : (
+            loading
+          ),
+          agua: ready ? waterSleepCard : loading,
+          actividad: ready ? (
+            <ActivityCard activities={dayActivities} onAdd={handleAddActivity} onDelete={handleDeleteActivity} />
+          ) : (
+            loading
+          ),
+          semana: summary ? (
+            <WeekSummaryCard
+              summary={summary}
+              activityGoalMinutes={activityGoalMinutes}
+              waterRestricted={Boolean(waterNotice)}
+            />
+          ) : (
+            loading
+          )
+        }}
+      />
     </div>
   );
 }

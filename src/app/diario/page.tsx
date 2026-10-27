@@ -6,8 +6,16 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getDiaryEntries, type FoodDiaryRow } from "@/lib/supabase/food-diary";
 import { getAllergies, type AllergyRow } from "@/lib/supabase/allergies";
 import { findAllergenMatches } from "@/lib/diet-allergens";
+import { DIARY_TABS, normalizeTab } from "@/lib/section-tabs";
 
-export default async function DiarioPage() {
+export default async function DiarioPage({
+  searchParams
+}: {
+  searchParams: Promise<{ tab?: string | string[] }>;
+}) {
+  const { tab } = await searchParams;
+  const initialTab = normalizeTab(tab, DIARY_TABS, "diario");
+
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.auth.getUser();
 
@@ -37,7 +45,7 @@ export default async function DiarioPage() {
       userEmail={data.user?.email ?? null}
     >
       {data.user ? (
-        <FoodDiaryManager initialEntries={entries} allergyMatches={allergyMatches} />
+        <FoodDiaryManager initialEntries={entries} allergyMatches={allergyMatches} initialTab={initialTab} />
       ) : (
         <SectionCard title="Inicia sesión" description="Necesitas una sesión activa para usar el diario.">
           <Link

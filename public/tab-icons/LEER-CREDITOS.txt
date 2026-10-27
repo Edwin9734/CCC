@@ -1,0 +1,10 @@
+Íconos de la barra inferior
+===========================
+
+Estos archivos (.svg) son gráficos de Twemoji:
+  Twemoji graphics © Twitter, Inc. y colaboradores
+  Licencia: Creative Commons Attribution 4.0 (CC BY 4.0)
+  https://creativecommons.org/licenses/by/4.0/
+  Fuente: https://github.com/jdecked/twemoji
+
+La app muestra el crédito al pie de la guía de alimentación.

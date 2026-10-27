@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Apple,
   ChefHat,
@@ -18,6 +18,7 @@ import { SectionCard } from "@/components/section-card";
 import { FoodDialog } from "@/components/diet/food-dialog";
 import { FoodImage } from "@/components/diet/food-image";
 import { FoodTiles } from "@/components/diet/food-tiles";
+import { useSectionTabs } from "@/components/shell/section-tabs";
 import { findAllergenMatches } from "@/lib/diet-allergens";
 import { MENU_DAYS, RECIPES, getAllergyMatches, type MealType } from "@/lib/diet-menu-data";
 
@@ -30,102 +31,126 @@ const MEAL_META: Record<MealType, { label: string; icon: typeof Apple }> = {
 
 const RECIPE_BY_ID = new Map(RECIPES.map((recipe) => [recipe.id, recipe]));
 
-export function DietMenu({ allergyNames = [] }: { allergyNames?: string[] }) {
-  const [dayKey, setDayKey] = useState(MENU_DAYS[0].key);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [foodId, setFoodId] = useState<string | null>(null);
-  const returnRef = useRef<HTMLElement | null>(null);
+// ---------------------------------------------------------------------------
+// Menú de ejemplo
+// ---------------------------------------------------------------------------
 
-  // Alergias por alimento (para marcar cada ficha e ingrediente)
+export function DietMenu({ allergyNames = [] }: { allergyNames?: string[] }) {
+  const tabs = useSectionTabs();
+  const [dayKey, setDayKey] = useState(MENU_DAYS[0].key);
+
+  // Alergias por alimento (para marcar cada ficha)
   const foodMatches = useMemo(() => findAllergenMatches(allergyNames), [allergyNames]);
 
   const day = MENU_DAYS.find((d) => d.key === dayKey) ?? MENU_DAYS[0];
 
-  const openRecipe = (id: string) => {
-    setExpandedId(id);
-    requestAnimationFrame(() => {
-      document.getElementById(`receta-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  };
-
   return (
-    <div className="space-y-6">
-      <SectionCard
-        title="Menú de ejemplo"
-        description="Una semana de ideas para comer con menos grasa saturada y más fibra. Elige un día y toca un alimento para ver su detalle."
-      >
-        <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
-          {MENU_DAYS.map((d) => (
-            <button
-              key={d.key}
-              type="button"
-              onClick={() => setDayKey(d.key)}
-              className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
-                d.key === dayKey
-                  ? "border-accent bg-accent text-white shadow-soft"
-                  : "border-black/10 bg-white text-ink hover:bg-slate-50"
+    <SectionCard
+      title="Menú de ejemplo"
+      description="Una semana de ideas para comer con menos grasa saturada y más fibra. Elige un día y toca un alimento para ver su detalle."
+    >
+      <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+        {MENU_DAYS.map((d) => (
+          <button
+            key={d.key}
+            type="button"
+            onClick={() => setDayKey(d.key)}
+            className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
+              d.key === dayKey
+                ? "border-accent bg-accent text-white shadow-soft"
+                : "border-black/10 bg-white text-ink hover:bg-slate-50"
+            }`}
+          >
+            {d.short}
+          </button>
+        ))}
+      </div>
+
+      <h3 className="mt-5 text-lg font-semibold text-ink">Menú del {day.label.toLowerCase()}</h3>
+
+      <div className="mt-3 grid gap-4 md:grid-cols-2">
+        {day.meals.map((item) => {
+          const meta = MEAL_META[item.type];
+          const Icon = meta.icon;
+          const recipe = item.recipeId ? RECIPE_BY_ID.get(item.recipeId) : undefined;
+          const flagged = getAllergyMatches(allergyNames, [...item.keywords, ...(recipe?.keywords ?? [])]);
+
+          return (
+            <article
+              key={item.type}
+              className={`rounded-3xl border p-5 ${
+                flagged.length > 0 ? "border-rose-200 bg-rose-50" : "border-black/5 bg-background"
               }`}
             >
-              {d.short}
-            </button>
-          ))}
-        </div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-accent">
+                <Icon className="h-4 w-4" />
+                {meta.label}
+              </div>
+              <p className="mt-2 text-base leading-7 text-ink">{item.text}</p>
 
-        <h3 className="mt-5 text-lg font-semibold text-ink">Menú del {day.label.toLowerCase()}</h3>
+              <FoodTiles ids={item.foodIds} tone="neutral" allergyMatches={foodMatches} limit={12} />
 
-        <div className="mt-3 grid gap-4 md:grid-cols-2">
-          {day.meals.map((item) => {
-            const meta = MEAL_META[item.type];
-            const Icon = meta.icon;
-            const recipe = item.recipeId ? RECIPE_BY_ID.get(item.recipeId) : undefined;
-            const flagged = getAllergyMatches(allergyNames, [...item.keywords, ...(recipe?.keywords ?? [])]);
-
-            return (
-              <article
-                key={item.type}
-                className={`rounded-3xl border p-5 ${
-                  flagged.length > 0 ? "border-rose-200 bg-rose-50" : "border-black/5 bg-background"
-                }`}
-              >
-                <div className="flex items-center gap-2 text-sm font-semibold text-accent">
-                  <Icon className="h-4 w-4" />
-                  {meta.label}
+              {flagged.length > 0 ? (
+                <div className="mt-3 flex items-start gap-2 rounded-2xl bg-rose-100 p-3 text-sm font-semibold leading-6 text-rose-900">
+                  <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                  <p>Puede contener algo relacionado con tu alergia: {flagged.join(", ")}. Cámbialo por otra opción.</p>
                 </div>
-                <p className="mt-2 text-base leading-7 text-ink">{item.text}</p>
+              ) : null}
 
-                <FoodTiles ids={item.foodIds} tone="neutral" allergyMatches={foodMatches} limit={12} />
+              {item.recipeId ? (
+                <button
+                  type="button"
+                  onClick={() => tabs?.setActive("recetas", item.recipeId as string)}
+                  className="mt-3 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-slate-50"
+                >
+                  <ChefHat className="h-4 w-4" />
+                  Ver receta
+                </button>
+              ) : null}
+            </article>
+          );
+        })}
+      </div>
 
-                {flagged.length > 0 ? (
-                  <div className="mt-3 flex items-start gap-2 rounded-2xl bg-rose-100 p-3 text-sm font-semibold leading-6 text-rose-900">
-                    <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
-                    <p>
-                      Puede contener algo relacionado con tu alergia: {flagged.join(", ")}. Cámbialo por otra opción.
-                    </p>
-                  </div>
-                ) : null}
+      <p className="mt-4 text-xs leading-5 text-muted">
+        Es un menú de ejemplo con porciones orientativas. Si tienes otras condiciones (como diabetes o problemas de
+        riñón) o tu médico te indicó una dieta específica, sigue sus indicaciones.
+      </p>
+    </SectionCard>
+  );
+}
 
-                {item.recipeId ? (
-                  <button
-                    type="button"
-                    onClick={() => openRecipe(item.recipeId as string)}
-                    className="mt-3 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-slate-50"
-                  >
-                    <ChefHat className="h-4 w-4" />
-                    Ver receta
-                  </button>
-                ) : null}
-              </article>
-            );
-          })}
-        </div>
+// ---------------------------------------------------------------------------
+// Recetas sencillas
+// ---------------------------------------------------------------------------
 
-        <p className="mt-4 text-xs leading-5 text-muted">
-          Es un menú de ejemplo con porciones orientativas. Si tienes otras condiciones (como diabetes o problemas de
-          riñón) o tu médico te indicó una dieta específica, sigue sus indicaciones.
-        </p>
-      </SectionCard>
+export function DietRecipes({ allergyNames = [] }: { allergyNames?: string[] }) {
+  const tabs = useSectionTabs();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [foodId, setFoodId] = useState<string | null>(null);
+  const returnRef = useRef<HTMLElement | null>(null);
 
-      <SectionCard title="Recetas sencillas" description="Preparaciones cortas con ingredientes fáciles de conseguir.">
+  const foodMatches = useMemo(() => findAllergenMatches(allergyNames), [allergyNames]);
+
+  // Cuando se llega desde "Ver receta" del menú, se abre esa receta.
+  const activeTab = tabs?.active;
+  const targetRecipe = tabs?.target;
+
+  useEffect(() => {
+    if (activeTab !== "recetas" || !targetRecipe) return;
+    setExpandedId(targetRecipe);
+    const frame = requestAnimationFrame(() => {
+      document.getElementById(`receta-${targetRecipe}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [activeTab, targetRecipe]);
+
+  return (
+    <>
+      <SectionCard
+        title="Recetas sencillas"
+        description="Preparaciones cortas con ingredientes fáciles de conseguir. Toca un ingrediente para ver su detalle."
+      >
         <div className="space-y-3">
           {RECIPES.map((recipe) => {
             const open = expandedId === recipe.id;
@@ -135,7 +160,7 @@ export function DietMenu({ allergyNames = [] }: { allergyNames?: string[] }) {
               <article
                 key={recipe.id}
                 id={`receta-${recipe.id}`}
-                className={`scroll-mt-4 rounded-3xl border ${
+                className={`scroll-mt-24 rounded-3xl border ${
                   flagged.length > 0 ? "border-rose-200 bg-rose-50" : "border-black/5 bg-background"
                 }`}
               >
@@ -178,8 +203,6 @@ export function DietMenu({ allergyNames = [] }: { allergyNames?: string[] }) {
                       <p className="text-sm font-semibold text-ink">Ingredientes</p>
                       <ul className="mt-2 space-y-2">
                         {recipe.ingredientItems.map((ingredient) => {
-                          const allergic = ingredient.foodId ? foodMatches[ingredient.foodId] : undefined;
-
                           if (!ingredient.foodId) {
                             return (
                               <li key={ingredient.text} className="text-base leading-7 text-ink">
@@ -189,6 +212,8 @@ export function DietMenu({ allergyNames = [] }: { allergyNames?: string[] }) {
                           }
 
                           const id = ingredient.foodId;
+                          const allergic = foodMatches[id];
+
                           return (
                             <li key={ingredient.text}>
                               <button
@@ -243,6 +268,6 @@ export function DietMenu({ allergyNames = [] }: { allergyNames?: string[] }) {
         onClose={() => setFoodId(null)}
         returnFocusRef={returnRef}
       />
-    </div>
+    </>
   );
 }

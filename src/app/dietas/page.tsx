@@ -3,7 +3,8 @@ import { AppShell } from "@/components/app-shell";
 import { AllergyManager } from "@/components/allergies/allergy-manager";
 import { DietBrowser } from "@/components/diet/diet-browser";
 import { DietInsightsPanel } from "@/components/diet/diet-insights-panel";
-import { DietMenu } from "@/components/diet/diet-menu";
+import { DietMenu, DietRecipes } from "@/components/diet/diet-menu";
+import { SectionTabs } from "@/components/shell/section-tabs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getMeasurements, type MeasurementWithStatus } from "@/lib/supabase/measurements";
 import { getMedications, type MedicationWithSchedules } from "@/lib/supabase/medications";
@@ -11,8 +12,16 @@ import { getAllergies, type AllergyRow } from "@/lib/supabase/allergies";
 import { buildDietInsights } from "@/lib/diet-insights";
 import { applyAllergyFilter, findAllergenMatches } from "@/lib/diet-allergens";
 import { LIQUID_HIDDEN_IDS, loadProfileExtras } from "@/lib/plan-profile";
+import { DIET_TABS, normalizeTab } from "@/lib/section-tabs";
 
-export default async function DietasPage() {
+export default async function DietasPage({
+  searchParams
+}: {
+  searchParams: Promise<{ tab?: string | string[] }>;
+}) {
+  const { tab } = await searchParams;
+  const initialTab = normalizeTab(tab, DIET_TABS, "guia");
+
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.auth.getUser();
 
@@ -67,10 +76,21 @@ export default async function DietasPage() {
           </div>
         ) : null}
 
-        <DietInsightsPanel insights={insights} allergyMatches={allergyMatches} />
-        <AllergyManager initialAllergies={allergies} />
-        <DietBrowser focusIds={insights.focusIds} allergyMatches={allergyMatches} />
-        <DietMenu allergyNames={allergyNames} />
+        <SectionTabs
+          tabs={DIET_TABS}
+          initialTab={initialTab}
+          panels={{
+            alergias: <AllergyManager initialAllergies={allergies} />,
+            guia: (
+              <>
+                <DietInsightsPanel insights={insights} allergyMatches={allergyMatches} />
+                <DietBrowser focusIds={insights.focusIds} allergyMatches={allergyMatches} />
+              </>
+            ),
+            menu: <DietMenu allergyNames={allergyNames} />,
+            recetas: <DietRecipes allergyNames={allergyNames} />
+          }}
+        />
       </div>
     </AppShell>
   );

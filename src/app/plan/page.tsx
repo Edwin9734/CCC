@@ -7,10 +7,18 @@ import { findAllergenMatches } from "@/lib/diet-allergens";
 import { minutesNowInAppTimeZone, todayInAppTimeZone } from "@/lib/date-utils";
 import { buildAdjustedPlan, loadAdjustmentData, type PlanAdjustment } from "@/lib/plan-adjustment";
 import { buildContacts, type ContactsInfo } from "@/lib/contacts";
+import { PLAN_TABS, normalizeTab } from "@/lib/section-tabs";
 import type { ProfileExtras } from "@/lib/plan-profile";
 import type { PlanData } from "@/lib/plan";
 
-export default async function PlanPage() {
+export default async function PlanPage({
+  searchParams
+}: {
+  searchParams: Promise<{ tab?: string | string[] }>;
+}) {
+  const { tab } = await searchParams;
+  const initialTab = normalizeTab(tab, PLAN_TABS, "metas");
+
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.auth.getUser();
 
@@ -48,6 +56,7 @@ export default async function PlanPage() {
           extras={extras}
           contacts={contacts}
           allergyMatches={allergyMatches}
+          initialTab={initialTab}
         />
       ) : (
         <SectionCard title="Inicia sesión" description="Necesitas una sesión activa para ver tu plan.">

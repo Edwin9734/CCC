@@ -10,4 +10,5 @@ export function foodImageSrc(id: string): string {
 }
 
 // Crédito que se muestra al pie de la guía de alimentación (null = no se muestra nada).
-export const FOOD_IMAGE_CREDIT: string | null = "Ilustraciones provisionales de Twemoji (CC BY 4.0).";
+// Los íconos de la barra inferior también son de Twemoji, así que el crédito se mantiene.
+export const FOOD_IMAGE_CREDIT: string | null = "Ilustraciones e íconos de Twemoji (CC BY 4.0).";
