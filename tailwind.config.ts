@@ -5,19 +5,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#f4efe7",
-        surface: "#fffaf2",
+        background: "#fff5f6",
+        surface: "#fffafa",
         ink: "#172033",
         muted: "#5f687c",
-        accent: "#3730a3",
-        accentDark: "#2a2578",
-        accentSoft: "#e6e4f7",
+        accent: "#e11d48",
+        accentDark: "#be123c",
+        accentSoft: "#ffe4e9",
         warning: "#d97706",
         danger: "#b42318",
         success: "#15803d"
       },
       boxShadow: {
-        soft: "0 18px 60px rgba(15, 23, 42, 0.12)"
+        soft: "0 12px 32px rgba(225, 29, 72, 0.12)"
       },
       borderRadius: {
         xl: "1.25rem"

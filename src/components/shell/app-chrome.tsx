@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { LogIn, Menu, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AppBackground } from "@/components/app-background";
 import { Greeting } from "@/components/shell/greeting";
 import { ProfilePanel } from "@/components/shell/profile-panel";
 import { SideMenu } from "@/components/shell/sidebar";
@@ -78,22 +79,28 @@ export function AppChrome({
   const initial = initialOf(profile?.first_name);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(232,173,165,0.28),_transparent_26%),linear-gradient(180deg,_#f8f4eb_0%,_#f2ede4_100%)] text-ink">
-      <header className="no-print sticky top-0 z-30 border-b border-black/5 bg-white/80 backdrop-blur-xl">
+    <div className="app-theme min-h-screen text-ink">
+      <AppBackground />
+      <header className="no-print sticky top-0 z-30 border-b border-black/5 bg-white/85 shadow-[0_8px_24px_rgba(225,29,72,0.08)] backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-          <button
-            ref={menuButtonRef}
-            type="button"
-            onClick={openMenu}
-            aria-label="Abrir menú"
-            aria-haspopup="dialog"
-            aria-expanded={menuOpen}
-            aria-controls="app-sidebar"
-            className="inline-flex h-11 items-center gap-2 rounded-full border border-black/10 bg-white px-4 text-sm font-semibold text-ink shadow-soft transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-accent/15"
-          >
-            <Menu className="h-5 w-5" />
-            Menú
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              ref={menuButtonRef}
+              type="button"
+              onClick={openMenu}
+              aria-label="Abrir menú"
+              aria-haspopup="dialog"
+              aria-expanded={menuOpen}
+              aria-controls="app-sidebar"
+              className="inline-flex h-11 items-center gap-2 rounded-full border border-black/10 bg-white px-4 text-sm font-semibold text-ink shadow-soft transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-accent/15"
+            >
+              <Menu className="h-5 w-5" />
+              Menú
+            </button>
+            <div className="ab-logo" aria-hidden="true">
+              <span>♥</span>
+            </div>
+          </div>
 
           <div className="flex items-center gap-3">
             <div className="hidden md:block">
@@ -157,7 +164,7 @@ export function AppChrome({
         />
       ) : null}
 
-      <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
+      <main className="relative z-10 mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
         <div className="space-y-5">
           {userEmail ? (
             <Greeting
@@ -170,7 +177,7 @@ export function AppChrome({
           ) : null}
 
           <div className="no-print">
-            <h1 className="text-2xl font-semibold text-ink sm:text-3xl">{title}</h1>
+            <h1 className="ab-title text-2xl font-semibold text-ink sm:text-3xl">{title}</h1>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-muted sm:text-base">{description}</p>
           </div>
 

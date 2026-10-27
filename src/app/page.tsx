@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Bell, FileText, ShieldCheck, Sparkles, Waves } from "lucide-react";
+import { AppBackground } from "@/components/app-background";
 import { TextSizeControl } from "@/components/text-size-control";
 
 const highlights = [
@@ -22,8 +23,9 @@ const highlights = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(232,173,165,0.30),_transparent_28%),linear-gradient(180deg,_#fbf7f0_0%,_#f2ede4_100%)] text-ink">
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-center px-4 py-10 sm:px-6 lg:px-8">
+    <main className="app-theme min-h-screen text-ink">
+      <AppBackground />
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-center px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-8 flex justify-end">
           <TextSizeControl />
         </div>
@@ -62,7 +64,7 @@ export default function HomePage() {
             </div>
           </section>
 
-          <aside className="rounded-[2rem] border border-black/5 bg-white/85 p-6 shadow-soft backdrop-blur-xl sm:p-8">
+          <aside className="ab-card rounded-[2rem] p-6 sm:p-8">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-accent">Resumen del proyecto</p>
             <div className="mt-6 grid gap-4">
               {highlights.map((item) => {

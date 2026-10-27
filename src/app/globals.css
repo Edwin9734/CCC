@@ -33,7 +33,7 @@ html[data-text-size="5"] {
 
 body {
   margin: 0;
-  background: #f4efe7;
+  background: #fff1f3;
   color: #172033;
   font-family: var(--font-body), system-ui, sans-serif;
 }
@@ -48,7 +48,110 @@ a {
 }
 
 ::selection {
-  background: rgba(55, 48, 163, 0.18);
+  background: rgba(244, 63, 94, 0.2);
+}
+
+/* =====================================================================
+   TEMA "LOGIN" PARA EL RESTO DE LA APP
+   Todo va dentro de .app-theme, así que no afecta al login ni a nada fuera.
+   Los colores de marca (accent) están en tailwind.config.ts.
+   ===================================================================== */
+.app-theme {
+  --a: #e11d48;
+  --a-dark: #be123c;
+  --a-soft: #fff1f3;
+  --line: #fbd5dc;
+  --field: #fff5f6;
+  position: relative;
+  background: linear-gradient(160deg, #fff1f3, #ffe0e6) fixed;
+}
+
+/* Colores de marca */
+.app-theme .bg-accent { background-image: linear-gradient(135deg, #f43f5e, #e11d48); }
+.app-theme .hover\:bg-accentDark:hover { background-image: none; }
+.app-theme .bg-ink { background-color: var(--a); background-image: linear-gradient(90deg, #f43f5e, #e11d48 60%, #f97316); }
+.app-theme .hover\:bg-slate-900:hover { background-color: var(--a-dark); background-image: none; }
+
+/* Bordes y fondos suaves con tinte rosa (los colores de marca viven en tailwind.config.ts) */
+.app-theme .bg-slate-50,
+.app-theme .hover\:bg-slate-50:hover { background-color: var(--field); }
+.app-theme .border-black\/5,
+.app-theme .border-black\/10 { border-color: var(--line); }
+
+/* Tarjetas del tema (SectionCard, StatCard, panel de inicio) */
+:where(.ab-card) { background-color: rgba(255, 255, 255, 0.92); }
+.ab-card {
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--line);
+  box-shadow: 0 16px 40px rgba(225, 29, 72, 0.14);
+  animation: ab-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Título de página con subrayado de color */
+.ab-title::after {
+  content: "";
+  display: block;
+  width: 3rem;
+  height: 4px;
+  margin-top: 0.5rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f43f5e, #f97316);
+}
+
+/* Logo con latido (para la barra superior) */
+.ab-logo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border-radius: 0.85rem;
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
+  color: #fff;
+  font-size: 1.15rem;
+  box-shadow: 0 6px 16px rgba(225, 29, 72, 0.35);
+}
+.ab-logo span { display: block; animation: ab-beat 1.6s ease-in-out infinite; }
+.ab-logo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 0.85rem;
+  border: 2px solid #f43f5e;
+  animation: ab-halo 1.6s ease-out infinite;
+}
+
+/* Fondo animado (manchas + íconos flotantes), siempre detrás del contenido */
+.ab-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.ab-blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.35; animation: ab-float 14s ease-in-out infinite; }
+.ab-blob.b1 { width: 340px; height: 340px; background: #fb7185; top: -80px; left: -80px; }
+.ab-blob.b2 { width: 300px; height: 300px; background: #f43f5e; bottom: -90px; right: -60px; animation-duration: 18s; animation-delay: -5s; }
+.ab-blob.b3 { width: 240px; height: 240px; background: #fda4af; top: 45%; left: 55%; animation-duration: 22s; animation-delay: -9s; }
+.ab-fl { position: absolute; bottom: -90px; left: var(--x); opacity: 0; color: var(--a); animation: ab-rise var(--d) linear infinite; animation-delay: var(--dl); }
+.ab-fl i { display: block; font-style: normal; line-height: 1; animation: ab-pulse var(--p) ease-in-out infinite; animation-delay: var(--dl); }
+/* los íconos quedan muy tenues para no estorbar la lectura */
+.ab-bg .ab-fl { filter: opacity(0.4); }
+
+@keyframes ab-float { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(40px, 30px) scale(1.12); } 66% { transform: translate(-30px, 50px) scale(0.94); } }
+@keyframes ab-rise { 0% { transform: translate(0, 0); opacity: 0; } 8% { opacity: 0.9; } 50% { transform: translate(26px, -55vh); } 92% { opacity: 0.85; } 100% { transform: translate(-20px, -125vh); opacity: 0; } }
+@keyframes ab-pulse { 0%, 100% { transform: scale(1) rotate(-4deg); } 50% { transform: scale(1.25) rotate(5deg); } 75% { transform: scale(0.9) rotate(0); } }
+@keyframes ab-beat { 0%, 40%, 100% { transform: scale(1); } 15% { transform: scale(1.18); } 30% { transform: scale(0.96); } }
+@keyframes ab-halo { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.6); opacity: 0; } }
+@keyframes ab-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* En celular: menos íconos y manchas más chicas */
+@media (max-width: 640px) {
+  .ab-fl:nth-of-type(even) { display: none; }
+  .ab-blob.b1 { width: 220px; height: 220px; }
+  .ab-blob.b2 { width: 200px; height: 200px; }
+  .ab-blob.b3 { width: 160px; height: 160px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ab-blob, .ab-fl, .ab-fl i, .ab-logo span, .ab-logo::after, .ab-card { animation: none !important; }
+  .ab-fl { display: none; }
 }
 
 /* Contenido que solo existe para imprimir o generar PDF (oculto en pantalla) */
@@ -64,6 +167,7 @@ a {
 
   /* Lo que nunca se imprime */
   .no-print,
+  .ab-bg,
   #pdf-export-button,
   #print-report-panel {
     display: none !important;
