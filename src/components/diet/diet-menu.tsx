@@ -24,7 +24,7 @@ import { MENU_DAYS, RECIPES, getAllergyMatches, type MealType } from "@/lib/diet
 
 const MEAL_META: Record<MealType, { label: string; icon: typeof Apple }> = {
   desayuno: { label: "Desayuno", icon: Sunrise },
-  colacion: { label: "Colación", icon: Apple },
+  colacion: { label: "Refacción", icon: Apple },
   almuerzo: { label: "Almuerzo", icon: Utensils },
   cena: { label: "Cena", icon: Moon }
 };

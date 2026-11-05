@@ -49,7 +49,7 @@ const LIGHT_DOT: Record<TrafficLight, string> = {
 
 const MEAL_LABEL: Record<MealType, string> = {
   desayuno: "Desayuno",
-  colacion: "Colación",
+  colacion: "Refacción",
   almuerzo: "Almuerzo",
   cena: "Cena"
 };

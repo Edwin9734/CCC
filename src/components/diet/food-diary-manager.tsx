@@ -17,7 +17,7 @@ import { DIARY_TABS } from "@/lib/section-tabs";
 
 const MEALS: { key: DiaryMealType; label: string; icon: typeof Apple }[] = [
   { key: "desayuno", label: "Desayuno", icon: Sunrise },
-  { key: "colacion", label: "Colación", icon: Apple },
+  { key: "colacion", label: "Refacción", icon: Apple },
   { key: "almuerzo", label: "Almuerzo", icon: Utensils },
   { key: "cena", label: "Cena", icon: Moon }
 ];
