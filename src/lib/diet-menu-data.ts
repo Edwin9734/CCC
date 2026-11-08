@@ -1,5 +1,7 @@
 import { getFoodKeywords } from "@/lib/diet-allergens";
 
+export { RECIPES, type Recipe, type Ingredient } from "@/lib/recipes-data";
+
 export type MealType = "desayuno" | "colacion" | "almuerzo" | "cena";
 
 export interface MenuMeal {
@@ -17,33 +19,6 @@ export interface MenuDay {
   meals: MenuMeal[];
 }
 
-export interface Ingredient {
-  text: string;
-  foodId?: string;
-}
-
-export interface Recipe {
-  id: string;
-  name: string;
-  time: string;
-  servings: string;
-  ingredients: string[]; // solo el texto de cada ingrediente (se usa al imprimir)
-  ingredientItems: Ingredient[]; // con el alimento asociado (se usa para mostrar su imagen)
-  steps: string[];
-  tip?: string;
-  keywords: string[];
-}
-
-interface RecipeInput {
-  id: string;
-  name: string;
-  time: string;
-  servings: string;
-  ingredients: Ingredient[];
-  steps: string[];
-  tip?: string;
-}
-
 // Palabras para detectar posibles alergias: salen de los alimentos de cada plato o receta.
 function keywordsOf(foodIds: string[]): string[] {
   return Array.from(new Set(foodIds.flatMap((id) => getFoodKeywords(id))));
@@ -57,181 +32,25 @@ const meal = (type: MealType, text: string, foodIds: string[], recipeId?: string
   keywords: keywordsOf(foodIds)
 });
 
-const recipe = ({ ingredients, ...rest }: RecipeInput): Recipe => ({
-  ...rest,
-  ingredients: ingredients.map((item) => item.text),
-  ingredientItems: ingredients,
-  keywords: keywordsOf(ingredients.flatMap((item) => (item.foodId ? [item.foodId] : [])))
-});
-
-export const RECIPES: Recipe[] = [
-  recipe({
-    id: "avena",
-    name: "Avena con manzana y canela",
-    time: "10 min",
-    servings: "1 porción",
-    ingredients: [
-      { text: "½ taza de avena en hojuelas", foodId: "avena" },
-      { text: "1 taza de agua (o de leche descremada)", foodId: "agua" },
-      { text: "1 manzana en cubitos", foodId: "manzana" },
-      { text: "Canela al gusto", foodId: "canela" },
-      { text: "1 cucharada de almendras picadas (opcional)", foodId: "almendras" }
-    ],
-    steps: [
-      "Hierve el agua en una olla pequeña.",
-      "Agrega la avena y cocina 5 minutos a fuego bajo, moviendo de vez en cuando.",
-      "Añade la manzana y la canela, y cocina 2 minutos más.",
-      "Sirve tibia y, si quieres, con las almendras por encima."
-    ],
-    tip: "No le agregues azúcar ni miel: la manzana ya aporta dulzor."
-  }),
-  recipe({
-    id: "pescado",
-    name: "Pescado al horno con verduras",
-    time: "35 min",
-    servings: "2 porciones",
-    ingredients: [
-      { text: "2 filetes de pescado (salmón o sardina)", foodId: "salmon" },
-      { text: "Un trozo de ayote en rodajas", foodId: "ayote" },
-      { text: "1 zanahoria en rodajas finas", foodId: "zanahoria" },
-      { text: "1 tomate en rodajas", foodId: "tomate" },
-      { text: "1 cucharada de aceite de oliva", foodId: "aceite-oliva" },
-      { text: "Jugo de ½ limón", foodId: "limon" },
-      { text: "1 diente de ajo picado", foodId: "ajo" },
-      { text: "Orégano y pimienta al gusto, con muy poca sal", foodId: "oregano" }
-    ],
-    steps: [
-      "Calienta el horno a 180 °C.",
-      "Pon las verduras en una bandeja y úntalas con la mitad del aceite.",
-      "Coloca encima los filetes con el limón, el ajo, el orégano y el resto del aceite.",
-      "Hornea de 20 a 25 minutos, hasta que el pescado se desmenuce con un tenedor."
-    ],
-    tip: "Usa poca sal: el limón y las hierbas dan mucho sabor."
-  }),
-  recipe({
-    id: "ensalada-frijoles",
-    name: "Ensalada de frijoles",
-    time: "15 min",
-    servings: "2 porciones",
-    ingredients: [
-      { text: "1 taza de frijoles cocidos y escurridos", foodId: "frijoles" },
-      { text: "1 tomate picado", foodId: "tomate" },
-      { text: "½ pepino en cubos", foodId: "pepino" },
-      { text: "¼ de cebolla picada", foodId: "cebolla" },
-      { text: "¼ de aguacate", foodId: "aguacate" },
-      { text: "Jugo de 1 limón", foodId: "limon" },
-      { text: "1 cucharadita de aceite de oliva", foodId: "aceite-oliva" },
-      { text: "Cilantro al gusto", foodId: "cilantro" }
-    ],
-    steps: [
-      "Mezcla los frijoles, el tomate, el pepino y la cebolla en un recipiente.",
-      "Mezcla el limón con el aceite y agrégalo a la ensalada.",
-      "Añade el cilantro y revuelve.",
-      "Agrega el aguacate en cubos al final, para que no se deshaga."
-    ],
-    tip: "Usa frijoles cocidos en casa, sin manteca. Si usas frijoles de lata, enjuágalos antes para quitar el exceso de sal."
-  }),
-  recipe({
-    id: "lentejas",
-    name: "Lentejas guisadas con verduras",
-    time: "40 min",
-    servings: "4 porciones",
-    ingredients: [
-      { text: "1 taza de lentejas", foodId: "lentejas" },
-      { text: "4 tazas de agua", foodId: "agua" },
-      { text: "1 zanahoria picada", foodId: "zanahoria" },
-      { text: "1 tomate picado", foodId: "tomate" },
-      { text: "¼ de cebolla picada", foodId: "cebolla" },
-      { text: "1 diente de ajo", foodId: "ajo" },
-      { text: "1 cucharada de aceite de oliva", foodId: "aceite-oliva" },
-      { text: "1 hoja de laurel y muy poca sal", foodId: "laurel" }
-    ],
-    steps: [
-      "Lava las lentejas y cuécelas en el agua con la hoja de laurel por 25 minutos.",
-      "Aparte, sofríe en el aceite la cebolla, el ajo y el tomate por 5 minutos.",
-      "Agrega ese sofrito y la zanahoria a las lentejas.",
-      "Cocina 10 minutos más, hasta que todo esté suave, y sirve."
-    ],
-    tip: "Las lentejas no necesitan remojo. Acompáñalas con arroz integral o una tortilla de maíz."
-  }),
-  recipe({
-    id: "tostada",
-    name: "Tostada integral con aguacate y tomate",
-    time: "5 min",
-    servings: "1 porción",
-    ingredients: [
-      { text: "1 rebanada de pan integral", foodId: "pan-integral" },
-      { text: "¼ de aguacate maduro", foodId: "aguacate" },
-      { text: "2 rodajas de tomate", foodId: "tomate" },
-      { text: "Unas gotas de limón", foodId: "limon" },
-      { text: "Pimienta al gusto", foodId: "pimienta" }
-    ],
-    steps: [
-      "Tuesta el pan.",
-      "Machaca el aguacate con unas gotas de limón y úntalo sobre el pan.",
-      "Coloca el tomate encima y agrega pimienta."
-    ],
-    tip: "Puedes acompañarla con un huevo cocido, con moderación si tu LDL está alto."
-  }),
-  recipe({
-    id: "licuado-verde",
-    name: "Licuado verde",
-    time: "5 min",
-    servings: "1 porción",
-    ingredients: [
-      { text: "1 taza de agua", foodId: "agua" },
-      { text: "1 puñado de espinaca", foodId: "espinaca" },
-      { text: "½ pepino", foodId: "pepino" },
-      { text: "1 tallo de apio", foodId: "apio" },
-      { text: "½ manzana verde", foodId: "manzana" },
-      { text: "Jugo de ½ limón", foodId: "limon" }
-    ],
-    steps: [
-      "Lava bien las verduras y la fruta.",
-      "Licúa todo con el agua hasta que quede suave.",
-      "Sirve de inmediato, sin azúcar."
-    ],
-    tip: "Si tomas warfarina o acenocumarol, consulta a tu médico antes de tomarlo seguido: la espinaca tiene vitamina K."
-  }),
-  recipe({
-    id: "platano",
-    name: "Plátano al horno con canela",
-    time: "25 min",
-    servings: "1 porción",
-    ingredients: [
-      { text: "1 plátano maduro", foodId: "platano" },
-      { text: "Canela al gusto", foodId: "canela" },
-      { text: "Unas gotas de limón (opcional)", foodId: "limon" }
-    ],
-    steps: [
-      "Calienta el horno a 180 °C.",
-      "Pela el plátano y córtalo por la mitad a lo largo.",
-      "Colócalo en una bandeja y hornéalo de 15 a 20 minutos, hasta que esté suave y dorado.",
-      "Espolvorea la canela y sirve tibio."
-    ],
-    tip: "No necesita azúcar ni aceite: el plátano maduro ya es dulce. No lo frías."
-  })
-];
-
 export const MENU_DAYS: MenuDay[] = [
   {
     key: "lunes",
     label: "Lunes",
     short: "Lun",
     meals: [
-      meal("desayuno", "Avena con manzana y canela, y té verde sin azúcar.", ["avena", "manzana", "canela", "te-verde"], "avena"),
+      meal("desayuno", "Mosh de avena con manzana, y té verde sin azúcar.", ["avena", "manzana", "canela", "te-verde"], "mosh"),
       meal("colacion", "1 naranja.", ["naranja"]),
       meal(
         "almuerzo",
-        "Pescado al horno con verduras y 3 a 4 cucharadas de arroz integral.",
-        ["salmon", "ayote", "zanahoria", "tomate", "arroz-integral"],
-        "pescado"
+        "Mojarra al horno con limón y 3 a 4 cucharadas de arroz integral.",
+        ["guisquil", "zanahoria", "tomate", "limon", "arroz-integral"],
+        "mojarra"
       ),
       meal(
         "cena",
-        "Ensalada de frijoles y una tortilla de maíz.",
-        ["frijoles", "tomate", "pepino", "aguacate", "tortilla-maiz"],
-        "ensalada-frijoles"
+        "Frijoles parados con chirmol y una tortilla de maíz.",
+        ["frijoles", "tomate", "cilantro", "tortilla-maiz"],
+        "frijoles-parados"
       )
     ]
   },
@@ -240,7 +59,7 @@ export const MENU_DAYS: MenuDay[] = [
     label: "Martes",
     short: "Mar",
     meals: [
-      meal("desayuno", "Tostada integral con aguacate y tomate, y agua o infusión sin azúcar.", ["pan-integral", "aguacate", "tomate", "agua"], "tostada"),
+      meal("desayuno", "Tostadas con frijol y aguacate, y agua o infusión sin azúcar.", ["frijoles", "aguacate", "agua"], "tostada-aguacate"),
       meal("colacion", "Un puñado pequeño de almendras (unas 10).", ["almendras"]),
       meal(
         "almuerzo",
@@ -275,7 +94,7 @@ export const MENU_DAYS: MenuDay[] = [
     label: "Jueves",
     short: "Jue",
     meals: [
-      meal("desayuno", "Avena con manzana y canela.", ["avena", "manzana", "canela"], "avena"),
+      meal("desayuno", "Mosh de avena con manzana.", ["avena", "manzana", "canela"], "mosh"),
       meal("colacion", "Zanahoria y pepino en tiras con limón.", ["zanahoria", "pepino", "limon"]),
       meal(
         "almuerzo",
@@ -297,7 +116,7 @@ export const MENU_DAYS: MenuDay[] = [
       meal("desayuno", "Licuado verde y una rebanada de pan integral.", ["licuado-verde", "pan-integral"], "licuado-verde"),
       meal("colacion", "1 plátano pequeño, hervido o al horno, sin freír.", ["platano", "canela"], "platano"),
       meal("almuerzo", "Salmón a la plancha con brócoli y papa cocida.", ["salmon", "brocoli", "papa"]),
-      meal("cena", "Ensalada de frijoles.", ["frijoles", "tomate", "pepino", "aguacate"], "ensalada-frijoles")
+      meal("cena", "Frijoles parados con chirmol.", ["frijoles", "tomate", "cilantro"], "frijoles-parados")
     ]
   },
   {
@@ -305,7 +124,7 @@ export const MENU_DAYS: MenuDay[] = [
     label: "Sábado",
     short: "Sáb",
     meals: [
-      meal("desayuno", "Tostada integral con aguacate y tomate.", ["pan-integral", "aguacate", "tomate"], "tostada"),
+      meal("desayuno", "Tostadas con frijol y aguacate.", ["frijoles", "aguacate"], "tostada-aguacate"),
       meal("colacion", "1 naranja.", ["naranja"]),
       meal(
         "almuerzo",
@@ -327,12 +146,12 @@ export const MENU_DAYS: MenuDay[] = [
     meals: [
       meal(
         "desayuno",
-        "Avena con manzana y canela, con almendras picadas.",
+        "Mosh de avena con manzana, con almendras picadas.",
         ["avena", "manzana", "canela", "almendras"],
-        "avena"
+        "mosh"
       ),
       meal("colacion", "Un puñado pequeño de maní, sin sal.", ["mani"]),
-      meal("almuerzo", "Pescado al horno con verduras.", ["salmon", "ayote", "zanahoria", "tomate"], "pescado"),
+      meal("almuerzo", "Mojarra al horno con limón.", ["guisquil", "zanahoria", "tomate", "limon"], "mojarra"),
       meal("cena", "Frijoles cocidos con aguacate y una tortilla de maíz.", ["frijoles", "aguacate", "tortilla-maiz"])
     ]
   }

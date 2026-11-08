@@ -3,7 +3,8 @@ import { AppShell } from "@/components/app-shell";
 import { AllergyManager } from "@/components/allergies/allergy-manager";
 import { DietBrowser } from "@/components/diet/diet-browser";
 import { DietInsightsPanel } from "@/components/diet/diet-insights-panel";
-import { DietMenu, DietRecipes } from "@/components/diet/diet-menu";
+import { DietMenu } from "@/components/diet/diet-menu";
+import { DietRecipes } from "@/components/diet/recipes-section";
 import { SectionTabs } from "@/components/shell/section-tabs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getMeasurements, type MeasurementWithStatus } from "@/lib/supabase/measurements";
@@ -88,7 +89,7 @@ export default async function DietasPage({
               </>
             ),
             menu: <DietMenu allergyNames={allergyNames} />,
-            recetas: <DietRecipes allergyNames={allergyNames} />
+            recetas: <DietRecipes allergyNames={allergyNames} waterRestricted={Boolean(extras?.waterRestricted)} />
           }}
         />
       </div>

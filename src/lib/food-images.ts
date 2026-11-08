@@ -91,6 +91,20 @@ export function foodImageSrc(id: string): string {
   return PHOTO_SET.has(id) ? `/foods/${id}.webp` : `/foods/${id}.svg`;
 }
 
+// Recetas que ya tienen su foto terminada (archivo public/recipes/<id>.webp).
+// Las demás muestran un fondo de color con un ícono animado.
+export const RECIPE_PHOTO_IDS: string[] = [];
+
+const RECIPE_PHOTO_SET = new Set(RECIPE_PHOTO_IDS);
+
+export function hasRecipePhoto(id: string): boolean {
+  return RECIPE_PHOTO_SET.has(id);
+}
+
+export function recipeImageSrc(id: string): string {
+  return `/recipes/${id}.webp`;
+}
+
 // Crédito que se muestra al pie de la guía de alimentación (null = no se muestra nada).
 // Los íconos de la barra inferior también son de Twemoji, así que el crédito se mantiene.
 export const FOOD_IMAGE_CREDIT: string | null = "Íconos de Twemoji (CC BY 4.0).";
