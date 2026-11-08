@@ -9,8 +9,8 @@ import {
 import type { ActivityRow, DailyHabitValues, IntakeRow } from "@/lib/supabase/habits";
 import type { MedicationWithSchedules } from "@/lib/supabase/medications";
 
-const WEEKDAY_LETTERS = ["L", "M", "X", "J", "V", "S", "D"];
-const WEEKDAY_NAMES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+export const WEEKDAY_LETTERS = ["L", "M", "X", "J", "V", "S", "D"];
+export const WEEKDAY_NAMES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
 // ---------------------------------------------------------------------------
 // Tomas de medicamentos

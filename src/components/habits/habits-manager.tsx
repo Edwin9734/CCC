@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { SectionCard } from "@/components/section-card";
+import { DayPickerBar } from "@/components/habits/day-picker-bar";
 import { MedicationIntakeCard } from "@/components/habits/medication-intake-card";
 import { ActivityCard } from "@/components/habits/activity-card";
 import { WaterSleepCard } from "@/components/habits/water-sleep-card";
@@ -29,7 +29,7 @@ import {
   type Dose
 } from "@/lib/habits-config";
 import { buildHabitDays } from "@/lib/habits-insights";
-import { addDays, formatDate, toDateString } from "@/lib/date-utils";
+import { addDays, toDateString } from "@/lib/date-utils";
 import { HABIT_TABS } from "@/lib/section-tabs";
 import "./habits.css";
 
@@ -267,52 +267,15 @@ export function HabitsManager({
     setActivities((prev) => prev.filter((a) => a.id !== id));
   };
 
-  const dateTitle = date
-    ? date === today
-      ? "Hoy"
-      : formatDate(date, { weekday: "long", day: "numeric", month: "long" })
-    : "";
-
   const loading = loadError ? null : <p className="text-center text-sm text-muted">Cargando tus hábitos...</p>;
 
   return (
     <div className="space-y-6">
-      <SectionCard
-        title="Registro del día"
-        description="Elige el día que quieres registrar. Lo de las pestañas de abajo se guarda en ese día."
-      >
-        <div className="flex flex-wrap items-end gap-3">
-          <label className="grid gap-2">
-            <span className="text-sm font-semibold">Fecha</span>
-            <input
-              type="date"
-              value={date}
-              max={today || undefined}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value && (!today || value <= today)) setDate(value);
-              }}
-              className="rounded-2xl border border-black/10 bg-background px-4 py-4 text-base outline-none"
-            />
-          </label>
+      <DayPickerBar date={date} today={today} days={recentDays} onChange={setDate} />
 
-          {today && date !== today ? (
-            <button
-              type="button"
-              onClick={() => setDate(today)}
-              className="rounded-full border border-black/10 bg-white px-5 py-4 text-sm font-semibold text-ink transition hover:bg-slate-50"
-            >
-              Ir a hoy
-            </button>
-          ) : null}
-        </div>
-
-        {dateTitle ? <p className="mt-3 text-base font-semibold capitalize text-ink">{dateTitle}</p> : null}
-
-        {saveError ? (
-          <p className="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-semibold text-danger">{saveError}</p>
-        ) : null}
-      </SectionCard>
+      {saveError ? (
+        <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm font-semibold text-danger">{saveError}</p>
+      ) : null}
 
       {loadError ? (
         <div className="rounded-2xl bg-rose-50 px-4 py-4 text-sm font-semibold text-danger">
