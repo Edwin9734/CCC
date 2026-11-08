@@ -23,6 +23,7 @@ export const HABIT_TABS: TabDef[] = [
   { key: "medicamentos", label: "Medicamentos", icon: "medicamentos" },
   { key: "agua", label: "Agua y sueño", icon: "agua-sueno" },
   { key: "actividad", label: "Actividad", icon: "actividad" },
+  { key: "rutina", label: "Rutina", icon: "rutina" },
   { key: "semana", label: "Semana", icon: "semana" }
 ];
 

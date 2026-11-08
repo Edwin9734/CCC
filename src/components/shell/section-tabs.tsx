@@ -129,7 +129,7 @@ export function SectionTabs({
                 onClick={() => setActive(tab.key)}
                 onKeyDown={(event) => handleKeyDown(event, index)}
                 className={cn(
-                  "flex min-w-[4.5rem] flex-1 shrink-0 flex-col items-center gap-1 rounded-2xl px-1 py-2 text-center text-xs font-semibold leading-tight transition focus:outline-none focus:ring-4 focus:ring-accent/15",
+                  "flex min-w-[4.25rem] flex-1 shrink-0 flex-col items-center gap-1 rounded-2xl px-1 py-2 text-center text-xs font-semibold leading-tight transition focus:outline-none focus:ring-4 focus:ring-accent/15",
                   selected ? "bg-accentSoft text-accent" : "text-muted hover:bg-slate-50"
                 )}
               >

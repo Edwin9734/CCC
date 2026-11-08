@@ -20,4 +20,5 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 
 1. Instalar dependencias con `npm install`.
 2. Ejecutar el SQL de [supabase/schema.sql](supabase/schema.sql) en el proyecto de Supabase.
-3. Crear registros reales con Supabase Auth y enlazar lectura/escritura desde la app.
+3. Para la pestaña Rutina de Hábitos, ejecutar también [supabase/rutina.sql](supabase/rutina.sql) (se deshace con [supabase/rutina-deshacer.sql](supabase/rutina-deshacer.sql)).
+4. Crear registros reales con Supabase Auth y enlazar lectura/escritura desde la app.

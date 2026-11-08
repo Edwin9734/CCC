@@ -3,6 +3,7 @@ import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
 import { HabitsManager } from "@/components/habits/habits-manager";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { buildContacts, type ContactsInfo } from "@/lib/contacts";
 import { minutesNowInAppTimeZone, todayInAppTimeZone } from "@/lib/date-utils";
 import { buildAdjustedPlan, loadAdjustmentData } from "@/lib/plan-adjustment";
 import { HABIT_TABS, normalizeTab } from "@/lib/section-tabs";
@@ -22,6 +23,7 @@ export default async function HabitosPage({
   let medications: MedicationWithSchedules[] = [];
   let activityGoalMinutes: number | undefined;
   let waterNotice: string | null = null;
+  let contacts: ContactsInfo | null = null;
 
   if (data.user) {
     const today = todayInAppTimeZone();
@@ -38,6 +40,7 @@ export default async function HabitosPage({
     });
     activityGoalMinutes = adjustment.activity.minutes;
     waterNotice = extras.liquidNotice;
+    contacts = buildContacts(loaded.profile);
   }
 
   return (
@@ -51,6 +54,7 @@ export default async function HabitosPage({
           medications={medications}
           activityGoalMinutes={activityGoalMinutes}
           waterNotice={waterNotice}
+          contacts={contacts}
           initialTab={initialTab}
         />
       ) : (

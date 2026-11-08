@@ -5,8 +5,10 @@ import { DayPickerBar } from "@/components/habits/day-picker-bar";
 import { MedicationIntakeCard } from "@/components/habits/medication-intake-card";
 import { ActivityCard } from "@/components/habits/activity-card";
 import { WaterSleepCard } from "@/components/habits/water-sleep-card";
+import { RoutineManager } from "@/components/habits/routine-manager";
 import { WeekSummaryCard } from "@/components/habits/week-summary-card";
 import { SectionTabs } from "@/components/shell/section-tabs";
+import type { ContactsInfo } from "@/lib/contacts";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
   addActivity,
@@ -43,11 +45,13 @@ export function HabitsManager({
   medications,
   activityGoalMinutes,
   waterNotice,
+  contacts,
   initialTab
 }: {
   medications: MedicationWithSchedules[];
   activityGoalMinutes?: number;
   waterNotice?: string | null;
+  contacts: ContactsInfo | null;
   initialTab: string;
 }) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
@@ -330,6 +334,7 @@ export function HabitsManager({
           ) : (
             loading
           ),
+          rutina: <RoutineManager date={date} today={today} contacts={contacts} />,
           semana: summary ? (
             <WeekSummaryCard
               summary={summary}

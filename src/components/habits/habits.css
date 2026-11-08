@@ -144,7 +144,61 @@
   100% { transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(var(--r)); opacity: 0; }
 }
 
+/* ---------- Rutina ---------- */
+.hab-page {
+  transform-box: view-box;
+  transform-origin: 80px 50px;
+  animation: hab-page 3.2s ease-in-out infinite;
+}
+.hab-letter {
+  animation: hab-letter 3s ease-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+.hab-wing {
+  transform-box: fill-box;
+  animation: hab-wing 0.55s ease-in-out infinite alternate;
+}
+.hab-wing-left { transform-origin: 100% 50%; }
+.hab-wing-right { transform-origin: 0% 50%; }
+.hab-sway {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: hab-sway 3.4s ease-in-out infinite;
+}
+.hab-breath { animation: hab-breath 10s ease-in-out infinite; }
+
+@keyframes hab-page {
+  0%, 15% { transform: scaleX(1); }
+  60%, 100% { transform: scaleX(-1); }
+}
+@keyframes hab-letter {
+  0% { opacity: 0; transform: translateY(8px); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-22px); }
+}
+@keyframes hab-wing {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0.45); }
+}
+@keyframes hab-sway {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+@keyframes hab-breath {
+  0%, 100% { transform: scale(0.72); }
+  40% { transform: scale(1.12); }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .hab-page,
+  .hab-wing,
+  .hab-sway,
+  .hab-breath {
+    animation: none !important;
+  }
+  .hab-letter {
+    display: none;
+  }
   .hab-ring,
   .hab-pop,
   .hab-rise,
