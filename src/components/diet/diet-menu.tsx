@@ -16,9 +16,10 @@ import {
 } from "lucide-react";
 import { SectionCard } from "@/components/section-card";
 import { FoodDialog } from "@/components/diet/food-dialog";
-import { FoodImage } from "@/components/diet/food-image";
-import { FoodTiles } from "@/components/diet/food-tiles";
+import { FoodPhotoTile } from "@/components/diet/food-photo-tile";
+import { FOOD_GRID_WIDE, FoodTiles } from "@/components/diet/food-tiles";
 import { useSectionTabs } from "@/components/shell/section-tabs";
+import { DIET_ITEM_BY_ID } from "@/lib/diet-data";
 import { findAllergenMatches } from "@/lib/diet-allergens";
 import { MENU_DAYS, RECIPES, getAllergyMatches, type MealType } from "@/lib/diet-menu-data";
 
@@ -88,7 +89,7 @@ export function DietMenu({ allergyNames = [] }: { allergyNames?: string[] }) {
               </div>
               <p className="mt-2 text-base leading-7 text-ink">{item.text}</p>
 
-              <FoodTiles ids={item.foodIds} tone="neutral" allergyMatches={foodMatches} limit={12} />
+              <FoodTiles ids={item.foodIds} allergyMatches={foodMatches} limit={12} narrow />
 
               {flagged.length > 0 ? (
                 <div className="mt-3 flex items-start gap-2 rounded-2xl bg-rose-100 p-3 text-sm font-semibold leading-6 text-rose-900">
@@ -201,41 +202,32 @@ export function DietRecipes({ allergyNames = [] }: { allergyNames?: string[] }) 
                   <div className="space-y-5 border-t border-black/5 p-5">
                     <div>
                       <p className="text-sm font-semibold text-ink">Ingredientes</p>
-                      <ul className="mt-2 space-y-2">
-                        {recipe.ingredientItems.map((ingredient) => {
-                          if (!ingredient.foodId) {
-                            return (
-                              <li key={ingredient.text} className="text-base leading-7 text-ink">
-                                {ingredient.text}
-                              </li>
-                            );
-                          }
+                      <div className={`mt-2 ${FOOD_GRID_WIDE}`}>
+                        {recipe.ingredientItems.flatMap((ingredient) => {
+                          const food = ingredient.foodId ? DIET_ITEM_BY_ID.get(ingredient.foodId) : undefined;
+                          if (!food) return [];
 
-                          const id = ingredient.foodId;
-                          const allergic = foodMatches[id];
-
-                          return (
-                            <li key={ingredient.text}>
-                              <button
-                                type="button"
-                                aria-haspopup="dialog"
-                                onClick={(event) => {
-                                  returnRef.current = event.currentTarget;
-                                  setFoodId(id);
-                                }}
-                                className={`flex w-full items-center gap-3 rounded-2xl border px-3 py-2 text-left transition focus:outline-none focus:ring-4 focus:ring-accent/15 ${
-                                  allergic
-                                    ? "border-rose-300 bg-rose-50 hover:bg-rose-100"
-                                    : "border-black/5 bg-white hover:bg-slate-50"
-                                }`}
-                              >
-                                <FoodImage id={id} size={36} rounded="rounded-xl" className="bg-slate-50" />
-                                <span className="flex-1 text-base leading-7 text-ink">{ingredient.text}</span>
-                                {allergic ? <ShieldAlert className="h-4 w-4 shrink-0 text-rose-700" /> : null}
-                              </button>
-                            </li>
-                          );
+                          return [
+                            <FoodPhotoTile
+                              key={ingredient.text}
+                              item={food}
+                              label={ingredient.text}
+                              opensDialog
+                              flagged={Boolean(foodMatches[food.id])}
+                              onClick={(event) => {
+                                returnRef.current = event.currentTarget;
+                                setFoodId(food.id);
+                              }}
+                            />
+                          ];
                         })}
+                      </div>
+                      <ul className="mt-3 list-disc space-y-1 pl-5 text-base leading-7 text-ink">
+                        {recipe.ingredientItems
+                          .filter((ingredient) => !ingredient.foodId || !DIET_ITEM_BY_ID.has(ingredient.foodId))
+                          .map((ingredient) => (
+                            <li key={ingredient.text}>{ingredient.text}</li>
+                          ))}
                       </ul>
                     </div>
 

@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { AlertTriangle, Apple, Ban, CupSoda, GlassWater, Info, Leaf, Search, ShieldAlert } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { Apple, Ban, CupSoda, GlassWater, Info, Leaf, Search } from "lucide-react";
 import { SectionCard } from "@/components/section-card";
-import { FoodImage } from "@/components/diet/food-image";
+import { FoodDialog } from "@/components/diet/food-dialog";
+import { FoodPhotoTile } from "@/components/diet/food-photo-tile";
 import { FOOD_IMAGE_CREDIT } from "@/lib/food-images";
 import { DIET_ITEMS, TRAFFIC_LABEL, type DietCategory, type TrafficLight } from "@/lib/diet-data";
 
@@ -23,22 +24,10 @@ const CATEGORY_LABEL: Record<DietCategory, string> = {
   others: "Verdura, cereal o condimento"
 };
 
-const LIGHTS: Record<TrafficLight, { card: string; badge: string; dot: string }> = {
-  green: {
-    card: "border-emerald-200 bg-emerald-50",
-    badge: "bg-emerald-100 text-emerald-800",
-    dot: "bg-emerald-500"
-  },
-  yellow: {
-    card: "border-amber-200 bg-amber-50",
-    badge: "bg-amber-100 text-amber-800",
-    dot: "bg-amber-500"
-  },
-  red: {
-    card: "border-rose-200 bg-rose-50",
-    badge: "bg-rose-100 text-rose-800",
-    dot: "bg-rose-500"
-  }
+const LIGHTS: Record<TrafficLight, { dot: string }> = {
+  green: { dot: "bg-emerald-500" },
+  yellow: { dot: "bg-amber-500" },
+  red: { dot: "bg-rose-500" }
 };
 
 function normalize(text: string) {
@@ -58,6 +47,8 @@ export function DietBrowser({
   const [tab, setTab] = useState<DietCategory>("foods-good");
   const [query, setQuery] = useState("");
   const [hideAllergens, setHideAllergens] = useState(true);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const returnRef = useRef<HTMLElement | null>(null);
 
   const focusSet = useMemo(() => new Set(focusIds), [focusIds]);
   const hasAllergyMatches = Object.keys(allergyMatches).length > 0;
@@ -86,7 +77,7 @@ export function DietBrowser({
 
       <SectionCard
         title="Guía de alimentación"
-        description="Busca un alimento o bebida, o explora por categoría. El semáforo te indica qué tan conveniente es."
+        description="Busca un alimento o bebida, o explora por categoría. Toca uno para ver su descripción."
       >
         <div className="flex items-center gap-3 rounded-2xl border border-black/10 bg-background px-4 py-4">
           <Search className="h-5 w-5 shrink-0 text-muted" />
@@ -162,65 +153,31 @@ export function DietBrowser({
               : "No encontramos resultados. Prueba con otra palabra."}
           </div>
         ) : (
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            {items.map((item) => {
-              const light = LIGHTS[item.level];
-              const forYou = focusSet.has(item.id);
-              const flagged = allergyMatches[item.id];
-              return (
-                <article
-                  key={item.id}
-                  className={`rounded-3xl border p-5 ${light.card} ${forYou ? "ring-2 ring-accent" : ""}`}
-                >
-                  <div className="flex items-start gap-4">
-                    <FoodImage id={item.id} size={64} rounded="rounded-2xl" className="bg-white p-1" />
-
-                    <div className="min-w-0 flex-1">
-                      {forYou ? (
-                        <span className="mb-2 inline-block rounded-full bg-accent px-3 py-1 text-xs font-semibold text-white">
-                          Para ti
-                        </span>
-                      ) : null}
-
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <h3 className="text-lg font-semibold text-ink">{item.name}</h3>
-                        <span
-                          className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${light.badge}`}
-                        >
-                          {TRAFFIC_LABEL[item.level]}
-                        </span>
-                      </div>
-
-                      {searching ? (
-                        <p className="mt-1 text-xs font-semibold text-muted">{CATEGORY_LABEL[item.category]}</p>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  {flagged ? (
-                    <div className="mt-3 flex items-start gap-2 rounded-2xl bg-rose-100 p-3 text-sm font-semibold text-rose-900">
-                      <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
-                      <p>Posible alergia: {flagged.join(", ")}</p>
-                    </div>
-                  ) : null}
-
-                  <p className="mt-3 text-base leading-7 text-ink">{item.why}</p>
-                  <p className="mt-2 text-sm leading-6 text-muted">
-                    <span className="font-semibold text-ink">Porción o frecuencia: </span>
-                    {item.portion}
-                  </p>
-
-                  {item.warning ? (
-                    <div className="mt-3 flex items-start gap-2 rounded-2xl bg-white/80 p-3 text-sm leading-6 text-amber-900">
-                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                      <p>{item.warning}</p>
-                    </div>
-                  ) : null}
-                </article>
-              );
-            })}
+          <div className="mt-4 grid grid-cols-2 gap-3 min-[440px]:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+            {items.map((item) => (
+              <FoodPhotoTile
+                key={item.id}
+                item={item}
+                tinted
+                opensDialog
+                forYou={focusSet.has(item.id)}
+                flagged={Boolean(allergyMatches[item.id])}
+                subtitle={searching ? CATEGORY_LABEL[item.category] : undefined}
+                onClick={(event) => {
+                  returnRef.current = event.currentTarget;
+                  setOpenId(item.id);
+                }}
+              />
+            ))}
           </div>
         )}
+
+        <FoodDialog
+          foodId={openId}
+          allergies={openId ? allergyMatches[openId] : undefined}
+          onClose={() => setOpenId(null)}
+          returnFocusRef={returnRef}
+        />
 
         {FOOD_IMAGE_CREDIT ? <p className="mt-6 text-xs leading-5 text-muted">{FOOD_IMAGE_CREDIT}</p> : null}
       </SectionCard>

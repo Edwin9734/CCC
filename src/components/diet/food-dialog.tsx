@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import { AlertTriangle, ShieldAlert, X } from "lucide-react";
 import { DIET_ITEM_BY_ID, TRAFFIC_LABEL, type TrafficLight } from "@/lib/diet-data";
 import { FoodImage } from "@/components/diet/food-image";
@@ -31,10 +32,12 @@ export function FoodDialog({
 
   if (!item) return null;
 
-  return (
+  // Se dibuja directamente en <body>: las tarjetas de la app tienen efectos que harían que
+  // "fixed" se mida contra la tarjeta y no contra la pantalla, y la ventana quedaría fuera de lugar.
+  return createPortal(
     <div
       onClick={onClose}
-      className="no-print fixed inset-0 z-[60] flex items-end justify-center bg-black/50 sm:items-center sm:p-4"
+      className="no-print fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
     >
       <section
         ref={panelRef}
@@ -42,11 +45,11 @@ export function FoodDialog({
         aria-modal="true"
         aria-labelledby="food-dialog-title"
         onClick={(event) => event.stopPropagation()}
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-surface p-6 shadow-soft sm:rounded-3xl"
+        className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-3xl bg-surface p-6 text-ink shadow-soft"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-4">
-            <FoodImage id={item.id} size={80} rounded="rounded-2xl" className="bg-white p-1" />
+            <FoodImage id={item.id} size={112} rounded="rounded-2xl" className="bg-white p-1" />
             <div>
               <h2 id="food-dialog-title" className="text-xl font-semibold text-ink">
                 {item.name}
@@ -92,6 +95,7 @@ export function FoodDialog({
           Información general: no reemplaza la indicación de tu médico o nutricionista.
         </p>
       </section>
-    </div>
+    </div>,
+    document.body
   );
 }

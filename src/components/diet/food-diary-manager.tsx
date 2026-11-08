@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Apple, Moon, Plus, Search, ShieldAlert, Sunrise, Trash2, Utensils } from "lucide-react";
 import { SectionCard } from "@/components/section-card";
-import { FoodImage } from "@/components/diet/food-image";
+import { FoodDialog } from "@/components/diet/food-dialog";
+import { FoodPhotoTile } from "@/components/diet/food-photo-tile";
+import { FOOD_GRID_WIDE } from "@/components/diet/food-tiles";
 import { SectionTabs } from "@/components/shell/section-tabs";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
@@ -12,7 +14,7 @@ import {
   type DiaryMealType,
   type FoodDiaryRow
 } from "@/lib/supabase/food-diary";
-import { DIET_ITEMS, type TrafficLight } from "@/lib/diet-data";
+import { DIET_ITEMS } from "@/lib/diet-data";
 import { DIARY_TABS } from "@/lib/section-tabs";
 
 const MEALS: { key: DiaryMealType; label: string; icon: typeof Apple }[] = [
@@ -27,12 +29,6 @@ const MEAL_BY_KEY = new Map(MEALS.map((meal) => [meal.key, meal]));
 const MEAL_ORDER: Record<DiaryMealType, number> = { desayuno: 0, colacion: 1, almuerzo: 2, cena: 3 };
 
 const ITEM_BY_ID = new Map(DIET_ITEMS.map((item) => [item.id, item]));
-
-const LIGHT_DOT: Record<TrafficLight, string> = {
-  green: "bg-emerald-500",
-  yellow: "bg-amber-500",
-  red: "bg-rose-500"
-};
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -88,6 +84,8 @@ export function FoodDiaryManager({
   const [message, setMessage] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [visibleDays, setVisibleDays] = useState(7);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const detailReturnRef = useRef<HTMLElement | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // La fecha de hoy se calcula en el navegador, para usar la hora local de la persona.
@@ -280,43 +278,20 @@ export function FoodDiaryManager({
             />
           </div>
 
-          <div className="max-h-72 overflow-y-auto rounded-2xl border border-black/10 bg-white p-3">
+          <div className="max-h-[32rem] overflow-y-auto rounded-2xl border border-black/10 bg-background p-3">
             {filteredItems.length === 0 ? (
               <p className="text-sm text-muted">No encontramos resultados.</p>
             ) : (
-              <div className="flex flex-wrap gap-2">
-                {filteredItems.map((item) => {
-                  const selected = selectedIds.includes(item.id);
-                  const flagged = Boolean(allergyMatches[item.id]);
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => toggleItem(item.id)}
-                      aria-pressed={selected}
-                      className={`flex items-center gap-2 rounded-full border py-1.5 pl-1.5 pr-3 text-sm font-semibold transition ${
-                        selected
-                          ? "border-accent bg-accent text-white"
-                          : flagged
-                            ? "border-rose-300 bg-rose-50 text-rose-900"
-                            : "border-black/10 bg-white text-ink hover:bg-slate-50"
-                      }`}
-                    >
-                      <FoodImage
-                        id={item.id}
-                        size={28}
-                        rounded="rounded-full"
-                        className={selected ? "bg-white" : "bg-slate-50"}
-                      />
-                      {item.name}
-                      {flagged ? (
-                        <ShieldAlert className="h-3.5 w-3.5" />
-                      ) : (
-                        <span className={`h-2.5 w-2.5 rounded-full ${LIGHT_DOT[item.level]}`} />
-                      )}
-                    </button>
-                  );
-                })}
+              <div className="grid grid-cols-2 gap-3 min-[440px]:grid-cols-3 sm:grid-cols-4 lg:grid-cols-5">
+                {filteredItems.map((item) => (
+                  <FoodPhotoTile
+                    key={item.id}
+                    item={item}
+                    selected={selectedIds.includes(item.id)}
+                    flagged={Boolean(allergyMatches[item.id])}
+                    onClick={() => toggleItem(item.id)}
+                  />
+                ))}
               </div>
             )}
           </div>
@@ -356,6 +331,12 @@ export function FoodDiaryManager({
 
   const listCard = (
     <SectionCard title="Mi diario" description="Lo que has registrado, de lo más reciente a lo más antiguo.">
+      <FoodDialog
+        foodId={detailId}
+        allergies={detailId ? allergyMatches[detailId] : undefined}
+        onClose={() => setDetailId(null)}
+        returnFocusRef={detailReturnRef}
+      />
       {groups.length === 0 ? (
         <p className="text-sm text-muted">Aún no has registrado comidas.</p>
       ) : (
@@ -394,16 +375,19 @@ export function FoodDiaryManager({
                       </div>
 
                       {items.length > 0 ? (
-                        <div className="mt-2 flex flex-wrap gap-2">
+                        <div className={`mt-2 ${FOOD_GRID_WIDE}`}>
                           {items.map((item) => (
-                            <span
+                            <FoodPhotoTile
                               key={item.id}
-                              className="flex items-center gap-2 rounded-full border border-black/10 bg-white py-1 pl-1 pr-3 text-sm text-ink"
-                            >
-                              <FoodImage id={item.id} size={24} rounded="rounded-full" className="bg-slate-50" />
-                              {item.name}
-                              <span className={`h-2.5 w-2.5 rounded-full ${LIGHT_DOT[item.level]}`} />
-                            </span>
+                              item={item}
+                              tinted
+                              opensDialog
+                              flagged={Boolean(allergyMatches[item.id])}
+                              onClick={(event) => {
+                                detailReturnRef.current = event.currentTarget;
+                                setDetailId(item.id);
+                              }}
+                            />
                           ))}
                         </div>
                       ) : null}

@@ -198,7 +198,7 @@ export function PlanView({
       </div>
 
       <p className="mt-5 text-sm font-semibold text-ink">Conviene priorizar:</p>
-      <FoodTiles ids={plan.diet.goodIds} tone="good" allergyMatches={allergyMatches} />
+      <FoodTiles ids={plan.diet.goodIds} allergyMatches={allergyMatches} />
       {plan.diet.omittedCount > 0 ? (
         <p className="mt-2 text-xs leading-5 text-muted">
           Se omitieron {plan.diet.omittedCount} alimento(s) de esta lista por tus alergias registradas.
@@ -206,7 +206,7 @@ export function PlanView({
       ) : null}
 
       <p className="mt-5 text-sm font-semibold text-ink">Conviene evitar o limitar:</p>
-      <FoodTiles ids={plan.diet.limitIds} tone="avoid" allergyMatches={allergyMatches} />
+      <FoodTiles ids={plan.diet.limitIds} allergyMatches={allergyMatches} />
 
       <ul className="mt-5 list-disc space-y-1 pl-5 text-base leading-7 text-ink">
         {plan.diet.tips.map((tip) => (

@@ -47,10 +47,10 @@ export function DietInsightsPanel({
             <p className="mt-2 text-sm leading-6 text-ink">{insight.message}</p>
 
             <p className="mt-4 text-sm font-semibold text-ink">Conviene priorizar:</p>
-            <FoodTiles ids={insight.goodIds} tone="good" allergyMatches={allergyMatches} />
+            <FoodTiles ids={insight.goodIds} allergyMatches={allergyMatches} />
 
             <p className="mt-4 text-sm font-semibold text-ink">Conviene evitar:</p>
-            <FoodTiles ids={insight.avoidIds} tone="avoid" allergyMatches={allergyMatches} />
+            <FoodTiles ids={insight.avoidIds} allergyMatches={allergyMatches} />
           </article>
         ))}
 
