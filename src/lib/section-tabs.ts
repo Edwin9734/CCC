@@ -31,6 +31,12 @@ export const DIARY_TABS: TabDef[] = [
   { key: "semana", label: "Semana", icon: "semana" }
 ];
 
+export const RACHA_TABS: TabDef[] = [
+  { key: "racha", label: "Racha", icon: "racha" },
+  { key: "logros", label: "Logros", icon: "logros" },
+  { key: "estadistica", label: "Estadística", icon: "estadistica" }
+];
+
 // Devuelve la pestaña pedida en la dirección, o la pestaña por defecto si no existe.
 export function normalizeTab(value: string | string[] | undefined, tabs: TabDef[], fallback: string): string {
   const raw = Array.isArray(value) ? value[0] : value;

@@ -9,6 +9,7 @@ import {
   BookOpen,
   ClipboardList,
   FileText,
+  Flame,
   HeartPulse,
   LogIn,
   Pill,
@@ -27,7 +28,8 @@ const GROUPS = [
       { href: "/mediciones", label: "Mediciones", icon: Stethoscope },
       { href: "/medicamentos", label: "Medicamentos", icon: Pill },
       { href: "/diario", label: "Diario", icon: BookOpen },
-      { href: "/habitos", label: "Hábitos", icon: HeartPulse }
+      { href: "/habitos", label: "Hábitos", icon: HeartPulse },
+      { href: "/racha", label: "Racha", icon: Flame }
     ]
   },
   {

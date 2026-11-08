@@ -1,0 +1,208 @@
+/* Animaciones del módulo Racha. Todas se apagan con "reducir movimiento" (al final). */
+
+/* ---------- Corazones ---------- */
+.racha-heart-pop {
+  animation: racha-pop 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+.racha-beat {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: racha-beat 1.8s ease-in-out infinite;
+}
+.racha-flame {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: racha-flicker 0.9s ease-in-out infinite alternate;
+}
+.racha-flame-inner {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: racha-flicker 0.6s ease-in-out infinite alternate-reverse;
+}
+.racha-today-pulse {
+  animation: racha-pending 1.6s ease-in-out infinite;
+}
+
+@keyframes racha-pop {
+  from { opacity: 0; transform: translateY(14px) scale(0.4); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes racha-beat {
+  0%, 45%, 100% { transform: scale(1); }
+  15% { transform: scale(1.07); }
+  30% { transform: scale(0.98); }
+}
+@keyframes racha-flicker {
+  from { transform: scale(0.94, 1) rotate(-3deg); }
+  to { transform: scale(1.05, 1.1) rotate(3deg); }
+}
+@keyframes racha-pending {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* ---------- Botella ---------- */
+.racha-water {
+  transform: translateY(var(--water-y));
+  animation: racha-water-rise 1.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.racha-wave { animation: racha-wave 3.2s linear infinite; }
+.racha-wave-back { animation: racha-wave 5s linear infinite reverse; }
+.racha-bubble {
+  animation: racha-bubble 2.6s ease-in infinite;
+  animation-delay: var(--delay, 0s);
+}
+.racha-bottle-sway {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: racha-sway 4s ease-in-out infinite;
+}
+
+@keyframes racha-water-rise {
+  from { transform: translateY(212px); }
+  to { transform: translateY(var(--water-y)); }
+}
+@keyframes racha-wave {
+  from { transform: translateX(0); }
+  to { transform: translateX(120px); }
+}
+@keyframes racha-bubble {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 0.85; }
+  100% { transform: translateY(-46px); opacity: 0; }
+}
+@keyframes racha-sway {
+  0%, 100% { transform: rotate(-1.4deg); }
+  50% { transform: rotate(1.4deg); }
+}
+
+/* ---------- Plato de frutas ---------- */
+.racha-fruit {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: racha-fruit 2.4s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+.racha-sparkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: racha-sparkle 2.2s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes racha-fruit {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-7px) rotate(3deg); }
+}
+@keyframes racha-sparkle {
+  0%, 100% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1); opacity: 1; }
+}
+
+/* ---------- Persona corriendo ---------- */
+.racha-limb { transform-box: view-box; }
+.racha-body { animation: racha-bob 0.4s ease-in-out infinite alternate; }
+.racha-thigh { animation: racha-thigh 0.8s ease-in-out infinite alternate; }
+.racha-shin { animation: racha-shin 0.8s ease-in-out infinite alternate; }
+.racha-arm { animation: racha-arm 0.8s ease-in-out infinite alternate; }
+.racha-opposite { animation-delay: -0.8s; }
+.racha-ground { animation: racha-ground 0.7s linear infinite; }
+.racha-shadow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: racha-shadow 0.4s ease-in-out infinite alternate;
+}
+
+/* La pierna hacia adelante rota en negativo (el personaje mira a la derecha). */
+@keyframes racha-thigh {
+  from { transform: rotate(32deg); }
+  to { transform: rotate(-38deg); }
+}
+@keyframes racha-shin {
+  from { transform: rotate(78deg); }
+  to { transform: rotate(14deg); }
+}
+@keyframes racha-arm {
+  from { transform: rotate(-38deg); }
+  to { transform: rotate(38deg); }
+}
+@keyframes racha-bob {
+  from { transform: translateY(0); }
+  to { transform: translateY(-6px); }
+}
+@keyframes racha-ground {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50px); }
+}
+@keyframes racha-shadow {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0.82); }
+}
+
+/* ---------- Medallas ---------- */
+.racha-medal-in {
+  animation: racha-pop 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+.racha-shine {
+  transform: translateX(-140%) skewX(-18deg);
+  animation: racha-shine 3.4s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 240ms);
+}
+
+@keyframes racha-shine {
+  0%, 55% { transform: translateX(-140%) skewX(-18deg); }
+  85%, 100% { transform: translateX(240%) skewX(-18deg); }
+}
+
+/* ---------- Velocímetros ---------- */
+.racha-needle {
+  transform-box: view-box;
+  transform-origin: 100px 100px;
+  transform: rotate(var(--gauge-to));
+  animation: racha-needle 1.7s cubic-bezier(0.3, 1.25, 0.5, 1) both;
+}
+.racha-gauge-arc { animation: racha-fade 0.7s ease-out both; }
+
+@keyframes racha-needle {
+  from { transform: rotate(-90deg); }
+  to { transform: rotate(var(--gauge-to)); }
+}
+@keyframes racha-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .racha-heart-pop,
+  .racha-beat,
+  .racha-flame,
+  .racha-flame-inner,
+  .racha-today-pulse,
+  .racha-water,
+  .racha-wave,
+  .racha-wave-back,
+  .racha-bubble,
+  .racha-bottle-sway,
+  .racha-fruit,
+  .racha-sparkle,
+  .racha-body,
+  .racha-thigh,
+  .racha-shin,
+  .racha-arm,
+  .racha-ground,
+  .racha-shadow,
+  .racha-medal-in,
+  .racha-shine,
+  .racha-needle,
+  .racha-gauge-arc {
+    animation: none !important;
+  }
+
+  .racha-bubble,
+  .racha-sparkle,
+  .racha-shine {
+    display: none;
+  }
+}

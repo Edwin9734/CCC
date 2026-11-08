@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-const protectedRoutes = ["/dashboard", "/mediciones", "/medicamentos", "/reportes"];
+const protectedRoutes = ["/dashboard", "/mediciones", "/medicamentos", "/reportes", "/racha"];
 
 export async function middleware(request: NextRequest) {
   // 1. Creamos una respuesta base
@@ -51,5 +51,5 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   // Agregamos también la ruta raíz por si acaso, pero el matcher que tienes ya cubre las subrutas perfectamente.
-  matcher: ["/dashboard/:path*", "/mediciones/:path*", "/medicamentos/:path*", "/reportes/:path*"]
+  matcher: ["/dashboard/:path*", "/mediciones/:path*", "/medicamentos/:path*", "/reportes/:path*", "/racha/:path*"]
 };
