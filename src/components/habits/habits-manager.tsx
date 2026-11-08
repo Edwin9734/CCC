@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Droplets, Minus, Moon, Plus } from "lucide-react";
 import { SectionCard } from "@/components/section-card";
 import { MedicationIntakeCard } from "@/components/habits/medication-intake-card";
 import { ActivityCard } from "@/components/habits/activity-card";
+import { WaterSleepCard } from "@/components/habits/water-sleep-card";
 import { WeekSummaryCard } from "@/components/habits/week-summary-card";
 import { SectionTabs } from "@/components/shell/section-tabs";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -22,19 +22,22 @@ import {
 } from "@/lib/supabase/habits";
 import type { MedicationWithSchedules } from "@/lib/supabase/medications";
 import {
-  SLEEP_GOAL_HOURS,
-  WATER_GOAL_GLASSES,
+  ACTIVITY_WEEKLY_GOAL_MINUTES,
   WATER_MAX_GLASSES,
-  WATER_RANGE_TEXT,
   buildDoses,
   computeWeekSummary,
-  formatHours,
   type Dose
 } from "@/lib/habits-config";
+import { buildHabitDays } from "@/lib/habits-insights";
 import { addDays, formatDate, toDateString } from "@/lib/date-utils";
 import { HABIT_TABS } from "@/lib/section-tabs";
+import "./habits.css";
 
 const EMPTY_HABIT: DailyHabitValues = { water_glasses: 0, sleep_hours: null };
+
+// Se cargan 14 días: la semana actual y la anterior, para poder compararlas.
+const HISTORY_DAYS = 14;
+const MINUTES_IN_DAY = 24 * 60;
 
 export function HabitsManager({
   medications,
@@ -59,8 +62,6 @@ export function HabitsManager({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [sleepInput, setSleepInput] = useState("");
-  const [sleepError, setSleepError] = useState<string | null>(null);
 
   // Cola de guardado: los cambios se envían uno tras otro, en el orden en que se hicieron.
   const queueRef = useRef<Promise<void>>(Promise.resolve());
@@ -108,20 +109,20 @@ export function HabitsManager({
     [supabase]
   );
 
-  // Al abrir: carga los últimos 7 días (para el resumen y el registro de hoy).
+  // Al abrir: carga las últimas dos semanas (para el resumen, la comparación y el registro de hoy).
   useEffect(() => {
     if (!today) return;
     setLoadError(null);
-    loadRange(addDays(today, -6), today).catch((err) => {
+    loadRange(addDays(today, 1 - HISTORY_DAYS), today).catch((err) => {
       console.error("Error al cargar los hábitos:", err);
       setLoadError("No se pudieron cargar tus hábitos.");
     });
   }, [today, loadRange, reloadKey]);
 
-  // Si eliges un día más antiguo que la última semana, se carga ese día aparte.
+  // Si eliges un día más antiguo, se carga ese día aparte.
   useEffect(() => {
     if (!today || !date) return;
-    if (date >= addDays(today, -6) || loadedDays.has(date)) return;
+    if (date >= addDays(today, 1 - HISTORY_DAYS) || loadedDays.has(date)) return;
     setLoadError(null);
     loadRange(date, date).catch((err) => {
       console.error("Error al cargar el día:", err);
@@ -137,12 +138,6 @@ export function HabitsManager({
 
   const current = habits[date] ?? EMPTY_HABIT;
 
-  // Mantiene el campo de sueño igual al valor guardado de la fecha elegida.
-  useEffect(() => {
-    setSleepInput(current.sleep_hours === null ? "" : String(current.sleep_hours));
-    setSleepError(null);
-  }, [date, ready, current.sleep_hours]);
-
   const doses = useMemo(
     () => (ready ? buildDoses(medications, intakes, date, today, nowMinutes) : []),
     [ready, medications, intakes, date, today, nowMinutes]
@@ -153,6 +148,36 @@ export function HabitsManager({
   const summary = useMemo(
     () => (windowReady ? computeWeekSummary({ today, nowMinutes, medications, habits, activities, intakes }) : null),
     [windowReady, today, nowMinutes, medications, habits, activities, intakes]
+  );
+
+  // Los 7 días anteriores: todos ya terminaron, por eso se calculan como al final del día.
+  const previousSummary = useMemo(
+    () =>
+      windowReady
+        ? computeWeekSummary({
+            today: addDays(today, -7),
+            nowMinutes: MINUTES_IN_DAY,
+            medications,
+            habits,
+            activities,
+            intakes
+          })
+        : null,
+    [windowReady, today, medications, habits, activities, intakes]
+  );
+
+  const recentDays = useMemo(
+    () => (windowReady ? buildHabitDays({ today, nowMinutes, medications, habits, activities, intakes }) : []),
+    [windowReady, today, nowMinutes, medications, habits, activities, intakes]
+  );
+
+  const lastActivity = useMemo(
+    () =>
+      activities.reduce<ActivityRow | null>(
+        (latest, activity) => (!latest || activity.created_at > latest.created_at ? activity : latest),
+        null
+      ),
+    [activities]
   );
 
   // Pone un guardado en la cola. Si falla, avisa y recarga ese día desde la base.
@@ -193,27 +218,8 @@ export function HabitsManager({
     saveHabit({ ...current, water_glasses: glasses });
   };
 
-  const handleSaveSleep = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setSleepError(null);
-
-    const text = sleepInput.trim().replace(",", ".");
-
-    // Campo vacío = quitar el dato de sueño de ese día.
-    if (text === "") {
-      if (current.sleep_hours !== null) saveHabit({ ...current, sleep_hours: null });
-      return;
-    }
-
-    const hours = Number(text);
-    if (!Number.isFinite(hours) || hours < 0 || hours > 24) {
-      setSleepError("Escribe un número de horas entre 0 y 24.");
-      return;
-    }
-
-    const rounded = Math.round(hours * 10) / 10;
-    saveHabit({ ...current, sleep_hours: rounded });
-    setSleepInput(String(rounded));
+  const saveSleep = (hours: number | null) => {
+    saveHabit({ ...current, sleep_hours: hours });
   };
 
   const handleMark = (dose: Dose, status: IntakeStatus) => {
@@ -268,115 +274,6 @@ export function HabitsManager({
     : "";
 
   const loading = loadError ? null : <p className="text-center text-sm text-muted">Cargando tus hábitos...</p>;
-
-  const waterSleepCard = (
-    <SectionCard title="Agua y sueño" description="Cuenta los vasos de agua que tomas y anota cuántas horas dormiste.">
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div>
-          <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-            <Droplets className="h-4 w-4 text-sky-600" />
-            Vasos de agua
-          </p>
-
-          <div className="mt-3 flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => changeWater(-1)}
-              disabled={current.water_glasses <= 0}
-              aria-label="Quitar un vaso"
-              className="flex h-14 w-14 items-center justify-center rounded-full border border-black/10 bg-white text-ink shadow-soft transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <Minus className="h-6 w-6" />
-            </button>
-
-            <div className="min-w-[5rem] text-center">
-              <p className="text-4xl font-semibold text-ink">{current.water_glasses}</p>
-              <p className="text-sm text-muted">{current.water_glasses === 1 ? "vaso" : "vasos"}</p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => changeWater(1)}
-              disabled={current.water_glasses >= WATER_MAX_GLASSES}
-              aria-label="Agregar un vaso"
-              className="flex h-14 w-14 items-center justify-center rounded-full border border-black/10 bg-white text-ink shadow-soft transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <Plus className="h-6 w-6" />
-            </button>
-          </div>
-
-          {waterNotice ? (
-            <>
-              <p className="mt-3 inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">
-                Sin meta: consulta a tu médico
-              </p>
-
-              <p className="mt-3 text-xs leading-5 text-amber-900">{waterNotice}</p>
-            </>
-          ) : (
-            <>
-              <p
-                className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-semibold ${
-                  current.water_glasses >= WATER_GOAL_GLASSES
-                    ? "bg-emerald-100 text-emerald-800"
-                    : "bg-slate-100 text-muted"
-                }`}
-              >
-                {current.water_glasses >= WATER_GOAL_GLASSES ? "Meta cumplida" : `Meta: ${WATER_RANGE_TEXT} al día`}
-              </p>
-
-              <p className="mt-3 text-xs leading-5 text-muted">
-                Si tu médico te limitó los líquidos (por ejemplo, por problemas del corazón o de los riñones), sigue su
-                indicación y no uses esta meta.
-              </p>
-            </>
-          )}
-        </div>
-
-        <div>
-          <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-            <Moon className="h-4 w-4 text-indigo-600" />
-            Horas de sueño
-          </p>
-          <p className="mt-1 text-xs leading-5 text-muted">Horas que dormiste la noche anterior a este día.</p>
-
-          <form onSubmit={handleSaveSleep} className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
-            <input
-              type="number"
-              inputMode="decimal"
-              value={sleepInput}
-              onChange={(e) => setSleepInput(e.target.value)}
-              min="0"
-              max="24"
-              step="any"
-              placeholder="Ej. 7.5"
-              aria-label="Horas de sueño"
-              className="rounded-2xl border border-black/10 bg-background px-4 py-4 text-base outline-none placeholder:text-muted"
-            />
-            <button
-              type="submit"
-              className="rounded-full bg-accent px-6 py-4 text-base font-semibold text-white shadow-soft transition hover:bg-accentDark"
-            >
-              Guardar sueño
-            </button>
-          </form>
-
-          {sleepError ? (
-            <p className="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-semibold text-danger">{sleepError}</p>
-          ) : null}
-
-          <p className="mt-3 text-sm text-muted">
-            {current.sleep_hours === null
-              ? "Sin registrar."
-              : `Guardado: ${formatHours(current.sleep_hours)} h · ${
-                  current.sleep_hours >= SLEEP_GOAL_HOURS ? "Meta cumplida" : `Meta: ${SLEEP_GOAL_HOURS} horas o más`
-                }`}
-          </p>
-          <p className="mt-1 text-xs leading-5 text-muted">Para borrar el dato, deja el campo vacío y guarda.</p>
-        </div>
-      </div>
-    </SectionCard>
-  );
 
   return (
     <div className="space-y-6">
@@ -435,19 +332,46 @@ export function HabitsManager({
         initialTab={initialTab}
         panels={{
           medicamentos: ready ? (
-            <MedicationIntakeCard doses={doses} hasMedications={medications.length > 0} onMark={handleMark} />
+            <MedicationIntakeCard
+              doses={doses}
+              hasMedications={medications.length > 0}
+              onMark={handleMark}
+              days={recentDays}
+              isToday={date === today}
+              nowMinutes={nowMinutes}
+            />
           ) : (
             loading
           ),
-          agua: ready ? waterSleepCard : loading,
+          agua: ready ? (
+            <WaterSleepCard
+              date={date}
+              current={current}
+              waterNotice={waterNotice}
+              days={recentDays}
+              onChangeWater={changeWater}
+              onSaveSleep={saveSleep}
+            />
+          ) : (
+            loading
+          ),
           actividad: ready ? (
-            <ActivityCard activities={dayActivities} onAdd={handleAddActivity} onDelete={handleDeleteActivity} />
+            <ActivityCard
+              activities={dayActivities}
+              onAdd={handleAddActivity}
+              onDelete={handleDeleteActivity}
+              weekMinutes={summary?.activity.totalMinutes ?? 0}
+              goalMinutes={activityGoalMinutes ?? ACTIVITY_WEEKLY_GOAL_MINUTES}
+              lastActivity={lastActivity}
+            />
           ) : (
             loading
           ),
           semana: summary ? (
             <WeekSummaryCard
               summary={summary}
+              previous={previousSummary}
+              days={recentDays}
               activityGoalMinutes={activityGoalMinutes}
               waterRestricted={Boolean(waterNotice)}
             />

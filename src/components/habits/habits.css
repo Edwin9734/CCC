@@ -1,0 +1,175 @@
+/* Animaciones del módulo Hábitos. Todas se apagan con "reducir movimiento" (al final). */
+
+/* ---------- Anillos de progreso ---------- */
+.hab-ring {
+  transition: stroke-dashoffset 0.6s ease;
+  animation: hab-ring-in 1.3s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+@keyframes hab-ring-in {
+  from { stroke-dashoffset: var(--ring-start); }
+}
+
+/* ---------- Entradas ---------- */
+.hab-pop {
+  animation: hab-pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+.hab-rise {
+  animation: hab-rise 0.5s ease-out backwards;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+@keyframes hab-pop {
+  from { opacity: 0; transform: scale(0.4); }
+}
+@keyframes hab-rise {
+  from { opacity: 0; transform: translateY(12px); }
+}
+
+/* ---------- Check de la toma ---------- */
+.hab-check-circle { animation: hab-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) backwards; transform-box: fill-box; transform-origin: center; }
+.hab-check-mark {
+  stroke-dasharray: 30;
+  animation: hab-draw 0.45s 0.2s ease-out backwards;
+}
+@keyframes hab-draw {
+  from { stroke-dashoffset: 30; }
+}
+
+/* ---------- Sol, nube y luna ---------- */
+.hab-spin { animation: hab-spin 14s linear infinite; }
+.hab-float { animation: hab-float 3.2s ease-in-out infinite; }
+.hab-rock { animation: hab-rock 4s ease-in-out infinite; }
+@keyframes hab-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes hab-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes hab-rock {
+  0%, 100% { transform: rotate(-10deg); }
+  50% { transform: rotate(10deg); }
+}
+
+/* ---------- Vaso de agua ---------- */
+.hab-water-level {
+  transform: translateY(var(--water-y));
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: hab-water-in 1.3s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.hab-wave { animation: hab-wave 3s linear infinite; }
+.hab-wave-back { animation: hab-wave 4.6s linear infinite reverse; }
+.hab-drop {
+  transform-box: fill-box;
+  animation: hab-drop 0.75s ease-out forwards;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes hab-water-in {
+  from { transform: translateY(142px); }
+}
+@keyframes hab-wave {
+  to { transform: translateX(100px); }
+}
+@keyframes hab-drop {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(var(--dx), 34px) scale(1); opacity: 0; }
+}
+
+/* ---------- Cielo de sueño ---------- */
+.hab-star {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hab-star-in 0.5s backwards, hab-twinkle 2.4s 0.5s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 80ms), calc(var(--i, 0) * 80ms + 0.5s);
+}
+.hab-moon {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hab-float 4s ease-in-out infinite;
+}
+.hab-zzz { animation: hab-zzz 3s ease-out infinite; animation-delay: var(--delay, 0s); }
+@keyframes hab-star-in {
+  from { opacity: 0; transform: scale(0); }
+}
+@keyframes hab-twinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
+}
+@keyframes hab-zzz {
+  0% { opacity: 0; transform: translate(0, 0); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translate(12px, -24px); }
+}
+
+/* ---------- Barras de 7 días ---------- */
+.hab-bar {
+  transform-origin: bottom;
+  animation: hab-bar 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+@keyframes hab-bar {
+  from { transform: scaleY(0); }
+}
+
+/* ---------- Actividad ---------- */
+.hab-activity-on { animation: hab-bounce 0.9s ease-in-out infinite; }
+.hab-timer-on { animation: hab-timer 1s ease-in-out infinite; }
+@keyframes hab-bounce {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  25% { transform: translateY(-5px) rotate(-6deg); }
+  75% { transform: translateY(-2px) rotate(6deg); }
+}
+@keyframes hab-timer {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.45); }
+  70% { box-shadow: 0 0 0 16px rgba(20, 184, 166, 0); }
+}
+
+/* ---------- Felicitación ---------- */
+.hab-confetti {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--c);
+  opacity: 0;
+  animation: hab-confetti 1.3s cubic-bezier(0.15, 0.7, 0.4, 1) forwards;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes hab-confetti {
+  0% { transform: translate(-50%, -50%) rotate(0); opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(var(--r)); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hab-ring,
+  .hab-pop,
+  .hab-rise,
+  .hab-check-circle,
+  .hab-check-mark,
+  .hab-spin,
+  .hab-float,
+  .hab-rock,
+  .hab-water-level,
+  .hab-wave,
+  .hab-wave-back,
+  .hab-star,
+  .hab-moon,
+  .hab-bar,
+  .hab-activity-on,
+  .hab-timer-on {
+    animation: none !important;
+  }
+  .hab-ring,
+  .hab-water-level {
+    transition: none;
+  }
+  .hab-drop,
+  .hab-zzz,
+  .hab-confetti {
+    display: none;
+  }
+}
