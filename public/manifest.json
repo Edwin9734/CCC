@@ -4,8 +4,8 @@
   "description": "Seguimiento de colesterol, medicamentos y alertas para adultos mayores.",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#f4efe7",
-  "theme_color": "#F4EFE7",
+  "background_color": "#fff1f3",
+  "theme_color": "#FFF1F3",
   "orientation": "portrait-primary",
   "icons": [
     {

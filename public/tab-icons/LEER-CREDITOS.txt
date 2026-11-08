@@ -7,6 +7,6 @@ Estos archivos (.svg) son gráficos de Twemoji:
   https://creativecommons.org/licenses/by/4.0/
   Fuente: https://github.com/jdecked/twemoji
 
-Excepción: racha.svg, logros.svg y estadistica.svg son dibujos propios de este proyecto.
+Excepción: racha.svg, logros.svg, estadistica.svg, inicio.svg, avisos.svg e historial.svg son dibujos propios de este proyecto.
 
 La app muestra el crédito al pie de la guía de alimentación.

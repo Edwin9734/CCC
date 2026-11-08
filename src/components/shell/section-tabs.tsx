@@ -28,6 +28,12 @@ export function useSectionTabs() {
   return useContext(TabsContext);
 }
 
+// Monta el contenido solo mientras su pestaña está abierta, para que las animaciones
+// empiecen de nuevo al abrirla y las gráficas puedan medir su ancho.
+export function WhenTabActive({ tab, children }: { tab: string; children: ReactNode }) {
+  return useSectionTabs()?.active === tab ? <>{children}</> : null;
+}
+
 function TabIcon({ name }: { name: string }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element

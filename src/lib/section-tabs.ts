@@ -31,6 +31,12 @@ export const DIARY_TABS: TabDef[] = [
   { key: "semana", label: "Semana", icon: "semana" }
 ];
 
+export const HOME_TABS: TabDef[] = [
+  { key: "inicio", label: "Inicio", icon: "inicio" },
+  { key: "avisos", label: "Avisos", icon: "avisos" },
+  { key: "historial", label: "Historial", icon: "historial" }
+];
+
 export const RACHA_TABS: TabDef[] = [
   { key: "racha", label: "Racha", icon: "racha" },
   { key: "logros", label: "Logros", icon: "logros" },

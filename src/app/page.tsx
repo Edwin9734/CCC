@@ -1,91 +1,67 @@
 import Link from "next/link";
-import { ArrowRight, Bell, FileText, ShieldCheck, Sparkles, Waves } from "lucide-react";
+import { redirect } from "next/navigation";
+import { ArrowRight, Pill, Stethoscope, Utensils } from "lucide-react";
 import { AppBackground } from "@/components/app-background";
 import { TextSizeControl } from "@/components/text-size-control";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-const highlights = [
-  {
-    icon: Bell,
-    title: "Alertas claras",
-    text: "Notificaciones por valores fuera de rango y recordatorios de medicamentos."
-  },
-  {
-    icon: FileText,
-    title: "Reportes PDF",
-    text: "Exportación con gráficas y registros históricos por fecha."
-  },
-  {
-    icon: ShieldCheck,
-    title: "Datos privados",
-    text: "Cada usuario solo ve su propia información con RLS en Supabase."
-  }
+const FEATURES = [
+  { icon: Stethoscope, label: "Mediciones", color: "bg-rose-600" },
+  { icon: Pill, label: "Medicinas", color: "bg-violet-600" },
+  { icon: Utensils, label: "Comidas", color: "bg-amber-600" }
 ];
 
-export default function HomePage() {
+// Bienvenida: quien ya tiene sesión entra directo a la aplicación.
+export default async function HomePage() {
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase.auth.getUser();
+
+  if (data.user) {
+    redirect("/dashboard");
+  }
+
   return (
-    <main className="app-theme min-h-screen text-ink">
+    <main className="app-theme min-h-[100dvh] text-ink">
       <AppBackground />
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-center px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mb-8 flex justify-end">
+      <div className="relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-5">
+        <div className="flex justify-center">
           <TextSizeControl />
         </div>
 
-        <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <section>
-            <div className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/80 px-4 py-2 text-sm font-semibold text-accent shadow-soft">
-              <Sparkles className="h-4 w-4" />
-              Diseñado para adultos mayores
+        <section className="flex flex-1 flex-col items-center justify-center py-8 text-center">
+          <div className="my-8 scale-[2.4]">
+            <div className="ab-logo" aria-hidden="true">
+              <span>♥</span>
             </div>
+          </div>
 
-            <h1 className="mt-6 max-w-3xl text-5xl font-semibold tracking-tight sm:text-6xl" style={{ fontFamily: "var(--font-heading)" }}>
-              Seguimiento simple y seguro del colesterol
-            </h1>
+          <h1 className="mt-6 text-4xl font-semibold tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>
+            Control de Colesterol
+          </h1>
+          <p className="mt-3 text-lg leading-7 text-muted">Tu colesterol y triglicéridos, fáciles de seguir cada día.</p>
 
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-muted sm:text-xl">
-              Sistema web en español para registrar HDL, LDL y triglicéridos de forma manual,
-              ver su evolución, recibir alertas y descargar reportes listos para imprimir.
-            </p>
+          <ul className="mt-8 grid w-full grid-cols-3 gap-3">
+            {FEATURES.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <li key={feature.label} className="flex flex-col items-center gap-2 text-sm font-semibold text-ink">
+                  <span className={`flex h-16 w-16 items-center justify-center rounded-3xl text-white shadow-soft ${feature.color}`}>
+                    <Icon className="h-8 w-8" aria-hidden="true" />
+                  </span>
+                  {feature.label}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
 
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-4 text-base font-semibold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-accentDark"
-              >
-                Empezar
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-6 py-4 text-base font-semibold text-ink shadow-soft transition hover:-translate-y-0.5 hover:bg-slate-50"
-              >
-                Ver panel
-                <Waves className="h-5 w-5" />
-              </Link>
-            </div>
-          </section>
-
-          <aside className="ab-card rounded-[2rem] p-6 sm:p-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-accent">Resumen del proyecto</p>
-            <div className="mt-6 grid gap-4">
-              {highlights.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <article key={item.title} className="rounded-3xl bg-background p-5">
-                    <div className="flex items-start gap-4">
-                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accentSoft text-accent">
-                        <Icon className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <h2 className="text-lg font-semibold text-ink">{item.title}</h2>
-                        <p className="mt-1 text-sm leading-6 text-muted">{item.text}</p>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </aside>
-        </div>
+        <Link
+          href="/login"
+          className="flex min-h-16 w-full items-center justify-center gap-2 rounded-full bg-accent px-6 py-4 text-xl font-semibold text-white shadow-soft transition active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-accent/25 motion-reduce:transition-none"
+        >
+          Entrar
+          <ArrowRight className="h-6 w-6" aria-hidden="true" />
+        </Link>
       </div>
     </main>
   );

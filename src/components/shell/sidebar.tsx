@@ -4,13 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, type RefObject } from "react";
 import {
-  Activity,
   Apple,
   BookOpen,
   ClipboardList,
   FileText,
   Flame,
   HeartPulse,
+  House,
   LogIn,
   Pill,
   Stethoscope,
@@ -35,7 +35,7 @@ const GROUPS = [
   {
     title: "Consultar",
     items: [
-      { href: "/dashboard", label: "Resumen", icon: Activity },
+      { href: "/dashboard", label: "Inicio", icon: House },
       { href: "/plan", label: "Mi plan", icon: ClipboardList },
       { href: "/dietas", label: "Dietas", icon: Apple },
       { href: "/reportes", label: "Reportes", icon: FileText }
