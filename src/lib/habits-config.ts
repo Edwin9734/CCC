@@ -41,13 +41,13 @@ export interface Dose {
 
 const ALL_DAYS = [1, 2, 3, 4, 5, 6, 7];
 
-function scheduleDays(raw: unknown): number[] {
+export function scheduleDays(raw: unknown): number[] {
   if (!Array.isArray(raw) || raw.length === 0) return ALL_DAYS;
   const days = raw.map((d) => Number(d)).filter((d) => d >= 1 && d <= 7);
   return days.length > 0 ? days : ALL_DAYS;
 }
 
-function createdLocalDate(createdAt: string | null | undefined): string {
+export function createdLocalDate(createdAt: string | null | undefined): string {
   if (!createdAt) return "0000-00-00";
   const d = new Date(createdAt);
   return Number.isNaN(d.getTime()) ? "0000-00-00" : dateInAppTimeZone(d);

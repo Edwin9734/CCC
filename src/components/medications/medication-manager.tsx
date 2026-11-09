@@ -8,6 +8,7 @@ import { SAVE_ERROR, useToast } from "@/components/antecedentes/antecedentes-ui"
 import { MedicationCabinet } from "@/components/medications/medication-cabinet";
 import { MedicationCalendar } from "@/components/medications/medication-calendar";
 import { MedicationToday } from "@/components/medications/medication-today";
+import { ReminderCard } from "@/components/medications/reminder-card";
 import type { MedicationApi, MedicationSaveInput } from "@/components/medications/medication-ui";
 import { SectionTabs, WhenTabActive, useSectionTabs } from "@/components/shell/section-tabs";
 import { minutesNowInAppTimeZone, todayInAppTimeZone } from "@/lib/date-utils";
@@ -28,6 +29,7 @@ export function MedicationManager({
   initialToday,
   initialMinutes,
   initialTab,
+  vapidPublicKey,
   api: apiOverride
 }: {
   initialMedications: MedicationWithSchedules[];
@@ -35,6 +37,7 @@ export function MedicationManager({
   initialToday: string;
   initialMinutes: number;
   initialTab: string;
+  vapidPublicKey: string | null;
   api?: MedicationApi;
 }) {
   const api = useMemo<MedicationApi>(() => {
@@ -112,7 +115,7 @@ export function MedicationManager({
         panels={{
           hoy: (
             <WhenTabActive tab="hoy">
-              <TodayTab medications={medications} doses={dosesFor(clock.today)} nowMinutes={clock.minutes} onMark={(dose, status) => markDose(dose, clock.today, status)} />
+              <TodayTab medications={medications} doses={dosesFor(clock.today)} nowMinutes={clock.minutes} onMark={(dose, status) => markDose(dose, clock.today, status)} reminders={<ReminderCard publicKey={vapidPublicKey} notify={showToast} />} />
             </WhenTabActive>
           ),
           botiquin: (

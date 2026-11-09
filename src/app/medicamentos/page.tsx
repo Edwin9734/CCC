@@ -42,6 +42,7 @@ export default async function MedicationsPage({
         initialToday={today}
         initialMinutes={minutesNowInAppTimeZone()}
         initialTab={initialTab}
+        vapidPublicKey={process.env.VAPID_PUBLIC_KEY ?? null}
       />
     </AppShell>
   );

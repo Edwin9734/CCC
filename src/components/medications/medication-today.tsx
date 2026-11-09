@@ -28,13 +28,15 @@ export function MedicationToday({
   doses,
   nowMinutes,
   onMark,
-  goToCabinet
+  goToCabinet,
+  reminders
 }: {
   medications: MedicationWithSchedules[];
   doses: Dose[];
   nowMinutes: number;
   onMark: (dose: Dose, status: IntakeStatus | null) => Promise<void>;
   goToCabinet: () => void;
+  reminders?: React.ReactNode;
 }) {
   const [cheer, setCheer] = useState(0);
 
@@ -97,6 +99,8 @@ export function MedicationToday({
           </div>
         ) : null}
       </Hero>
+
+      {reminders}
 
       {late.length >= 2 ? (
         <button type="button" onClick={() => markAll(late)} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-emerald-700 px-5 py-3 text-lg font-bold text-white shadow-soft transition active:scale-[0.98]">
