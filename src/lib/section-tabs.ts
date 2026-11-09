@@ -44,6 +44,12 @@ export const RACHA_TABS: TabDef[] = [
   { key: "estadistica", label: "Estadística", icon: "estadistica" }
 ];
 
+export const ANTECEDENTES_TABS: TabDef[] = [
+  { key: "medicinas", label: "Medicinas", icon: "antecedentes-medicinas" },
+  { key: "enfermedades", label: "Enfermedades", icon: "antecedentes-enfermedades" },
+  { key: "examenes", label: "Exámenes", icon: "antecedentes-examenes" }
+];
+
 // Devuelve la pestaña pedida en la dirección, o la pestaña por defecto si no existe.
 export function normalizeTab(value: string | string[] | undefined, tabs: TabDef[], fallback: string): string {
   const raw = Array.isArray(value) ? value[0] : value;

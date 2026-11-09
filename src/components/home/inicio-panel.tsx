@@ -14,6 +14,7 @@ const TILES: { href: string; label: string; helper: string; image: string }[] = 
   { href: "/diario", label: "Diario", helper: "Lo que comiste", image: "diario" },
   { href: "/habitos", label: "Hábitos", helper: "Agua, sueño, actividad", image: "habitos" },
   { href: "/racha", label: "Racha", helper: "Logros y gráficas", image: "racha" },
+  { href: "/antecedentes", label: "Antecedentes", helper: "Tu historia de salud", image: "antecedentes" },
   { href: "/plan", label: "Mi plan", helper: "Metas y consejos", image: "plan" },
   { href: "/dietas", label: "Dietas", helper: "Guía y recetas", image: "dietas" },
   { href: "/reportes", label: "Reportes", helper: "Para tu médico", image: "reportes" }

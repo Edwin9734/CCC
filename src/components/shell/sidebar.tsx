@@ -9,6 +9,7 @@ import {
   ClipboardList,
   FileText,
   Flame,
+  FolderHeart,
   HeartPulse,
   House,
   LogIn,
@@ -29,7 +30,8 @@ const GROUPS = [
       { href: "/medicamentos", label: "Medicamentos", icon: Pill },
       { href: "/diario", label: "Diario", icon: BookOpen },
       { href: "/habitos", label: "Hábitos", icon: HeartPulse },
-      { href: "/racha", label: "Racha", icon: Flame }
+      { href: "/racha", label: "Racha", icon: Flame },
+      { href: "/antecedentes", label: "Antecedentes", icon: FolderHeart }
     ]
   },
   {

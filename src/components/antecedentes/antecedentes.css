@@ -1,0 +1,209 @@
+/* Animaciones del módulo Antecedentes. Todas se apagan con "reducir movimiento" (al final). */
+
+.ant-rise {
+  animation: ant-rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  animation-delay: calc(min(var(--i, 0), 10) * 55ms);
+}
+.ant-pop {
+  animation: ant-pop 0.42s cubic-bezier(0.2, 1.4, 0.4, 1) backwards;
+  animation-delay: calc(min(var(--i, 0), 14) * 28ms);
+}
+.ant-fade { animation: ant-fade 0.22s ease-out backwards; }
+.ant-modal { animation: ant-modal 0.36s cubic-bezier(0.2, 1.15, 0.4, 1) backwards; }
+.ant-shake { animation: ant-shake 0.4s ease-in-out; }
+.ant-star { animation: ant-star 0.55s cubic-bezier(0.2, 1.5, 0.4, 1); }
+.ant-toast { animation: ant-toast 0.42s cubic-bezier(0.2, 1.3, 0.4, 1) backwards; }
+
+/* Detalle que se abre y se cierra sin saltos */
+.ant-expand {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.32s ease;
+}
+.ant-expand[data-open="true"] { grid-template-rows: 1fr; }
+.ant-expand > div { min-height: 0; overflow: hidden; }
+.ant-chevron { transition: transform 0.3s ease; }
+[aria-expanded="true"] .ant-chevron { transform: rotate(180deg); }
+
+/* Banner con brillo */
+.ant-shine-box { position: relative; overflow: hidden; }
+.ant-shine-box::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: translateX(-140%) skewX(-18deg);
+  animation: ant-shine 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Portadas */
+.ant-float {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ant-float 3s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+.ant-bubble {
+  position: absolute;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.1);
+  animation: ant-float 6s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  pointer-events: none;
+}
+.ant-beat {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ant-beat 1.8s ease-in-out infinite;
+}
+.ant-ecg {
+  stroke-dasharray: 1;
+  animation: ant-ecg 2.6s ease-in-out infinite;
+}
+.ant-scan { animation: ant-scan 3.6s ease-in-out infinite; }
+
+/* Línea de tiempo */
+.ant-timeline { position: relative; }
+.ant-timeline::before {
+  content: "";
+  position: absolute;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  left: 0.8125rem;
+  width: 3px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #fda4af, #fed7aa);
+}
+.ant-timeline > li { position: relative; padding-left: 2.25rem; }
+
+@keyframes ant-rise { from { opacity: 0; transform: translateY(16px); } }
+@keyframes ant-pop { from { opacity: 0; transform: scale(0.55); } }
+@keyframes ant-fade { from { opacity: 0; } }
+@keyframes ant-modal { from { opacity: 0; transform: translateY(30px) scale(0.94); } }
+@keyframes ant-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+@keyframes ant-star {
+  0% { transform: scale(0.4) rotate(-40deg); }
+  60% { transform: scale(1.35) rotate(12deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+@keyframes ant-toast { from { opacity: 0; transform: translate(-50%, 24px) scale(0.9); } }
+@keyframes ant-shine {
+  0%, 55% { transform: translateX(-140%) skewX(-18deg); }
+  90%, 100% { transform: translateX(320%) skewX(-18deg); }
+}
+@keyframes ant-float {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-8px) rotate(5deg); }
+}
+@keyframes ant-beat {
+  0%, 45%, 100% { transform: scale(1); }
+  15% { transform: scale(1.08); }
+  30% { transform: scale(0.97); }
+}
+@keyframes ant-ecg {
+  0% { stroke-dashoffset: 1; }
+  55%, 80% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -1; }
+}
+@keyframes ant-scan {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(-30px, -22px); }
+  66% { transform: translate(-6px, -40px); }
+}
+
+/* Celular muy angosto: que los títulos no se partan a media palabra */
+@media (max-width: 379px) {
+  .ant-hero-art { display: none; }
+  .ant-stats > div { padding-left: 0.125rem; padding-right: 0.125rem; }
+  .ant-stats dt { font-size: 0.8125rem; }
+}
+@media (max-width: 399px) {
+  html[data-text-size="2"] .ant-hero-art { display: none; }
+  html[data-text-size="2"] .ant-stats { grid-template-columns: minmax(0, 1fr); }
+  html[data-text-size="2"] .ant-stats > div {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+}
+
+/* Celular con letra grande: todo el ancho para el texto */
+@media (max-width: 479px) {
+  html[data-text-size="3"] .ant-tile,
+  html[data-text-size="4"] .ant-tile,
+  html[data-text-size="5"] .ant-tile,
+  html[data-text-size="4"] .ant-pill-check,
+  html[data-text-size="5"] .ant-pill-check,
+  html[data-text-size="3"] .ant-hero-art,
+  html[data-text-size="4"] .ant-hero-art,
+  html[data-text-size="5"] .ant-hero-art {
+    display: none;
+  }
+  html[data-text-size="3"] .ant-stats,
+  html[data-text-size="4"] .ant-stats,
+  html[data-text-size="5"] .ant-stats,
+  html[data-text-size="3"] .ant-kinds,
+  html[data-text-size="4"] .ant-kinds,
+  html[data-text-size="5"] .ant-kinds,
+  html[data-text-size="4"] .ant-type-grid,
+  html[data-text-size="5"] .ant-type-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html[data-text-size="3"] .ant-stats > div,
+  html[data-text-size="4"] .ant-stats > div,
+  html[data-text-size="5"] .ant-stats > div {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  html[data-text-size="3"] .ant-kinds button,
+  html[data-text-size="4"] .ant-kinds button,
+  html[data-text-size="5"] .ant-kinds button,
+  html[data-text-size="4"] .ant-type-grid button,
+  html[data-text-size="5"] .ant-type-grid button {
+    flex-direction: row;
+    justify-content: flex-start;
+    text-align: left;
+  }
+  html[data-text-size="4"] .ant-timeline::before,
+  html[data-text-size="5"] .ant-timeline::before,
+  html[data-text-size="4"] .ant-timeline-dot,
+  html[data-text-size="5"] .ant-timeline-dot {
+    display: none;
+  }
+  html[data-text-size="4"] .ant-timeline > li,
+  html[data-text-size="5"] .ant-timeline > li {
+    padding-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ant-rise,
+  .ant-pop,
+  .ant-fade,
+  .ant-modal,
+  .ant-shake,
+  .ant-star,
+  .ant-toast,
+  .ant-float,
+  .ant-bubble,
+  .ant-beat,
+  .ant-ecg,
+  .ant-scan,
+  .ant-shine-box::after {
+    animation: none !important;
+  }
+  .ant-shine-box::after { display: none; }
+  .ant-expand,
+  .ant-chevron { transition: none; }
+}
