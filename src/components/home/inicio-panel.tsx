@@ -1,19 +1,6 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import {
-  AlertTriangle,
-  Apple,
-  BellRing,
-  BookOpen,
-  ChevronRight,
-  ClipboardList,
-  FileText,
-  Flame,
-  HeartPulse,
-  Pill,
-  Stethoscope,
-  type LucideIcon
-} from "lucide-react";
+import { AlertTriangle, BellRing, ChevronRight, Pill } from "lucide-react";
 import { HeartFlame } from "@/components/racha/racha-art";
 import "@/components/racha/racha.css";
 import { METRIC_LABELS } from "@/lib/ranges";
@@ -21,15 +8,15 @@ import type { StreakSummary } from "@/lib/racha";
 import type { MeasurementWithStatus } from "@/lib/supabase/measurements";
 import type { NextReminder } from "@/lib/supabase/medications";
 
-const TILES: { href: string; label: string; helper: string; icon: LucideIcon; color: string }[] = [
-  { href: "/mediciones", label: "Mediciones", helper: "Anota tus análisis", icon: Stethoscope, color: "bg-rose-600" },
-  { href: "/medicamentos", label: "Medicamentos", helper: "Tus medicinas", icon: Pill, color: "bg-violet-600" },
-  { href: "/diario", label: "Diario", helper: "Lo que comiste", icon: BookOpen, color: "bg-amber-600" },
-  { href: "/habitos", label: "Hábitos", helper: "Agua, sueño, actividad", icon: HeartPulse, color: "bg-emerald-600" },
-  { href: "/racha", label: "Racha", helper: "Logros y gráficas", icon: Flame, color: "bg-orange-600" },
-  { href: "/plan", label: "Mi plan", helper: "Metas y consejos", icon: ClipboardList, color: "bg-sky-600" },
-  { href: "/dietas", label: "Dietas", helper: "Guía y recetas", icon: Apple, color: "bg-green-600" },
-  { href: "/reportes", label: "Reportes", helper: "Para tu médico", icon: FileText, color: "bg-indigo-600" }
+const TILES: { href: string; label: string; helper: string; image: string }[] = [
+  { href: "/mediciones", label: "Mediciones", helper: "Anota tus análisis", image: "mediciones" },
+  { href: "/medicamentos", label: "Medicamentos", helper: "Tus medicinas", image: "medicamentos" },
+  { href: "/diario", label: "Diario", helper: "Lo que comiste", image: "diario" },
+  { href: "/habitos", label: "Hábitos", helper: "Agua, sueño, actividad", image: "habitos" },
+  { href: "/racha", label: "Racha", helper: "Logros y gráficas", image: "racha" },
+  { href: "/plan", label: "Mi plan", helper: "Metas y consejos", image: "plan" },
+  { href: "/dietas", label: "Dietas", helper: "Guía y recetas", image: "dietas" },
+  { href: "/reportes", label: "Reportes", helper: "Para tu médico", image: "reportes" }
 ];
 
 function reminderDay(reminder: NextReminder) {
@@ -139,26 +126,29 @@ export function InicioPanel({
 
       <nav aria-label="Secciones de la aplicación">
         <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-          {TILES.map((tile, index) => {
-            const Icon = tile.icon;
-            return (
-              <li key={tile.href}>
-                <Link
-                  href={tile.href}
-                  className="ab-card group flex h-full min-h-[10rem] flex-col items-center justify-center rounded-[1.75rem] p-3 text-center focus:outline-none focus:ring-4 focus:ring-accent/25"
-                  style={{ animationDelay: `${index * 45}ms` } as CSSProperties}
-                >
-                  <span
-                    className={`flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-3xl text-white shadow-soft transition group-hover:scale-105 group-active:scale-95 motion-reduce:transition-none ${tile.color}`}
-                  >
-                    <Icon className="h-9 w-9" aria-hidden="true" />
-                  </span>
-                  <span className="mt-3 w-full text-lg font-semibold leading-6 text-ink">{tile.label}</span>
+          {TILES.map((tile, index) => (
+            <li key={tile.href}>
+              <Link
+                href={tile.href}
+                className="ab-card group flex h-full flex-col overflow-hidden rounded-[1.75rem] text-center focus:outline-none focus:ring-4 focus:ring-accent/25"
+                style={{ animationDelay: `${index * 45}ms` } as CSSProperties}
+              >
+                <span className="block overflow-hidden">
+                  <img
+                    src={`/home/${tile.image}.webp`}
+                    alt=""
+                    aria-hidden="true"
+                    decoding="async"
+                    className="block aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-105 group-active:scale-95 motion-reduce:transform-none motion-reduce:transition-none"
+                  />
+                </span>
+                <span className="flex flex-1 flex-col justify-center p-3">
+                  <span className="w-full text-lg font-semibold leading-6 text-ink">{tile.label}</span>
                   <span className="mt-0.5 w-full text-sm leading-5 text-muted">{tile.helper}</span>
-                </Link>
-              </li>
-            );
-          })}
+                </span>
+              </Link>
+            </li>
+          ))}
         </ul>
       </nav>
     </div>

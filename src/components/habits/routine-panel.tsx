@@ -4,11 +4,7 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import {
   BookOpen,
   Briefcase,
-  Candy,
   Check,
-  Cigarette,
-  Coffee,
-  Dices,
   Flower2,
   GraduationCap,
   HandHeart,
@@ -19,19 +15,13 @@ import {
   Palette,
   PenLine,
   Phone,
-  Pill,
   Plus,
   Puzzle,
   ShieldAlert,
-  Smartphone,
   Sun,
-  Syringe,
-  Tv,
   Users,
   Wind,
-  Wine,
   X,
-  Zap,
   type LucideIcon
 } from "lucide-react";
 import { Butterfly, GrowingPlant, ReadingBook } from "@/components/habits/routine-art";
@@ -61,121 +51,111 @@ import {
   type RoutineItem
 } from "@/lib/routine-config";
 
-const ITEM_VISUALS: Record<string, { icon: LucideIcon; color: string }> = {
-  lectura: { icon: BookOpen, color: "bg-violet-600" },
-  meditacion: { icon: Flower2, color: "bg-pink-600" },
-  escritura: { icon: PenLine, color: "bg-indigo-600" },
-  trabajo: { icon: Briefcase, color: "bg-slate-600" },
-  oracion: { icon: HandHeart, color: "bg-amber-600" },
-  musica: { icon: Music, color: "bg-rose-600" },
-  manualidades: { icon: Palette, color: "bg-orange-600" },
-  juegos_mente: { icon: Puzzle, color: "bg-cyan-600" },
-  familia: { icon: Users, color: "bg-emerald-600" },
-  aire_libre: { icon: Sun, color: "bg-yellow-600" },
-  voluntariado: { icon: HeartHandshake, color: "bg-red-600" },
-  aprender: { icon: GraduationCap, color: "bg-sky-600" },
-  fumar: { icon: Cigarette, color: "bg-slate-500" },
-  alcohol: { icon: Wine, color: "bg-slate-500" },
-  drogas: { icon: Syringe, color: "bg-slate-500" },
-  energizantes: { icon: Zap, color: "bg-slate-500" },
-  celular: { icon: Smartphone, color: "bg-slate-500" },
-  television: { icon: Tv, color: "bg-slate-500" },
-  cafe: { icon: Coffee, color: "bg-slate-500" },
-  dulces: { icon: Candy, color: "bg-slate-500" },
-  azar: { icon: Dices, color: "bg-slate-500" },
-  automedicacion: { icon: Pill, color: "bg-slate-500" }
+const SUGGESTION_ICONS: Record<string, LucideIcon> = {
+  lectura: BookOpen,
+  meditacion: Flower2,
+  escritura: PenLine,
+  trabajo: Briefcase,
+  oracion: HandHeart,
+  musica: Music,
+  manualidades: Palette,
+  juegos_mente: Puzzle,
+  familia: Users,
+  aire_libre: Sun,
+  voluntariado: HeartHandshake,
+  aprender: GraduationCap
 };
-
-function visualOf(key: string) {
-  return ITEM_VISUALS[key] ?? { icon: Check, color: "bg-slate-500" };
-}
 
 function dayWord(count: number) {
   return count === 1 ? "día" : "días";
 }
 
+function ItemPhoto({
+  itemKey,
+  className = "aspect-[4/3]",
+  children
+}: {
+  itemKey: string;
+  className?: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div className={`relative flex-auto overflow-hidden ${className}`}>
+      <img
+        src={`/routine/${itemKey}.webp`}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
+      />
+      {children}
+    </div>
+  );
+}
+
 function Stepper({
   item,
   amount,
-  stacked = false,
   onChange
 }: {
   item: RoutineItem;
   amount: number;
-  stacked?: boolean;
   onChange: (amount: number) => void;
 }) {
   const buttonClass =
     "flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-black/10 bg-white text-ink shadow-soft transition hover:bg-slate-50 active:scale-90 disabled:cursor-not-allowed disabled:opacity-40";
 
   const value = (
-    <p key={amount} className="hab-pop whitespace-nowrap text-center text-base font-semibold leading-6 text-ink">
+    <p key={amount} className="hab-pop text-center text-base font-semibold leading-6 text-ink">
       {formatAmount(item, amount)}
     </p>
   );
 
-  const minus = (
-    <button
-      type="button"
-      onClick={() => onChange(Math.max(0, amount - item.step))}
-      disabled={amount <= 0}
-      aria-label={`Quitar de ${item.label}`}
-      className={buttonClass}
-    >
-      <Minus className="h-5 w-5" aria-hidden="true" />
-    </button>
-  );
-
-  const plus = (
-    <button
-      type="button"
-      onClick={() => onChange(Math.min(ROUTINE_MAX_AMOUNT, amount + item.step))}
-      aria-label={`Agregar a ${item.label}`}
-      className={buttonClass}
-    >
-      <Plus className="h-5 w-5" aria-hidden="true" />
-    </button>
-  );
-
-  if (stacked) {
-    return (
-      <div className="grid gap-2">
-        {value}
-        <div className="flex flex-wrap justify-center gap-3">
-          {minus}
-          {plus}
-        </div>
-        {item.showHours ? (
-          <div className="flex flex-wrap justify-center gap-2">
-            <button
-              type="button"
-              onClick={() => onChange(Math.max(0, amount - 60))}
-              disabled={amount <= 0}
-              aria-label={`Quitar una hora de ${item.label}`}
-              className="min-h-11 flex-1 rounded-full border border-black/10 bg-white px-2 py-1 text-sm font-semibold text-ink transition hover:bg-slate-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              −1 h
-            </button>
-            <button
-              type="button"
-              onClick={() => onChange(Math.min(ROUTINE_MAX_AMOUNT, amount + 60))}
-              disabled={amount >= ROUTINE_MAX_AMOUNT}
-              aria-label={`Agregar una hora a ${item.label}`}
-              className="min-h-11 flex-1 rounded-full bg-slate-600 px-2 py-1 text-sm font-semibold text-white transition hover:bg-slate-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              +1 h
-            </button>
-          </div>
-        ) : null}
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      {minus}
+    <div className="grid gap-2">
       {value}
-      {plus}
+      <div className="flex flex-wrap justify-center gap-3">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(0, amount - item.step))}
+          disabled={amount <= 0}
+          aria-label={`Quitar de ${item.label}`}
+          className={buttonClass}
+        >
+          <Minus className="h-5 w-5" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(Math.min(ROUTINE_MAX_AMOUNT, amount + item.step))}
+          aria-label={`Agregar a ${item.label}`}
+          className={buttonClass}
+        >
+          <Plus className="h-5 w-5" aria-hidden="true" />
+        </button>
+      </div>
+      {item.showHours ? (
+        <div className="flex flex-wrap justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => onChange(Math.max(0, amount - 60))}
+            disabled={amount <= 0}
+            aria-label={`Quitar una hora de ${item.label}`}
+            className="min-h-11 flex-1 rounded-full border border-black/10 bg-white px-2 py-1 text-sm font-semibold text-ink transition hover:bg-slate-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            −1 h
+          </button>
+          <button
+            type="button"
+            onClick={() => onChange(Math.min(ROUTINE_MAX_AMOUNT, amount + 60))}
+            disabled={amount >= ROUTINE_MAX_AMOUNT}
+            aria-label={`Agregar una hora a ${item.label}`}
+            className="min-h-11 flex-1 rounded-full bg-slate-600 px-2 py-1 text-sm font-semibold text-white transition hover:bg-slate-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            +1 h
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -597,7 +577,7 @@ export function RoutinePanel({
     addHealthy(item, Math.min(ROUTINE_MAX_AMOUNT, amountOn(entries, date, item.key) + item.step));
 
   const suggestion = suggestPositive(entries, date, today, goals);
-  const SuggestionIcon = visualOf(suggestion.key).icon;
+  const SuggestionIcon = SUGGESTION_ICONS[suggestion.key] ?? Check;
   const goalKeys = new Set(goals.map((goal) => goal.item_key));
   const helper = contacts?.doctor?.phone
     ? { label: "Llamar a mi médico", phone: contacts.doctor.phone }
@@ -665,29 +645,28 @@ export function RoutinePanel({
       {view === "healthy" ? (
         <>
           <SectionCard title="Mis actividades saludables" description="Toca + para sumar el tiempo que le dedicaste en este día.">
-            <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+            <ul className="hab-photo-grid grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
               {HEALTHY_ITEMS.map((item, index) => {
-                const visual = visualOf(item.key);
-                const Icon = visual.icon;
                 const amount = amountOn(entries, date, item.key);
                 return (
                   <li
                     key={item.key}
-                    className={`hab-pop flex flex-col justify-between gap-2 rounded-3xl border p-3 text-center ${
+                    className={`hab-pop group flex flex-col overflow-hidden rounded-3xl border text-center ${
                       amount > 0 ? "border-emerald-300 bg-emerald-50" : "border-black/5 bg-white"
                     }`}
                     style={{ "--i": index } as CSSProperties}
                   >
-                    <div className="flex flex-col items-center gap-2">
-                      <span className={`flex h-14 w-14 items-center justify-center rounded-2xl text-white ${visual.color}`} aria-hidden="true">
-                        <Icon
-                          className={`h-7 w-7 ${amount > 0 ? "hab-activity-on" : "hab-float"}`}
-                          style={{ animationDelay: `${index * 180}ms` }}
-                        />
-                      </span>
+                    <ItemPhoto itemKey={item.key}>
+                      {amount > 0 ? (
+                        <span className="hab-pop absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-white shadow-soft" aria-hidden="true">
+                          <Check className="h-5 w-5" />
+                        </span>
+                      ) : null}
+                    </ItemPhoto>
+                    <div className="flex flex-col gap-2 p-3">
                       <p className="text-base font-semibold leading-5 text-ink">{item.label}</p>
+                      <Stepper item={item} amount={amount} onChange={(next) => addHealthy(item, next)} />
                     </div>
-                    <Stepper item={item} amount={amount} stacked onChange={(next) => addHealthy(item, next)} />
                   </li>
                 );
               })}
@@ -732,49 +711,46 @@ export function RoutinePanel({
           ) : null}
 
           <SectionCard title="Mis vicios" description="Registra cuánto fue en este día. Si fue nada, no tienes que anotar.">
-            <ul className="grid gap-3 md:grid-cols-2">
+            <ul className="hab-photo-grid grid grid-flow-dense grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
               {VICE_ITEMS.map((item, index) => {
-                const visual = visualOf(item.key);
-                const Icon = visual.icon;
                 const amount = amountOn(entries, date, item.key);
                 const hasGoal = goalKeys.has(item.key);
+                const formOpen = formFor === item.key && !hasGoal;
                 return (
                   <li
                     key={item.key}
-                    className="hab-rise rounded-3xl border border-black/5 bg-white p-3"
+                    className={`hab-rise group flex flex-col overflow-hidden rounded-3xl border border-black/5 bg-white text-center ${
+                      formOpen ? "col-span-2" : ""
+                    }`}
                     style={{ "--i": index } as CSSProperties}
                   >
-                    <div className="flex items-center gap-3">
-                      <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white ${visual.color}`} aria-hidden="true">
-                        <Icon className="hab-rock h-6 w-6" style={{ animationDelay: `${index * 200}ms` }} />
-                      </span>
-                      <p className="min-w-0 flex-1 text-base font-semibold leading-5 text-ink">{item.label}</p>
-                    </div>
-                    <div className="mt-2">
+                    <ItemPhoto itemKey={item.key} className={formOpen ? "aspect-[2/1]" : "aspect-[4/3]"} />
+                    <div className="flex flex-col gap-2 p-3">
+                      <p className="text-base font-semibold leading-5 text-ink">{item.label}</p>
                       <Stepper item={item} amount={amount} onChange={(next) => onSetAmount(item.key, next)} />
-                    </div>
 
-                    {hasGoal ? (
-                      <p className="mt-2 text-center text-sm font-semibold text-emerald-800">Tienes un plan activo</p>
-                    ) : formFor === item.key ? (
-                      <GoalForm
-                        item={item}
-                        amountToday={amount}
-                        onCancel={() => setFormFor(null)}
-                        onCreate={async (input) => {
-                          await onCreateGoal({ item_key: item.key, ...input });
-                          setFormFor(null);
-                        }}
-                      />
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setFormFor(item.key)}
-                        className="mt-2 min-h-11 w-full rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-100 active:scale-[0.98]"
-                      >
-                        Quiero cambiar este vicio
-                      </button>
-                    )}
+                      {hasGoal ? (
+                        <p className="text-sm font-semibold text-emerald-800">Tienes un plan activo</p>
+                      ) : formOpen ? (
+                        <GoalForm
+                          item={item}
+                          amountToday={amount}
+                          onCancel={() => setFormFor(null)}
+                          onCreate={async (input) => {
+                            await onCreateGoal({ item_key: item.key, ...input });
+                            setFormFor(null);
+                          }}
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setFormFor(item.key)}
+                          className="min-h-11 w-full rounded-full bg-emerald-50 px-3 py-2 text-sm font-semibold leading-5 text-emerald-900 transition hover:bg-emerald-100 active:scale-[0.98]"
+                        >
+                          Quiero cambiar este vicio
+                        </button>
+                      )}
+                    </div>
                   </li>
                 );
               })}

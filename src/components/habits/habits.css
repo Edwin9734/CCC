@@ -227,3 +227,15 @@
     display: none;
   }
 }
+
+/* Con letra muy grande en teléfono, cada tarjeta con foto ocupa toda la fila */
+@media (max-width: 479.98px) {
+  html[data-text-size="4"] .hab-photo-grid,
+  html[data-text-size="5"] .hab-photo-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html[data-text-size="4"] .hab-photo-grid > *,
+  html[data-text-size="5"] .hab-photo-grid > * {
+    grid-column: auto;
+  }
+}
