@@ -12,7 +12,9 @@ import { getMedications, type MedicationWithSchedules } from "@/lib/supabase/med
 import { getAllergies, type AllergyRow } from "@/lib/supabase/allergies";
 import { buildDietInsights } from "@/lib/diet-insights";
 import { applyAllergyFilter, findAllergenMatches } from "@/lib/diet-allergens";
-import { LIQUID_HIDDEN_IDS, loadProfileExtras } from "@/lib/plan-profile";
+import { buildContacts } from "@/lib/contacts";
+import { LIQUID_HIDDEN_IDS, buildProfileExtras } from "@/lib/plan-profile";
+import { loadProfileForShell } from "@/lib/supabase/profile";
 import { DIET_TABS, normalizeTab } from "@/lib/section-tabs";
 
 export default async function DietasPage({
@@ -55,7 +57,9 @@ export default async function DietasPage({
   const blockedIds = new Set(Object.keys(allergyMatches));
 
   // Con restricción de líquidos (enfermedad renal o insuficiencia cardíaca) no se sugiere agua ni té verde.
-  const extras = data.user ? await loadProfileExtras(supabase) : null;
+  const shell = data.user ? await loadProfileForShell(supabase) : null;
+  const extras = shell ? buildProfileExtras(shell.profile, shell.conditions) : null;
+  const contacts = shell ? buildContacts(shell.profile) : null;
   const hiddenLiquidIds = extras?.waterRestricted ? LIQUID_HIDDEN_IDS : [];
 
   const insights = applyAllergyFilter(
@@ -81,7 +85,7 @@ export default async function DietasPage({
           tabs={DIET_TABS}
           initialTab={initialTab}
           panels={{
-            alergias: <AllergyManager initialAllergies={allergies} />,
+            alergias: <AllergyManager initialAllergies={allergies} contacts={contacts} />,
             guia: (
               <>
                 <DietInsightsPanel insights={insights} allergyMatches={allergyMatches} />

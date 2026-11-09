@@ -272,4 +272,29 @@ a {
   body[data-print-target="guide"] #guide-print-content {
     margin-top: 0 !important;
   }
+
+  /* ---------- Imprimir TARJETA DE ALERGIAS ---------- */
+  body[data-print-target="allergy"] * {
+    visibility: hidden;
+  }
+
+  body[data-print-target="allergy"] #allergy-card,
+  body[data-print-target="allergy"] #allergy-card * {
+    visibility: visible;
+  }
+
+  body[data-print-target="allergy"] #allergy-card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+    box-shadow: none;
+  }
+
+  body[data-print-target="allergy"] #allergy-card .no-print {
+    display: none !important;
+  }
 }

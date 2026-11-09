@@ -84,7 +84,7 @@ const ALLERGEN_KEYWORDS: Record<string, string[]> = {
   pimienta: ["pimienta"]
 };
 
-function normalize(text: string) {
+export function normalize(text: string) {
   return text
     .toLowerCase()
     .normalize("NFD")

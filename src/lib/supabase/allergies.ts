@@ -43,6 +43,26 @@ export async function getAllergies(supabase: SupabaseClient) {
   return data as AllergyRow[];
 }
 
+export async function updateAllergy(
+  supabase: SupabaseClient,
+  id: string,
+  { allergy_name, notes }: { allergy_name: string; notes?: string }
+) {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) throw new Error("No authenticated user");
+
+  const { data, error } = await supabase
+    .from("allergies")
+    .update({ allergy_name, notes: notes || null })
+    .eq("id", id)
+    .eq("user_id", user.user.id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as AllergyRow;
+}
+
 export async function deleteAllergy(supabase: SupabaseClient, id: string) {
   const { data: user } = await supabase.auth.getUser();
   if (!user.user) throw new Error("No authenticated user");
