@@ -24,7 +24,7 @@ import { useSectionTabs } from "@/components/shell/section-tabs";
 import { DIET_ITEM_BY_ID } from "@/lib/diet-data";
 import { findAllergenMatches } from "@/lib/diet-allergens";
 import { getAllergyMatches } from "@/lib/diet-menu-data";
-import { hasRecipePhoto, recipeImageSrc } from "@/lib/food-images";
+import { hasRecipePhoto, ingredientImageSrc, recipeImageSrc } from "@/lib/food-images";
 import {
   DRINK_TAGS,
   RECIPES,
@@ -98,6 +98,23 @@ function RecipeImage({ recipe, className }: { recipe: Recipe; className?: string
   );
 }
 
+function IngredientTile({ image, text }: { image: string; text: string }) {
+  return (
+    <div className="flex h-full w-full flex-col rounded-3xl border-2 border-black/5 bg-white p-2 text-center">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={ingredientImageSrc(image)}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+        className="aspect-square w-full rounded-2xl object-cover"
+      />
+      <span className="mt-2 block px-0.5 text-sm font-semibold leading-5 text-ink">{text}</span>
+    </div>
+  );
+}
+
 function CookingHero() {
   return (
     <svg viewBox="0 0 160 120" className="h-28 w-auto shrink-0" aria-hidden="true">
@@ -154,12 +171,8 @@ function RecipeDialog({
     returnFocusRef: closedRef
   });
 
-  const foods = recipe.ingredientItems.flatMap((ingredient) => {
-    const food = ingredient.foodId ? DIET_ITEM_BY_ID.get(ingredient.foodId) : undefined;
-    return food ? [{ food, text: ingredient.text }] : [];
-  });
   const others = recipe.ingredientItems.filter(
-    (ingredient) => !ingredient.foodId || !DIET_ITEM_BY_ID.has(ingredient.foodId)
+    (ingredient) => !ingredient.image && (!ingredient.foodId || !DIET_ITEM_BY_ID.has(ingredient.foodId))
   );
 
   const toggleStep = (index: number) =>
@@ -232,19 +245,28 @@ function RecipeDialog({
 
           <h3 className="mt-5 text-lg font-semibold">Ingredientes</h3>
           <div className={`mt-2 ${FOOD_GRID_NARROW}`}>
-            {foods.map(({ food, text }) => (
-              <FoodPhotoTile
-                key={text}
-                item={food}
-                label={text}
-                opensDialog
-                flagged={Boolean(foodMatches[food.id])}
-                onClick={(event) => {
-                  foodReturnRef.current = event.currentTarget;
-                  setFoodId(food.id);
-                }}
-              />
-            ))}
+            {recipe.ingredientItems.flatMap((ingredient) => {
+              if (ingredient.image) {
+                return [<IngredientTile key={ingredient.text} image={ingredient.image} text={ingredient.text} />];
+              }
+
+              const food = ingredient.foodId ? DIET_ITEM_BY_ID.get(ingredient.foodId) : undefined;
+              if (!food) return [];
+
+              return [
+                <FoodPhotoTile
+                  key={ingredient.text}
+                  item={food}
+                  label={ingredient.text}
+                  opensDialog
+                  flagged={Boolean(foodMatches[food.id])}
+                  onClick={(event) => {
+                    foodReturnRef.current = event.currentTarget;
+                    setFoodId(food.id);
+                  }}
+                />
+              ];
+            })}
           </div>
           {others.length > 0 ? (
             <ul className="mt-3 list-disc space-y-1 pl-5 text-base leading-7">

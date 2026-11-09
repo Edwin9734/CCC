@@ -93,7 +93,14 @@ export function foodImageSrc(id: string): string {
 
 // Recetas que ya tienen su foto terminada (archivo public/recipes/<id>.webp).
 // Las demás muestran un fondo de color con un ícono animado.
-export const RECIPE_PHOTO_IDS: string[] = [];
+export const RECIPE_PHOTO_IDS: string[] = [
+  "mosh", "frijoles-parados", "lentejas", "mojarra", "sardinas-tomate", "casamiento", "caldo-pollo",
+  "pepian-ligero", "jocon-ligero", "hilachas-pollo", "guisquil-guisado", "sopa-verduras", "tamalitos-chipilin",
+  "tostada-aguacate", "tostada-guacamol", "tostada-chirmol", "platano", "elote-limon", "fruta-pepita",
+  "mani-tostado", "pepino-zanahoria", "licuado-verde", "licuado-avena-manzana", "licuado-papaya-avena",
+  "licuado-pera-chan", "licuado-banano-mani", "fresco-cebada", "fresco-avena", "limonada-chan", "fresco-jamaica",
+  "fresco-pepino", "jugo-tomate", "jugo-zanahoria-naranja", "jugo-remolacha", "jugo-apio-pepino"
+];
 
 const RECIPE_PHOTO_SET = new Set(RECIPE_PHOTO_IDS);
 
@@ -103,6 +110,10 @@ export function hasRecipePhoto(id: string): boolean {
 
 export function recipeImageSrc(id: string): string {
   return `/recipes/${id}.webp`;
+}
+
+export function ingredientImageSrc(key: string): string {
+  return `/ingredients/${key}.webp`;
 }
 
 // Crédito que se muestra al pie de la guía de alimentación (null = no se muestra nada).

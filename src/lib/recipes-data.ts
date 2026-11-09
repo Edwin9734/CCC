@@ -5,6 +5,7 @@ export type RecipeTag = "bajar" | "economica" | "saludable" | "refaccion" | "lic
 export interface Ingredient {
   text: string;
   foodId?: string; // alimento de diet-data.ts, para mostrar su imagen
+  image?: string; // foto de public/ingredients, para lo que no está en la guía
 }
 
 export interface Recipe {
@@ -22,7 +23,7 @@ export interface Recipe {
 }
 
 interface RecipeInput extends Omit<Recipe, "ingredients" | "ingredientItems" | "keywords"> {
-  ingredients: (string | [string, string])[]; // "texto" o ["texto", idDelAlimento]
+  ingredients: (string | [string, string] | Ingredient)[]; // "texto", ["texto", idDelAlimento] o img("texto", foto)
   allergens?: string[]; // palabras de alergia de ingredientes que no están en la guía
 }
 
@@ -49,17 +50,35 @@ export const RECIPE_TAG_LABEL: Record<RecipeTag, string> = {
 
 export const DRINK_TAGS: RecipeTag[] = ["licuado", "fresco", "jugo"];
 
+const img = (text: string, image: string): Ingredient => ({ text, image });
+
+// Palabras de alergia de los ingredientes que no están en la guía de alimentos.
+const IMAGE_ALLERGENS: Record<string, string[]> = {
+  papaya: ["papaya"],
+  remolacha: ["remolacha"],
+  elote: ["maiz", "elote"],
+  "masa-maiz": ["maiz"],
+  tostadas: ["maiz"],
+  miltomate: ["miltomate"],
+  "flor-jamaica": ["jamaica"]
+};
+
 const recipe = ({ ingredients, allergens = [], ...rest }: RecipeInput): Recipe => {
-  const items: Ingredient[] = ingredients.map((item) =>
-    typeof item === "string" ? { text: item } : { text: item[0], foodId: item[1] }
-  );
+  const items: Ingredient[] = ingredients.map((item) => {
+    if (typeof item === "string") return { text: item };
+    return Array.isArray(item) ? { text: item[0], foodId: item[1] } : item;
+  });
 
   return {
     ...rest,
     ingredients: items.map((item) => item.text),
     ingredientItems: items,
     keywords: Array.from(
-      new Set([...items.flatMap((item) => (item.foodId ? getFoodKeywords(item.foodId) : [])), ...allergens])
+      new Set([
+        ...items.flatMap((item) => (item.foodId ? getFoodKeywords(item.foodId) : [])),
+        ...items.flatMap((item) => (item.image ? (IMAGE_ALLERGENS[item.image] ?? []) : [])),
+        ...allergens
+      ])
     )
   };
 };
@@ -105,7 +124,7 @@ export const RECIPES: Recipe[] = [
       ["3 tomates para el chirmol", "tomate"],
       ["Cilantro picado", "cilantro"],
       ["Jugo de 1 limón", "limon"],
-      "Muy poca sal"
+      img("Muy poca sal", "sal")
     ],
     steps: [
       "Limpia y lava los frijoles. Déjalos en remojo durante la noche y bota esa agua.",
@@ -131,7 +150,7 @@ export const RECIPES: Recipe[] = [
       ["1 diente de ajo", "ajo"],
       ["1 cucharada de aceite de oliva", "aceite-oliva"],
       ["1 hoja de laurel", "laurel"],
-      "Muy poca sal"
+      img("Muy poca sal", "sal")
     ],
     steps: [
       "Lava las lentejas y cuécelas en el agua con el laurel por 25 minutos.",
@@ -149,7 +168,7 @@ export const RECIPES: Recipe[] = [
     time: "35 min",
     servings: "2 porciones",
     ingredients: [
-      "2 mojarras limpias, medianas",
+      img("2 mojarras limpias, medianas", "mojarra"),
       ["1 zanahoria en rodajas finas", "zanahoria"],
       ["1 güisquil en tiras", "guisquil"],
       ["1 tomate en rodajas", "tomate"],
@@ -231,7 +250,7 @@ export const RECIPES: Recipe[] = [
       ["½ cebolla", "cebolla"],
       ["2 dientes de ajo", "ajo"],
       ["Cilantro", "cilantro"],
-      "Muy poca sal"
+      img("Muy poca sal", "sal")
     ],
     steps: [
       "Cuece el pollo en el agua con la cebolla y el ajo por 25 minutos.",
@@ -251,12 +270,13 @@ export const RECIPES: Recipe[] = [
     ingredients: [
       ["6 piezas de pollo sin piel", "pollo-sin-piel"],
       ["6 tomates", "tomate"],
-      "4 miltomates",
+      img("4 miltomates", "miltomate"),
       ["1 cebolla", "cebolla"],
       ["3 dientes de ajo", "ajo"],
-      "2 cucharadas de pepitoria",
-      "1 cucharada de ajonjolí",
-      "1 chile guaque y 1 chile pasa, sin semillas",
+      img("2 cucharadas de pepitoria", "pepitoria"),
+      img("1 cucharada de ajonjolí", "ajonjoli"),
+      img("1 chile guaque sin semillas", "chile-guaque"),
+      img("1 chile pasa sin semillas", "chile-pasa"),
       ["2 güisquiles en trozos", "guisquil"],
       ["2 papas en trozos", "papa"],
       ["1 raja de canela", "canela"]
@@ -279,11 +299,11 @@ export const RECIPES: Recipe[] = [
     servings: "4 porciones",
     ingredients: [
       ["4 piezas de pollo sin piel", "pollo-sin-piel"],
-      "1 libra de miltomate",
-      "1 manojo de cebollín",
+      img("1 libra de miltomate", "miltomate"),
+      img("1 manojo de cebollín", "cebollin"),
       ["1 manojo de cilantro", "cilantro"],
       ["2 dientes de ajo", "ajo"],
-      "2 cucharadas de pepitoria",
+      img("2 cucharadas de pepitoria", "pepitoria"),
       ["1 tortilla de maíz tostada, para espesar", "tortilla-maiz"]
     ],
     steps: [
@@ -305,10 +325,10 @@ export const RECIPES: Recipe[] = [
     ingredients: [
       ["2 pechugas de pollo sin piel", "pollo-sin-piel"],
       ["5 tomates", "tomate"],
-      "3 miltomates",
+      img("3 miltomates", "miltomate"),
       ["2 papas en cubos", "papa"],
       ["2 zanahorias en cubos", "zanahoria"],
-      "1 chile guaque sin semillas",
+      img("1 chile guaque sin semillas", "chile-guaque"),
       ["1 tortilla de maíz, para espesar", "tortilla-maiz"],
       ["2 dientes de ajo", "ajo"]
     ],
@@ -333,7 +353,7 @@ export const RECIPES: Recipe[] = [
       ["¼ de cebolla picada", "cebolla"],
       ["1 cucharadita de aceite de oliva", "aceite-oliva"],
       ["Orégano al gusto", "oregano"],
-      "Muy poca sal"
+      img("Muy poca sal", "sal")
     ],
     steps: [
       "Cuece los güisquiles en agua por 10 minutos y escúrrelos.",
@@ -358,7 +378,7 @@ export const RECIPES: Recipe[] = [
       ["1 tomate picado", "tomate"],
       ["¼ de cebolla", "cebolla"],
       ["Cilantro", "cilantro"],
-      "Muy poca sal"
+      img("Muy poca sal", "sal")
     ],
     steps: [
       "Hierve el agua con el tomate y la cebolla por 5 minutos.",
@@ -376,12 +396,12 @@ export const RECIPES: Recipe[] = [
     time: "1 h",
     servings: "8 tamalitos",
     ingredients: [
-      "2 tazas de masa de maíz",
-      "1 taza de hojas de chipilín",
+      img("2 tazas de masa de maíz", "masa-maiz"),
+      img("1 taza de hojas de chipilín", "chipilin"),
       ["2 cucharadas de aceite de oliva", "aceite-oliva"],
       ["½ taza de agua tibia", "agua"],
-      "Hojas de milpa o de plátano",
-      "Muy poca sal"
+      img("Hojas de milpa o de plátano", "hojas-milpa"),
+      img("Muy poca sal", "sal")
     ],
     steps: [
       "Mezcla la masa con el aceite, el agua y una pizca de sal hasta que quede suave.",
@@ -401,7 +421,7 @@ export const RECIPES: Recipe[] = [
     time: "10 min",
     servings: "2 tostadas",
     ingredients: [
-      "2 tostadas horneadas o de comal, sin freír",
+      img("2 tostadas horneadas o de comal, sin freír", "tostadas"),
       ["3 cucharadas de frijol colado sin manteca", "frijoles"],
       ["¼ de aguacate en láminas", "aguacate"],
       ["Unas gotas de limón", "limon"],
@@ -422,7 +442,7 @@ export const RECIPES: Recipe[] = [
     time: "10 min",
     servings: "4 tostadas",
     ingredients: [
-      "4 tostadas horneadas o de comal, sin freír",
+      img("4 tostadas horneadas o de comal, sin freír", "tostadas"),
       ["1 aguacate maduro", "aguacate"],
       ["Jugo de 1 limón", "limon"],
       ["¼ de cebolla picada fina", "cebolla"],
@@ -443,7 +463,7 @@ export const RECIPES: Recipe[] = [
     time: "15 min",
     servings: "4 tostadas",
     ingredients: [
-      "4 tostadas horneadas o de comal, sin freír",
+      img("4 tostadas horneadas o de comal, sin freír", "tostadas"),
       ["3 tomates", "tomate"],
       ["¼ de cebolla", "cebolla"],
       ["Cilantro picado", "cilantro"],
@@ -482,10 +502,10 @@ export const RECIPES: Recipe[] = [
     time: "30 min",
     servings: "2 porciones",
     ingredients: [
-      "2 elotes tiernos",
+      img("2 elotes tiernos", "elote"),
       ["Agua para cocer", "agua"],
       ["Jugo de 1 limón", "limon"],
-      "Una pizca de chile en polvo (opcional)"
+      img("Una pizca de chile en polvo (opcional)", "chile-polvo")
     ],
     steps: [
       "Limpia los elotes y cuécelos en agua de 20 a 25 minutos.",
@@ -503,9 +523,9 @@ export const RECIPES: Recipe[] = [
     ingredients: [
       ["1 manzana picada", "manzana"],
       ["1 pera picada", "pera"],
-      "1 taza de papaya picada",
+      img("1 taza de papaya picada", "papaya"),
       ["Jugo de ½ limón", "limon"],
-      "1 cucharada de pepita de ayote sin sal"
+      img("1 cucharada de pepita de ayote sin sal", "pepita-ayote")
     ],
     steps: [
       "Pica la fruta en cubos y colócala en un plato.",
@@ -544,7 +564,7 @@ export const RECIPES: Recipe[] = [
       ["1 pepino en tiras", "pepino"],
       ["2 zanahorias en tiras", "zanahoria"],
       ["Jugo de 1 limón", "limon"],
-      "Una pizca de pepita molida (opcional)"
+      img("Una pizca de pepita molida (opcional)", "pepita-ayote")
     ],
     steps: ["Lava y corta las verduras en tiras.", "Agrega el limón y, si quieres, la pepita molida."],
     allergens: NUT_SEEDS
@@ -592,7 +612,7 @@ export const RECIPES: Recipe[] = [
     time: "5 min",
     servings: "1 vaso",
     ingredients: [
-      "1 taza de papaya picada",
+      img("1 taza de papaya picada", "papaya"),
       ["3 cucharadas de avena en hojuelas", "avena"],
       ["1 taza de agua", "agua"],
       ["Jugo de ½ limón", "limon"]
@@ -608,7 +628,7 @@ export const RECIPES: Recipe[] = [
     servings: "1 vaso",
     ingredients: [
       ["1 pera con cáscara", "pera"],
-      "1 cucharada de semillas de chan (chía)",
+      img("1 cucharada de semillas de chan (chía)", "chan"),
       ["1 taza de agua", "agua"],
       ["Canela al gusto", "canela"]
     ],
@@ -641,7 +661,7 @@ export const RECIPES: Recipe[] = [
     time: "40 min",
     servings: "6 vasos",
     ingredients: [
-      "½ taza de cebada en grano",
+      img("½ taza de cebada en grano", "cebada"),
       ["8 tazas de agua", "agua"],
       ["1 raja de canela", "canela"],
       ["Jugo de 1 limón", "limon"]
@@ -678,7 +698,7 @@ export const RECIPES: Recipe[] = [
     ingredients: [
       ["Jugo de 4 limones", "limon"],
       ["5 tazas de agua", "agua"],
-      "2 cucharadas de semillas de chan (chía)"
+      img("2 cucharadas de semillas de chan (chía)", "chan")
     ],
     steps: ["Remoja el chan en el agua por 10 minutos, moviendo a veces.", "Agrega el jugo de limón.", "Sirve frío, sin azúcar."],
     allergens: ["semilla", "chia", "chan"]
@@ -691,7 +711,7 @@ export const RECIPES: Recipe[] = [
     time: "20 min",
     servings: "6 vasos",
     ingredients: [
-      ["1 taza de flor de jamaica", "agua-jamaica"],
+      img("1 taza de flor de jamaica", "flor-jamaica"),
       ["8 tazas de agua", "agua"],
       ["1 raja de canela", "canela"]
     ],
@@ -756,7 +776,7 @@ export const RECIPES: Recipe[] = [
     time: "5 min",
     servings: "1 vaso pequeño",
     ingredients: [
-      "½ remolacha cruda, pelada",
+      img("½ remolacha cruda, pelada", "remolacha"),
       ["1 zanahoria", "zanahoria"],
       ["Jugo de 1 limón", "limon"],
       ["1 taza de agua", "agua"]
