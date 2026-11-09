@@ -44,6 +44,18 @@ export const RACHA_TABS: TabDef[] = [
   { key: "estadistica", label: "Estadística", icon: "estadistica" }
 ];
 
+export const MEASUREMENT_TABS: TabDef[] = [
+  { key: "registrar", label: "Registrar", icon: "mediciones-registrar" },
+  { key: "evolucion", label: "Evolución", icon: "estadistica" },
+  { key: "historial", label: "Historial", icon: "historial" }
+];
+
+export const MEDICATION_TABS: TabDef[] = [
+  { key: "hoy", label: "Hoy", icon: "medicamentos-hoy" },
+  { key: "botiquin", label: "Botiquín", icon: "medicamentos" },
+  { key: "calendario", label: "Calendario", icon: "semana" }
+];
+
 export const ANTECEDENTES_TABS: TabDef[] = [
   { key: "medicinas", label: "Medicinas", icon: "antecedentes-medicinas" },
   { key: "enfermedades", label: "Enfermedades", icon: "antecedentes-enfermedades" },

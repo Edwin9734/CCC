@@ -91,6 +91,50 @@ export async function getMedications(supabase: SupabaseClient) {
   return data as MedicationWithSchedules[];
 }
 
+// Los horarios que siguen existiendo se actualizan en su lugar: borrar uno borraría
+// también su historial de tomas.
+export async function updateMedication(
+  supabase: SupabaseClient,
+  id: string,
+  {
+    name,
+    dosage,
+    instructions,
+    schedules,
+    removedScheduleIds
+  }: {
+    name: string;
+    dosage: string;
+    instructions?: string;
+    schedules: (ScheduleInput & { id?: string })[];
+    removedScheduleIds: string[];
+  }
+) {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) throw new Error("No authenticated user");
+  const userId = user.user.id;
+
+  const { error: medError } = await supabase
+    .from("medications")
+    .update({ name, dosage, instructions: instructions || null })
+    .eq("id", id)
+    .eq("user_id", userId);
+  if (medError) throw medError;
+
+  for (const schedule of schedules) {
+    const values = { time_of_day: schedule.time_of_day, repeat_days: schedule.repeat_days };
+    const { error } = schedule.id
+      ? await supabase.from("medication_schedules").update(values).eq("id", schedule.id).eq("user_id", userId)
+      : await supabase.from("medication_schedules").insert({ ...values, medication_id: id, user_id: userId });
+    if (error) throw error;
+  }
+
+  if (removedScheduleIds.length > 0) {
+    const { error } = await supabase.from("medication_schedules").delete().in("id", removedScheduleIds).eq("user_id", userId);
+    if (error) throw error;
+  }
+}
+
 export async function deleteMedication(supabase: SupabaseClient, id: string) {
   const { data: user } = await supabase.auth.getUser();
   if (!user.user) throw new Error("No authenticated user");

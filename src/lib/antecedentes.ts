@@ -250,7 +250,7 @@ export const EXAM_REASON_SUGGESTIONS = [
 ];
 
 // ---------- Utilidades ----------
-const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+export const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 
 export function formatLongDate(iso: string) {
   const [year, month, day] = iso.split("-").map(Number);
