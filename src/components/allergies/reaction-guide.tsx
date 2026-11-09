@@ -576,7 +576,7 @@ export function ReactionGuide({
             type="button"
             onClick={() => scrollToId("reaccion-lista")}
             aria-label={`Continuar con ${plural(markedSigns.length, "síntoma marcado", "síntomas marcados")}`}
-            className="alg-pop sticky bottom-3 z-10 mx-auto mt-4 flex min-h-14 w-full max-w-md items-center justify-center gap-2 rounded-full bg-ink px-5 py-3 text-base font-semibold text-white shadow-soft"
+            className="alg-pop sticky bottom-[5.5rem] z-10 mx-auto mt-4 flex min-h-14 w-full max-w-md items-center justify-center gap-2 rounded-full bg-ink px-5 py-3 text-base font-semibold text-white shadow-soft"
           >
             Continuar ({markedSigns.length})
             <ArrowDown className="h-5 w-5 shrink-0" aria-hidden="true" />

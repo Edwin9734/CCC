@@ -96,14 +96,15 @@ export interface MedalGroup {
   medals: Medal[];
 }
 
+export type StatsMetric = "meals" | "water" | "sleep" | "activity" | "measurements";
+export type StatsValues = Record<StatsMetric, number>;
+
 export interface StatsDay {
   date: string;
   label: string;
-  meals: number;
-  water: number;
-  sleep: number;
-  activity: number;
-  measurements: number;
+  isToday: boolean;
+  current: StatsValues | null; // null en los días de esta semana que aún no llegan
+  previous: StatsValues; // el mismo día de la semana pasada
 }
 
 export interface FoodCounts {
@@ -430,15 +431,9 @@ export function buildRachaView(raw: RachaRawData, today: string): RachaView {
 
   const allMedals = medalGroups.flatMap((group) => group.medals);
 
-  // Semana actual: de lunes hasta hoy (los días que aún no llegan no se muestran).
-  const monday = mondayOf(today);
-  const elapsed = isoWeekday(today);
-  const weekDays: StatsDay[] = Array.from({ length: elapsed }, (_, index) => {
-    const date = addDays(monday, index);
+  const valuesFor = (date: string): StatsValues => {
     const habit = habitByDay.get(date);
     return {
-      date,
-      label: WEEKDAY_SHORT[index],
       meals: raw.meals.filter((meal) => meal.eaten_on === date).length,
       water: habit?.water_glasses ?? 0,
       sleep: habit?.sleep_hours ?? 0,
@@ -446,6 +441,19 @@ export function buildRachaView(raw: RachaRawData, today: string): RachaView {
         .filter((activity) => activity.activity_date === date)
         .reduce((sum, activity) => sum + activity.minutes, 0),
       measurements: raw.measurements.filter((measurement) => measurement.measured_at === date).length
+    };
+  };
+
+  // La semana completa, de lunes a domingo, junto al mismo día de la semana pasada.
+  const monday = mondayOf(today);
+  const weekDays: StatsDay[] = WEEKDAY_SHORT.map((label, index) => {
+    const date = addDays(monday, index);
+    return {
+      date,
+      label,
+      isToday: date === today,
+      current: date <= today ? valuesFor(date) : null,
+      previous: valuesFor(addDays(date, -7))
     };
   });
 

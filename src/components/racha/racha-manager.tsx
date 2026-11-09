@@ -40,7 +40,7 @@ export function RachaManager({
         ),
         estadistica: (
           <WhenTabActive tab="estadistica">
-            <EstadisticaPanel view={view} measurements={measurements} sex={sex} />
+            <EstadisticaPanel view={view} measurements={measurements} sex={sex} waterRestricted={waterRestricted} />
           </WhenTabActive>
         )
       }}

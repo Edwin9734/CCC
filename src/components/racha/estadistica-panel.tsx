@@ -1,12 +1,12 @@
 "use client";
 
-import { Bar, BarChart, LabelList, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { MeasurementChart } from "@/components/charts/measurement-chart";
 import { Gauge, type GaugeBand } from "@/components/racha/gauge";
+import { WEEK_CHARTS, WeekDayChart } from "@/components/racha/week-day-chart";
 import { SectionCard } from "@/components/section-card";
 import { formatDate } from "@/lib/date-utils";
 import { METRIC_LABELS, getLipidStatus, getStatusLabel, type LipidMetric, type LipidStatus } from "@/lib/ranges";
-import type { RachaView, StatsDay } from "@/lib/racha";
+import type { RachaView } from "@/lib/racha";
 import type { MeasurementWithStatus } from "@/lib/supabase/measurements";
 import type { Sex } from "@/lib/profile";
 
@@ -73,56 +73,16 @@ function foodHelper(count: number, total: number) {
   return total > 0 ? `${count} de ${total} alimentos de esta semana.` : "Registra comidas en tu Diario para verlo.";
 }
 
-const BAR_CHARTS: { key: keyof Omit<StatsDay, "date" | "label">; title: string; unit: string; color: string; empty: string }[] = [
-  { key: "meals", title: "Comidas", unit: "comidas registradas", color: "#f97316", empty: "Aún no hay comidas esta semana." },
-  { key: "water", title: "Agua", unit: "vasos", color: "#0ea5e9", empty: "Aún no hay vasos de agua esta semana." },
-  { key: "sleep", title: "Sueño", unit: "horas", color: "#6366f1", empty: "Aún no hay horas de sueño esta semana." },
-  { key: "activity", title: "Actividad física", unit: "minutos", color: "#14b8a6", empty: "Aún no hay actividad esta semana." },
-  { key: "measurements", title: "Mediciones", unit: "registros", color: "#e11d48", empty: "No hay mediciones esta semana." }
-];
-
-function DayBars({ days, chart }: { days: StatsDay[]; chart: (typeof BAR_CHARTS)[number] }) {
-  const hasData = days.some((day) => day[chart.key] > 0);
-  const summary = days.map((day) => `${day.label}: ${day[chart.key]}`).join(", ");
-
-  return (
-    <figure className="rounded-3xl border border-black/5 bg-white p-4">
-      <figcaption className="text-base font-semibold text-ink">
-        {chart.title} <span className="text-sm font-normal text-muted">({chart.unit})</span>
-      </figcaption>
-      {hasData ? (
-        <div role="img" aria-label={`${chart.title}, ${chart.unit}. ${summary}.`} className="mt-3">
-          <ResponsiveContainer width="100%" height={210}>
-            <BarChart data={days} margin={{ top: 28, right: 4, left: 4, bottom: 0 }}>
-              <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#5f687c" style={{ fontSize: "13px" }} />
-              <YAxis hide domain={[0, "auto"]} />
-              <Bar dataKey={chart.key} fill={chart.color} radius={[10, 10, 0, 0]} maxBarSize={52} animationDuration={1200}>
-                <LabelList
-                  dataKey={chart.key}
-                  position="top"
-                  fill="#172033"
-                  style={{ fontSize: "14px", fontWeight: 600 }}
-                  formatter={(value) => (Number(value) > 0 ? value : "")}
-                />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      ) : (
-        <p className="mt-3 rounded-2xl bg-slate-50 px-4 py-8 text-center text-sm text-muted">{chart.empty}</p>
-      )}
-    </figure>
-  );
-}
-
 export function EstadisticaPanel({
   view,
   measurements,
-  sex
+  sex,
+  waterRestricted
 }: {
   view: RachaView;
   measurements: MeasurementWithStatus[];
   sex: Sex | null;
+  waterRestricted: boolean;
 }) {
   const { green, yellow, red, total } = view.weekFoods;
   const noFoods = total === 0 ? "Sin registros esta semana" : undefined;
@@ -191,10 +151,10 @@ export function EstadisticaPanel({
         </div>
       </SectionCard>
 
-      <SectionCard title="Mi semana día por día" description="Una barra por cada día que ya pasó de esta semana.">
+      <SectionCard title="Mi semana día por día" description="De lunes a domingo: las barras son esta semana y la línea gris, la semana pasada.">
         <div className="grid gap-4 md:grid-cols-2">
-          {BAR_CHARTS.map((chart) => (
-            <DayBars key={chart.key} days={view.weekDays} chart={chart} />
+          {WEEK_CHARTS.map((chart) => (
+            <WeekDayChart key={chart.key} days={view.weekDays} chart={chart} showGoal={!(chart.key === "water" && waterRestricted)} />
           ))}
         </div>
         <p className="mt-4 text-xs leading-5 text-muted">

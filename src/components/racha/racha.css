@@ -174,7 +174,16 @@
   to { opacity: 1; }
 }
 
+/* ---------- Gráficas de la semana ---------- */
+.racha-stat-in {
+  animation: racha-pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  animation-delay: calc(var(--i, 0) * 110ms);
+}
+.racha-table-in { animation: racha-fade 0.35s ease-out both; }
+
 @media (prefers-reduced-motion: reduce) {
+  .racha-stat-in,
+  .racha-table-in,
   .racha-heart-pop,
   .racha-beat,
   .racha-flame,
