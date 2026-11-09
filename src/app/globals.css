@@ -66,6 +66,22 @@ a {
   background: linear-gradient(160deg, #fff1f3, #ffe0e6) fixed;
 }
 
+/* Con letra grande en pantallas angostas, el contenido debe poder encogerse y bajar de línea
+   en vez de salirse. Con :where no pesa nada: cualquier clase de tamaño propia sigue mandando. */
+:where(.app-theme main) {
+  overflow-wrap: break-word;
+}
+:where(.app-theme main .grid > *, .app-theme main .flex > *, .app-theme main .inline-flex > *) {
+  min-width: 0;
+}
+:where(.app-theme main input, .app-theme main select, .app-theme main textarea) {
+  min-width: 0;
+  max-width: 100%;
+}
+:where(.app-theme main svg) {
+  max-width: 100%;
+}
+
 /* Colores de marca */
 .app-theme .bg-accent { background-image: linear-gradient(135deg, #f43f5e, #e11d48); }
 .app-theme .hover\:bg-accentDark:hover { background-image: none; }

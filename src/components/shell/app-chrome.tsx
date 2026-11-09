@@ -97,8 +97,11 @@ export function AppChrome({
               <Menu className="h-5 w-5" />
               Menú
             </button>
-            <div className="ab-logo" aria-hidden="true">
-              <span>♥</span>
+            {/* En celulares muy angostos se oculta el logo para que no se salga la barra. */}
+            <div className="hidden min-[360px]:block">
+              <div className="ab-logo" aria-hidden="true">
+                <span>♥</span>
+              </div>
             </div>
           </div>
 

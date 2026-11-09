@@ -231,7 +231,7 @@ export function WeekSummaryCard({
       </section>
 
       <SectionCard title="Calendario de 7 días" description="De un vistazo, qué hábitos cumpliste cada día.">
-        <div className="overflow-x-auto">
+        <div className="relative overflow-x-auto">
           <table className="w-full min-w-[19rem] border-separate border-spacing-y-2 text-center text-sm">
             <thead>
               <tr>

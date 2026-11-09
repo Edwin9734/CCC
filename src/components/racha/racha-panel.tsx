@@ -96,7 +96,7 @@ export function RachaPanel({ view, waterRestricted }: { view: RachaView; waterRe
     <div className="space-y-6">
       <SectionCard title="Mi racha" description="Cada día con agua, sueño y al menos una comida suma un corazón.">
         <div className="flex flex-col items-center text-center">
-          <div className="racha-heart-pop relative h-52 w-48">
+          <div className="racha-heart-pop relative h-52 w-48 max-w-full">
             <HeartFlame status={streak.current > 0 ? "complete" : "missed"} beating className="h-full w-full" />
             <p
               className={cn(

@@ -64,18 +64,18 @@ export function AllergyManager({ initialAllergies }: { initialAllergies: Allergy
       title="Mis alergias"
       description="Registra los alimentos a los que eres alérgico. Los ocultaremos de la guía y no te los sugeriremos."
     >
-      <form className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]" onSubmit={handleSubmit}>
+      <form className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]" onSubmit={handleSubmit}>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Ej. Mariscos, nueces, lácteos"
-          className="rounded-2xl border border-black/10 bg-background px-4 py-4 text-base outline-none placeholder:text-muted"
+          className="w-full min-w-0 rounded-2xl border border-black/10 bg-background px-4 py-4 text-base outline-none placeholder:text-muted"
         />
         <input
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Nota (opcional)"
-          className="rounded-2xl border border-black/10 bg-background px-4 py-4 text-base outline-none placeholder:text-muted"
+          className="w-full min-w-0 rounded-2xl border border-black/10 bg-background px-4 py-4 text-base outline-none placeholder:text-muted"
         />
         <button
           type="submit"
@@ -100,9 +100,9 @@ export function AllergyManager({ initialAllergies }: { initialAllergies: Allergy
               key={allergy.id}
               className="flex items-start justify-between gap-3 rounded-3xl border border-black/5 bg-background p-4"
             >
-              <div className="flex items-start gap-3">
+              <div className="flex min-w-0 items-start gap-3">
                 <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-danger" />
-                <div>
+                <div className="min-w-0 break-words">
                   <p className="text-sm font-semibold text-ink">{allergy.allergy_name}</p>
                   {allergy.notes ? <p className="mt-1 text-xs text-muted">{allergy.notes}</p> : null}
                 </div>

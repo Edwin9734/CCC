@@ -141,12 +141,12 @@ function Stepper({
     return (
       <div className="grid gap-2">
         {value}
-        <div className="flex justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-3">
           {minus}
           {plus}
         </div>
         {item.showHours ? (
-          <div className="flex justify-center gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             <button
               type="button"
               onClick={() => onChange(Math.max(0, amount - 60))}
@@ -172,7 +172,7 @@ function Stepper({
   }
 
   return (
-    <div className="flex items-center justify-between gap-2">
+    <div className="flex flex-wrap items-center justify-between gap-2">
       {minus}
       {value}
       {plus}

@@ -43,11 +43,11 @@ export function HistorialPanel({ measurements }: { measurements: MeasurementWith
             <div className="space-y-3 sm:hidden">
               {measurements.map((item) => (
                 <article key={item.id} className="rounded-2xl border border-black/5 bg-white p-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-x-2">
                     <p className="font-semibold text-ink">{item.metric}</p>
                     <p className="text-sm text-muted">{formatDate(item.measured_at)}</p>
                   </div>
-                  <div className="mt-2 flex items-center justify-between">
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-x-2">
                     <p className="text-muted">{item.value} mg/dL</p>
                     <p className={`text-sm ${item.status === "CRITICAL" ? "font-bold text-red-800" : "font-semibold text-ink"}`}>
                       {getStatusLabel(item.status)}

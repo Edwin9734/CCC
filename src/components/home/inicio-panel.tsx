@@ -153,8 +153,8 @@ export function InicioPanel({
                   >
                     <Icon className="h-9 w-9" aria-hidden="true" />
                   </span>
-                  <span className="mt-3 text-lg font-semibold leading-6 text-ink">{tile.label}</span>
-                  <span className="mt-0.5 text-sm leading-5 text-muted">{tile.helper}</span>
+                  <span className="mt-3 w-full text-lg font-semibold leading-6 text-ink">{tile.label}</span>
+                  <span className="mt-0.5 w-full text-sm leading-5 text-muted">{tile.helper}</span>
                 </Link>
               </li>
             );
