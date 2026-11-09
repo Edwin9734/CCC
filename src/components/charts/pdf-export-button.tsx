@@ -35,7 +35,7 @@ export function PDFExportButton({ elementId, fileName }: PDFExportButtonProps) {
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { orientation: "portrait" as const, unit: "mm" as const, format: "a4" },
         // Solo evita cortar filas de tabla y tarjetas de gráfica individuales.
-        pagebreak: { mode: ["css", "legacy"], avoid: ["tr", ".chart-card"] }
+        pagebreak: { mode: ["css", "legacy"], avoid: ["tr", ".chart-card", ".print-avoid-break"] }
       };
 
       // El PDF siempre se genera con el tamaño de letra original.

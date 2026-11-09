@@ -26,6 +26,20 @@
 .alg-sonar-off {
   border-color: rgba(225, 29, 72, 0.4);
 }
+.alg-sonar-white {
+  border-color: rgba(255, 255, 255, 0.85);
+}
+.alg-fade {
+  animation: alg-fade 0.2s ease-out backwards;
+}
+.alg-modal {
+  animation: alg-modal 0.35s cubic-bezier(0.2, 1.2, 0.4, 1) backwards;
+}
+.alg-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: alg-draw 0.3s ease-out 0.08s backwards;
+}
 
 @keyframes alg-rise {
   from { opacity: 0; transform: translateY(14px); }
@@ -46,12 +60,57 @@
   from { opacity: 0.9; transform: scale(0.72); }
   to { opacity: 0; transform: scale(1.25); }
 }
+@keyframes alg-fade {
+  from { opacity: 0; }
+}
+@keyframes alg-modal {
+  from { opacity: 0; transform: translateY(28px) scale(0.92); }
+}
+@keyframes alg-draw {
+  from { stroke-dashoffset: 1; }
+}
+
+/* Celular con letra muy grande: da todo el ancho al texto */
+@media (max-width: 479px) {
+  html[data-text-size="3"] .alg-sign-tile,
+  html[data-text-size="4"] .alg-sign-tile,
+  html[data-text-size="5"] .alg-sign-tile,
+  html[data-text-size="4"] .alg-timeline-dot,
+  html[data-text-size="5"] .alg-timeline-dot,
+  html[data-text-size="4"] .alg-timeline::before,
+  html[data-text-size="5"] .alg-timeline::before {
+    display: none;
+  }
+  html[data-text-size="3"] .alg-sign-check,
+  html[data-text-size="4"] .alg-sign-check,
+  html[data-text-size="5"] .alg-sign-check {
+    width: 60px;
+  }
+  html[data-text-size="4"] .alg-timeline > li,
+  html[data-text-size="5"] .alg-timeline > li {
+    padding-left: 0;
+  }
+  html[data-text-size="4"] .alg-cause-grid,
+  html[data-text-size="5"] .alg-cause-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html[data-text-size="4"] .alg-cause-grid button,
+  html[data-text-size="5"] .alg-cause-grid button {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding-right: 2.5rem;
+    text-align: left;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .alg-rise,
   .alg-pop,
   .alg-shake,
-  .alg-shield {
+  .alg-shield,
+  .alg-fade,
+  .alg-modal,
+  .alg-draw {
     animation: none !important;
   }
   .alg-sonar {

@@ -7,7 +7,8 @@ import { GuideReportSection } from "@/components/diet/guide-report-section";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getMeasurements, type MeasurementWithStatus } from "@/lib/supabase/measurements";
 import { getMedications, type MedicationWithSchedules } from "@/lib/supabase/medications";
-import { getAllergies, type AllergyRow } from "@/lib/supabase/allergies";
+import { ReactionReportSection } from "@/components/allergies/reaction-report-section";
+import { getAllergies, getAllergyReactions, type AllergyReactionRow, type AllergyRow } from "@/lib/supabase/allergies";
 import { loadProfileForShell } from "@/lib/supabase/profile";
 import { buildDietInsights } from "@/lib/diet-insights";
 import { applyAllergyFilter, findAllergenMatches } from "@/lib/diet-allergens";
@@ -24,6 +25,7 @@ export default async function ReportesPage() {
   let measurements: MeasurementWithStatus[] = [];
   let medications: MedicationWithSchedules[] = [];
   let allergies: AllergyRow[] = [];
+  let reactions: AllergyReactionRow[] = [];
   let profile: ProfileData | null = null;
   let conditionNames: string[] = [];
 
@@ -44,6 +46,12 @@ export default async function ReportesPage() {
       allergies = await getAllergies(supabase);
     } catch (err) {
       console.error("Error loading allergies:", err);
+    }
+
+    try {
+      reactions = await getAllergyReactions(supabase);
+    } catch (err) {
+      console.error("Error loading allergy reactions:", err);
     }
 
     const shell = await loadProfileForShell(supabase);
@@ -213,6 +221,11 @@ export default async function ReportesPage() {
               </table>
             </div>
           </SectionCard>
+        </div>
+
+        {/* Reacciones alérgicas registradas en Dietas > Alergias */}
+        <div id="report-alergias" className="scroll-mt-24">
+          <ReactionReportSection reactions={reactions} />
         </div>
 
         {/* Notas Médicas */}

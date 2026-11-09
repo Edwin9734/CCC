@@ -9,7 +9,7 @@ import { SectionTabs } from "@/components/shell/section-tabs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getMeasurements, type MeasurementWithStatus } from "@/lib/supabase/measurements";
 import { getMedications, type MedicationWithSchedules } from "@/lib/supabase/medications";
-import { getAllergies, type AllergyRow } from "@/lib/supabase/allergies";
+import { getAllergies, getAllergyReactions, type AllergyReactionRow, type AllergyRow } from "@/lib/supabase/allergies";
 import { buildDietInsights } from "@/lib/diet-insights";
 import { applyAllergyFilter, findAllergenMatches } from "@/lib/diet-allergens";
 import { buildContacts } from "@/lib/contacts";
@@ -31,6 +31,7 @@ export default async function DietasPage({
   let measurements: MeasurementWithStatus[] = [];
   let medications: MedicationWithSchedules[] = [];
   let allergies: AllergyRow[] = [];
+  let reactions: AllergyReactionRow[] = [];
 
   if (data.user) {
     try {
@@ -49,6 +50,12 @@ export default async function DietasPage({
       allergies = await getAllergies(supabase);
     } catch (err) {
       console.error("Error loading allergies:", err);
+    }
+
+    try {
+      reactions = await getAllergyReactions(supabase);
+    } catch (err) {
+      console.error("Error loading allergy reactions:", err);
     }
   }
 
@@ -85,7 +92,7 @@ export default async function DietasPage({
           tabs={DIET_TABS}
           initialTab={initialTab}
           panels={{
-            alergias: <AllergyManager initialAllergies={allergies} contacts={contacts} />,
+            alergias: <AllergyManager initialAllergies={allergies} initialReactions={reactions} contacts={contacts} />,
             guia: (
               <>
                 <DietInsightsPanel insights={insights} allergyMatches={allergyMatches} />

@@ -12,6 +12,7 @@ interface PrintSection {
 const SECTIONS: PrintSection[] = [
   { key: "evolucion", label: "Evolución de indicadores" },
   { key: "historial", label: "Historial completo" },
+  { key: "alergias", label: "Historial de alergias" },
   { key: "recomendaciones", label: "Recomendaciones" }
 ];
 
@@ -19,6 +20,7 @@ export function PrintReportPanel() {
   const [selected, setSelected] = useState<Record<string, boolean>>({
     evolucion: true,
     historial: true,
+    alergias: true,
     recomendaciones: true
   });
 
@@ -31,6 +33,7 @@ export function PrintReportPanel() {
     // usando atributos data- que la hoja de estilo @media print lee.
     document.body.setAttribute("data-print-evolucion", String(selected.evolucion));
     document.body.setAttribute("data-print-historial", String(selected.historial));
+    document.body.setAttribute("data-print-alergias", String(selected.alergias));
     document.body.setAttribute("data-print-recomendaciones", String(selected.recomendaciones));
     printWithTarget("report");
   };

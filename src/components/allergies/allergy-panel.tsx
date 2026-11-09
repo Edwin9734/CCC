@@ -3,7 +3,8 @@
 import { useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { AlertTriangle, BookOpen, Check, ChevronDown, CreditCard, HeartPulse, Pencil, Plus, ShieldAlert, Trash2, Undo2, Utensils, X } from "lucide-react";
 import "@/components/allergies/allergies.css";
-import { AllergyCardDialog, FoodChecker, ReactionGuide, TipsCard } from "@/components/allergies/allergy-tools";
+import { AllergyCardDialog, FoodChecker, TipsCard } from "@/components/allergies/allergy-tools";
+import { ReactionGuide } from "@/components/allergies/reaction-guide";
 import { SectionCard } from "@/components/section-card";
 import { useSectionTabs } from "@/components/shell/section-tabs";
 import {
@@ -18,7 +19,7 @@ import {
 import type { ContactsInfo } from "@/lib/contacts";
 import { normalize } from "@/lib/diet-allergens";
 import { foodImageSrc } from "@/lib/food-images";
-import type { AllergyRow } from "@/lib/supabase/allergies";
+import type { AllergyReactionInput, AllergyReactionRow, AllergyRow } from "@/lib/supabase/allergies";
 
 export interface AllergyInput {
   allergy_name: string;
@@ -273,16 +274,22 @@ function AllergyItem({
 
 export function AllergyPanel({
   allergies,
+  reactions,
   contacts,
   onCreate,
   onUpdate,
-  onDelete
+  onDelete,
+  onSaveReaction,
+  onDeleteReaction
 }: {
   allergies: AllergyRow[];
+  reactions: AllergyReactionRow[];
   contacts: ContactsInfo | null;
   onCreate: (input: AllergyInput) => Promise<void>;
   onUpdate: (id: string, input: AllergyInput) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onSaveReaction: (input: AllergyReactionInput) => Promise<void>;
+  onDeleteReaction: (id: string) => Promise<void>;
 }) {
   const tabs = useSectionTabs();
   const cardButtonRef = useRef<HTMLButtonElement>(null);
@@ -535,7 +542,7 @@ export function AllergyPanel({
       </SectionCard>
 
       <FoodChecker names={names} />
-      <ReactionGuide contacts={contacts} />
+      <ReactionGuide contacts={contacts} reactions={reactions} onSave={onSaveReaction} onDelete={onDeleteReaction} />
       <TipsCard />
 
       <p className="text-center text-sm leading-6 text-muted">

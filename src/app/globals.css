@@ -231,6 +231,10 @@ a {
     display: none !important;
   }
 
+  body[data-print-target="report"][data-print-alergias="false"] #report-alergias {
+    display: none !important;
+  }
+
   body[data-print-target="report"][data-print-recomendaciones="false"] #report-recomendaciones {
     display: none !important;
   }

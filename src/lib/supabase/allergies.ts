@@ -8,6 +8,62 @@ export interface AllergyRow {
   created_at: string;
 }
 
+export interface AllergyReactionInput {
+  occurred_at: string;
+  symptoms: string[];
+  severity: "severe" | "mild";
+  causes: string[];
+  details: string | null;
+}
+
+export interface AllergyReactionRow extends AllergyReactionInput {
+  id: string;
+  user_id: string;
+  created_at: string;
+}
+
+export async function getAllergyReactions(supabase: SupabaseClient) {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) throw new Error("No authenticated user");
+
+  const { data, error } = await supabase
+    .from("allergy_reactions")
+    .select("*")
+    .eq("user_id", user.user.id)
+    .order("occurred_at", { ascending: false })
+    .limit(200);
+
+  if (error) throw error;
+  return data as AllergyReactionRow[];
+}
+
+export async function createAllergyReaction(supabase: SupabaseClient, input: AllergyReactionInput) {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) throw new Error("No authenticated user");
+
+  const { data, error } = await supabase
+    .from("allergy_reactions")
+    .insert({ ...input, user_id: user.user.id })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as AllergyReactionRow;
+}
+
+export async function deleteAllergyReaction(supabase: SupabaseClient, id: string) {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) throw new Error("No authenticated user");
+
+  const { error } = await supabase
+    .from("allergy_reactions")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.user.id);
+
+  if (error) throw error;
+}
+
 export async function createAllergy(
   supabase: SupabaseClient,
   { allergy_name, notes }: { allergy_name: string; notes?: string }

@@ -2,10 +2,10 @@
 
 import { useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, ChevronRight, Lightbulb, Phone, Printer, Search, Share2, ShieldAlert, Siren, X } from "lucide-react";
+import { Lightbulb, Printer, Search, Share2, ShieldAlert, X } from "lucide-react";
 import { SectionCard } from "@/components/section-card";
-import { ALLERGY_TIPS, REACTION_SIGNS, checkFood, type ReactionLevel } from "@/lib/allergy-insights";
-import { telHref, type ContactsInfo } from "@/lib/contacts";
+import { ALLERGY_TIPS, checkFood } from "@/lib/allergy-insights";
+import type { ContactsInfo } from "@/lib/contacts";
 import { printWithTarget } from "@/lib/print-utils";
 import type { AllergyRow } from "@/lib/supabase/allergies";
 import { useDrawer } from "@/lib/use-drawer";
@@ -84,114 +84,6 @@ export function FoodChecker({ names }: { names: string[] }) {
         </div>
       ) : null}
     </SectionCard>
-  );
-}
-
-function CallButtons({ contacts }: { contacts: ContactsInfo | null }) {
-  const rows = [
-    contacts?.doctor?.phone ? { key: "doctor", label: "Llamar a mi médico", phone: contacts.doctor.phone } : null,
-    contacts?.emergency?.phone
-      ? { key: "emergency", label: `Llamar a ${contacts.emergency.name ?? "mi contacto"}`, phone: contacts.emergency.phone }
-      : null
-  ].filter((row): row is { key: string; label: string; phone: string } => row !== null);
-
-  if (rows.length === 0) {
-    return (
-      <p className="mt-3 text-sm leading-6">
-        Guarda a tu médico y un contacto de emergencia en «Mis datos» (arriba a la derecha) para llamarles desde aquí.
-      </p>
-    );
-  }
-
-  return (
-    <div className="mt-3 grid gap-2 sm:grid-cols-2">
-      {rows.map((row) => (
-        <a
-          key={row.key}
-          href={telHref(row.phone)}
-          className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-red-700 px-4 py-3 text-center text-base font-semibold text-white shadow-soft transition hover:bg-red-800 active:scale-[0.98]"
-        >
-          <Phone className="h-5 w-5 shrink-0" aria-hidden="true" />
-          {row.label}
-        </a>
-      ))}
-    </div>
-  );
-}
-
-const REACTION_TEXT: Record<ReactionLevel, { title: string; steps: string[]; className: string }> = {
-  severe: {
-    title: "Busca atención de emergencia ahora",
-    steps: [
-      "Deja de comer ese alimento.",
-      "Llama a emergencias o pide que te lleven de inmediato.",
-      "Si te recetaron epinefrina, úsala como te indicó tu médico.",
-      "No te quedes sin compañía."
-    ],
-    className: "bg-red-700 text-white"
-  },
-  mild: {
-    title: "Deja de comer ese alimento y llama a tu médico",
-    steps: [
-      "Guarda la etiqueta o anota lo que comiste.",
-      "Observa cómo sigues durante las próximas horas.",
-      "Si aparece falta de aire, hinchazón de la cara o mareo, busca emergencia de inmediato."
-    ],
-    className: "bg-amber-100 text-amber-950"
-  }
-};
-
-export function ReactionGuide({ contacts }: { contacts: ContactsInfo | null }) {
-  const [selected, setSelected] = useState<string | null>(null);
-  const sign = REACTION_SIGNS.find((item) => item.label === selected);
-  const response = sign ? REACTION_TEXT[sign.level] : null;
-
-  return (
-    <section id="alergia-reaccion" className="ab-card scroll-mt-24 rounded-[1.75rem] border-2 border-red-200 p-5 sm:p-6">
-      <div className="flex items-center gap-3">
-        <span className="alg-shield flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-red-700 text-white" aria-hidden="true">
-          <Siren className="h-7 w-7" />
-        </span>
-        <div className="min-w-0">
-          <h2 className="text-xl font-semibold text-ink">Si tengo una reacción</h2>
-          <p className="text-sm leading-6 text-muted">Toca lo que sientes para ver qué hacer.</p>
-        </div>
-      </div>
-
-      <div className="mt-4 grid gap-2 sm:grid-cols-2">
-        {REACTION_SIGNS.map((item, index) => (
-          <button
-            key={item.label}
-            type="button"
-            onClick={() => setSelected(item.label)}
-            aria-pressed={selected === item.label}
-            className={`alg-rise flex min-h-14 items-center justify-between gap-2 rounded-2xl border px-4 py-3 text-left text-base font-semibold leading-5 transition active:scale-[0.98] ${
-              selected === item.label ? "border-red-700 bg-red-50 text-red-950" : "border-black/10 bg-white text-ink hover:bg-slate-50"
-            }`}
-            style={{ "--i": index } as CSSProperties}
-          >
-            {item.label}
-            <ChevronRight className="h-5 w-5 shrink-0" aria-hidden="true" />
-          </button>
-        ))}
-      </div>
-
-      {response ? (
-        <div key={selected} role="status" className={`alg-pop mt-3 rounded-2xl p-4 ${response.className}`}>
-          <p className="flex items-start gap-2 text-lg font-bold leading-6">
-            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
-            {response.title}
-          </p>
-          <ol className="mt-2 list-decimal space-y-1 pl-6 text-base leading-6">
-            {response.steps.map((step) => (
-              <li key={step}>{step}</li>
-            ))}
-          </ol>
-        </div>
-      ) : null}
-
-      <CallButtons contacts={contacts} />
-    </section>
   );
 }
 
