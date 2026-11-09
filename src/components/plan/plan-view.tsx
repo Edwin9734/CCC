@@ -1,376 +1,166 @@
-import Link from "next/link";
-import { Activity, AlertTriangle, Droplets, Dumbbell, Info, Lightbulb, Moon, Target } from "lucide-react";
-import { SectionCard } from "@/components/section-card";
-import { CriticalAlert } from "@/components/measurements/critical-alert";
-import { FoodTiles } from "@/components/diet/food-tiles";
-import { PlanAdjustmentCard } from "@/components/plan/plan-adjustment-card";
-import { PlanAntecedentsCard } from "@/components/plan/plan-antecedents-card";
-import { SectionTabs } from "@/components/shell/section-tabs";
-import { EXERCISE_SAFETY, RISK_DISCLAIMER, type PlanData, type RiskLevel } from "@/lib/plan";
+"use client";
+
+import { useMemo, useState } from "react";
+import "@/components/antecedentes/antecedentes.css";
+import "@/components/habits/habits.css";
+import "@/components/racha/racha.css";
+import "./plan.css";
+import { SAVE_ERROR, useToast } from "@/components/antecedentes/antecedentes-ui";
+import { PlanAjuste } from "@/components/plan/plan-ajuste";
+import { PlanConsejos } from "@/components/plan/plan-consejos";
+import { PlanDieta } from "@/components/plan/plan-dieta";
+import { PlanEjercicio } from "@/components/plan/plan-ejercicio";
+import { PlanMetas } from "@/components/plan/plan-metas";
+import { SectionTabs, WhenTabActive } from "@/components/shell/section-tabs";
+import { getLatestByMetric, type PlanData } from "@/lib/plan";
 import type { PlanAdjustment } from "@/lib/plan-adjustment";
+import type { MarkKind, NewActivity, PlanApi, PlanGoalCheck, PlanGoalInput, PlanGoalRow, PlanMark } from "@/lib/plan-goals";
 import type { ProfileExtras } from "@/lib/plan-profile";
-import type { ContactsInfo } from "@/lib/contacts";
+import type { LipidMetric } from "@/lib/ranges";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import type { ActivityRow } from "@/lib/supabase/habits";
+import type { MeasurementWithStatus } from "@/lib/supabase/measurements";
+import { createPlanApi } from "@/lib/supabase/plan-goals";
 import { PLAN_TABS } from "@/lib/section-tabs";
-
-const LEVEL_STYLE: Record<RiskLevel, { badge: string; card: string }> = {
-  NONE: { badge: "bg-slate-200 text-slate-800", card: "border-slate-200 bg-slate-50" },
-  LOW: { badge: "bg-emerald-600 text-white", card: "border-emerald-200 bg-emerald-50" },
-  MODERATE: { badge: "bg-amber-500 text-white", card: "border-amber-200 bg-amber-50" },
-  HIGH: { badge: "bg-orange-600 text-white", card: "border-orange-200 bg-orange-50" },
-  CRITICAL: { badge: "bg-red-700 text-white", card: "border-red-700 bg-red-50" }
-};
-
-const STATUS_BOX: Record<string, string> = {
-  LOW: "border-blue-200 bg-blue-50",
-  NORMAL: "border-emerald-200 bg-emerald-50",
-  PROTECTIVE: "border-emerald-200 bg-emerald-50",
-  BORDERLINE: "border-amber-200 bg-amber-50",
-  HIGH: "border-orange-200 bg-orange-50",
-  VERY_HIGH: "border-rose-200 bg-rose-50",
-  CRITICAL: "border-red-700 bg-red-100"
-};
-
-const HABIT_ICON = {
-  water: Droplets,
-  sleep: Moon,
-  activity: Activity
-} as const;
 
 export function PlanView({
   plan,
   adjustment,
   extras,
-  contacts,
   allergyMatches,
-  initialTab
+  initialTab,
+  today,
+  measurements,
+  initialActivities,
+  initialGoals,
+  initialChecks,
+  initialMarks,
+  api: apiOverride
 }: {
   plan: PlanData;
   adjustment: PlanAdjustment;
   extras: ProfileExtras;
-  contacts: ContactsInfo | null;
   allergyMatches: Record<string, string[]>;
   initialTab: string;
+  today: string;
+  measurements: MeasurementWithStatus[];
+  initialActivities: ActivityRow[];
+  initialGoals: PlanGoalRow[];
+  initialChecks: PlanGoalCheck[];
+  initialMarks: PlanMark[];
+  api?: PlanApi;
 }) {
-  const levelStyle = LEVEL_STYLE[plan.level];
-  const isCritical = plan.level === "CRITICAL";
+  const api = useMemo(() => apiOverride ?? createPlanApi(createSupabaseBrowserClient()), [apiOverride]);
+  const [goals, setGoals] = useState(initialGoals);
+  const [checks, setChecks] = useState(initialChecks);
+  const [marks, setMarks] = useState(initialMarks);
+  const [activities, setActivities] = useState(initialActivities);
+  const { toastElement, showToast } = useToast();
 
-  const metasPanel = (
-    <>
-      <SectionCard title="Mi nivel de riesgo" description="Se calcula con tu último valor de HDL, LDL y triglicéridos.">
-        <div className={`rounded-3xl border p-5 ${levelStyle.card}`}>
-          <div className="flex flex-wrap items-center gap-3">
-            <span className={`rounded-full px-4 py-2 text-lg font-semibold ${levelStyle.badge}`}>
-              {plan.levelLabel}
-            </span>
-            {plan.driversText ? <p className="text-sm font-semibold text-ink">{plan.driversText}</p> : null}
-          </div>
+  const latestValues = useMemo(() => {
+    const latest = getLatestByMetric(measurements);
+    const values: Partial<Record<LipidMetric, number>> = {};
+    (Object.keys(latest) as LipidMetric[]).forEach((metric) => {
+      values[metric] = Number(latest[metric]?.value);
+    });
+    return values;
+  }, [measurements]);
 
-          <p className="mt-3 text-base leading-7 text-ink">{plan.levelMessage}</p>
+  const hasMark = (kind: MarkKind, key: string) => marks.some((mark) => mark.kind === kind && mark.item_key === key);
 
-          {plan.level === "NONE" ? (
-            <Link
-              href="/mediciones"
-              className="mt-4 inline-flex rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white shadow-soft"
-            >
-              Registrar una medición
-            </Link>
-          ) : null}
-        </div>
+  // Se ve al instante y se revierte si no se pudo guardar.
+  const toggleMark = async (kind: MarkKind, key: string) => {
+    const on = !hasMark(kind, key);
+    const without = (list: PlanMark[]) => list.filter((mark) => !(mark.kind === kind && mark.item_key === key));
+    setMarks((current) => (on ? [...without(current), { kind, item_key: key }] : without(current)));
+    try {
+      await api.setMark(kind, key, on);
+    } catch {
+      setMarks((current) => (on ? without(current) : [...without(current), { kind, item_key: key }]));
+      showToast(SAVE_ERROR, true);
+    }
+  };
 
-        <div className="mt-4 flex items-start gap-3 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm leading-6 text-sky-900">
-          <Info className="mt-0.5 h-5 w-5 shrink-0" />
-          <p>{RISK_DISCLAIMER}</p>
-        </div>
-      </SectionCard>
+  const toggleCheck = async (goalId: string, date: string, on: boolean) => {
+    const without = (list: PlanGoalCheck[]) => list.filter((check) => !(check.goal_id === goalId && check.check_date === date));
+    setChecks((current) => (on ? [...without(current), { goal_id: goalId, check_date: date }] : without(current)));
+    try {
+      await api.setCheck(goalId, date, on);
+    } catch (error) {
+      setChecks((current) => (on ? without(current) : [...without(current), { goal_id: goalId, check_date: date }]));
+      throw error;
+    }
+  };
 
-      <SectionCard
-        title="Mis metas"
-        description="Lo que buscamos lograr con tus valores de colesterol y con tus hábitos."
-      >
-        <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-          <Target className="h-4 w-4 text-accent" />
-          Colesterol
-        </p>
+  const saveGoal = async (input: PlanGoalInput, id?: string) => {
+    const saved = await api.saveGoal(input, id);
+    setGoals((current) => (id ? current.map((goal) => (goal.id === id ? saved : goal)) : [saved, ...current]));
+  };
 
-        <div className="mt-3 grid gap-3 md:grid-cols-3">
-          {plan.cholesterolGoals.map((goal) => {
-            const next = adjustment.nextGoals.find((item) => item.metric === goal.metric);
-            return (
-              <article
-                key={goal.metric}
-                className={`rounded-3xl border p-5 ${
-                  goal.status ? (STATUS_BOX[goal.status] ?? "border-black/5 bg-white") : "border-black/5 bg-white"
-                }`}
-              >
-                <p className="text-sm font-semibold text-muted">{goal.label}</p>
-                <p className="mt-1 text-sm text-ink">
-                  Meta final: <span className="font-semibold">{goal.targetText}</span>
-                </p>
+  const deleteGoal = async (id: string) => {
+    await api.deleteGoal(id);
+    setGoals((current) => current.filter((goal) => goal.id !== id));
+  };
 
-                {goal.valueText ? (
-                  <>
-                    <p className="mt-3 text-3xl font-semibold text-ink">
-                      {goal.valueText} <span className="text-base font-normal text-muted">mg/dL</span>
-                    </p>
-                    <p className="text-xs text-muted">
-                      {goal.statusLabel} · {goal.dateText}
-                    </p>
-                  </>
-                ) : null}
-
-                <p className={`mt-3 text-sm font-semibold ${goal.met ? "text-emerald-700" : "text-ink"}`}>
-                  {goal.gapText}
-                </p>
-
-                {next ? (
-                  <div className="mt-3 rounded-2xl bg-white/70 p-3 text-sm leading-6 text-ink">
-                    <p className="font-semibold">Próximo control: {next.targetText}</p>
-                    <p className="text-xs text-muted">{next.reason}</p>
-                  </div>
-                ) : null}
-              </article>
-            );
-          })}
-        </div>
-
-        <p className="mt-6 flex items-center gap-2 text-sm font-semibold text-ink">
-          <Activity className="h-4 w-4 text-accent" />
-          Hábitos
-        </p>
-
-        <div className="mt-3 grid gap-3 md:grid-cols-3">
-          {plan.habitGoals.map((goal) => {
-            const Icon = HABIT_ICON[goal.key];
-            return (
-              <article key={goal.key} className="rounded-3xl border border-black/5 bg-white p-5">
-                <p className="flex items-center gap-2 text-sm font-semibold text-muted">
-                  <Icon className="h-4 w-4" />
-                  {goal.label}
-                </p>
-                <p className="mt-2 text-lg font-semibold text-ink">{goal.target}</p>
-                <p className="mt-1 text-sm leading-6 text-muted">{goal.note}</p>
-              </article>
-            );
-          })}
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Link
-            href="/mediciones"
-            className="rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-semibold text-ink transition hover:bg-slate-50"
-          >
-            Registrar una medición
-          </Link>
-          <Link
-            href="/habitos"
-            className="rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-semibold text-ink transition hover:bg-slate-50"
-          >
-            Registrar mis hábitos
-          </Link>
-        </div>
-      </SectionCard>
-    </>
-  );
-
-  const dietaPanel = (
-    <SectionCard
-      title="Mi plan de alimentación"
-      description="Se ajusta a tu nivel de riesgo y a tu evolución. Toca un alimento para ver su detalle."
-    >
-      <h3 className="text-lg font-semibold text-ink">{plan.diet.headline}</h3>
-
-      {adjustment.dietEscalated && adjustment.dietNote ? (
-        <div className="mt-3 flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold leading-6 text-amber-900">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>{adjustment.dietNote}</p>
-        </div>
-      ) : null}
-
-      <div className="mt-3 space-y-2 text-base leading-7 text-ink">
-        <p>
-          <span className="mr-2 inline-block h-3 w-3 rounded-full bg-rose-500" />
-          {plan.diet.redRule}
-        </p>
-        <p>
-          <span className="mr-2 inline-block h-3 w-3 rounded-full bg-amber-500" />
-          {plan.diet.yellowRule}
-        </p>
-      </div>
-
-      <p className="mt-5 text-sm font-semibold text-ink">Conviene priorizar:</p>
-      <FoodTiles ids={plan.diet.goodIds} allergyMatches={allergyMatches} />
-      {plan.diet.omittedCount > 0 ? (
-        <p className="mt-2 text-xs leading-5 text-muted">
-          Se omitieron {plan.diet.omittedCount} alimento(s) de esta lista por tus alergias registradas.
-        </p>
-      ) : null}
-
-      <p className="mt-5 text-sm font-semibold text-ink">Conviene evitar o limitar:</p>
-      <FoodTiles ids={plan.diet.limitIds} allergyMatches={allergyMatches} />
-
-      <ul className="mt-5 list-disc space-y-1 pl-5 text-base leading-7 text-ink">
-        {plan.diet.tips.map((tip) => (
-          <li key={tip}>{tip}</li>
-        ))}
-      </ul>
-
-      <div className="mt-4 flex flex-wrap gap-3">
-        <Link
-          href="/dietas?tab=guia"
-          className="rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-semibold text-ink transition hover:bg-slate-50"
-        >
-          Ver la guía de alimentación
-        </Link>
-        <Link
-          href="/diario"
-          className="rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-semibold text-ink transition hover:bg-slate-50"
-        >
-          Anotar mis comidas
-        </Link>
-      </div>
-    </SectionCard>
-  );
-
-  const ejercicioPanel = (
-    <SectionCard title="Mi rutina de ejercicio" description="Una semana de ejemplo, según tu nivel de riesgo.">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="flex items-center gap-2 rounded-full bg-accentSoft px-4 py-2 text-sm font-semibold text-accent">
-          <Dumbbell className="h-4 w-4" />
-          {plan.routine.name}
-        </span>
-        <p className="text-sm font-semibold text-ink">{plan.routine.weeklyMinutes} minutos por semana</p>
-      </div>
-
-      <p className="mt-3 text-base leading-7 text-ink">{plan.routine.intro}</p>
-
-      {adjustment.activity.minutes !== plan.routine.weeklyMinutes ? (
-        <p className="mt-3 rounded-2xl bg-accentSoft p-3 text-sm font-semibold leading-6 text-ink">
-          Tu meta de esta semana es de {adjustment.activity.minutes} min (ajustada según tu semana anterior). Esta
-          rutina es un ejemplo base de {plan.routine.weeklyMinutes} min: adáptala a tu meta.
-        </p>
-      ) : null}
-
-      <ul className="mt-4 space-y-2">
-        {plan.routine.days.map((day) => (
-          <li
-            key={day.day}
-            className="flex items-start justify-between gap-3 rounded-2xl border border-black/5 bg-background px-4 py-3"
-          >
-            <div>
-              <p className="text-sm font-semibold text-ink">{day.day}</p>
-              <p className="text-sm leading-6 text-muted">{day.activity}</p>
-            </div>
-            <p className="shrink-0 text-sm font-semibold text-ink">
-              {day.minutes > 0 ? `${day.minutes} min` : "Descanso"}
-            </p>
-          </li>
-        ))}
-      </ul>
-
-      <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-        <p className="flex items-center gap-2 font-semibold">
-          <AlertTriangle className="h-4 w-4" />
-          Antes y durante el ejercicio
-        </p>
-        {extras.cardiacClearance ? (
-          <p className="mt-2 font-semibold">
-            Por tus antecedentes ({extras.cardiacConditions.join(", ")}), no empieces ni aumentes esta rutina sin la
-            autorización de tu médico.
-          </p>
-        ) : null}
-        <p className="mt-2">
-          {isCritical
-            ? "Con un valor crítico, consulta a tu médico antes de empezar cualquier rutina."
-            : "Consulta a tu médico antes de empezar o aumentar la actividad física, sobre todo si tienes problemas del corazón, presión alta, diabetes o dolor en las articulaciones."}
-        </p>
-        <ul className="mt-2 list-disc space-y-1 pl-5">
-          {EXERCISE_SAFETY.map((tip) => (
-            <li key={tip}>{tip}</li>
-          ))}
-        </ul>
-      </div>
-
-      <Link
-        href="/habitos?tab=actividad"
-        className="mt-4 inline-flex rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-semibold text-ink transition hover:bg-slate-50"
-      >
-        Registrar mi actividad
-      </Link>
-    </SectionCard>
-  );
-
-  const consejosPanel = (
-    <>
-      <SectionCard
-        title="Recomendaciones de estilo de vida"
-        description="Las marcadas como prioridad se relacionan con tus valores fuera de rango."
-      >
-        <div className="grid gap-3 md:grid-cols-2">
-          {plan.lifestyle.map((item) => (
-            <article
-              key={item.id}
-              className={`rounded-3xl border p-5 ${
-                item.priority ? "border-accent bg-accentSoft" : "border-black/5 bg-background"
-              }`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <p className="flex items-center gap-2 text-base font-semibold text-ink">
-                  <Lightbulb className="h-4 w-4 text-accent" />
-                  {item.title}
-                </p>
-                {item.priority ? (
-                  <span className="shrink-0 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-white">
-                    Prioridad
-                  </span>
-                ) : null}
-              </div>
-              <p className="mt-2 text-sm leading-6 text-ink">{item.text}</p>
-            </article>
-          ))}
-        </div>
-
-        <p className="mt-4 text-xs leading-5 text-muted">
-          Este plan es orientativo, se calcula con tus mediciones y lo que registras, y no reemplaza la indicación de
-          tu médico o nutricionista.
-        </p>
-      </SectionCard>
-
-      <PlanAntecedentsCard extras={extras} />
-    </>
-  );
+  const addActivity = async (input: NewActivity) => {
+    const saved = await api.addActivity(input);
+    setActivities((current) => [saved, ...current]);
+  };
 
   return (
-    <div className="space-y-6">
-      {isCritical ? (
-        <CriticalAlert
-          title="Tienes un valor crítico"
-          message={plan.criticalMessages.join(" ")}
-          contacts={contacts}
-        />
-      ) : null}
-
-      {/* Nivel de riesgo, siempre a la vista (el detalle está en «Metas») */}
-      <div className={`rounded-2xl border p-4 ${levelStyle.card}`}>
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-sm font-semibold text-muted">Mi nivel de riesgo</span>
-          <span className={`rounded-full px-4 py-1.5 text-base font-semibold ${levelStyle.badge}`}>
-            {plan.levelLabel}
-          </span>
-          {plan.driversText ? <p className="text-sm font-semibold text-ink">{plan.driversText}</p> : null}
-        </div>
-      </div>
-
+    <>
       <SectionTabs
         tabs={PLAN_TABS}
         initialTab={initialTab}
         panels={{
-          metas: metasPanel,
-          ajuste: <PlanAdjustmentCard adjustment={adjustment} />,
-          dieta: dietaPanel,
-          ejercicio: ejercicioPanel,
-          consejos: consejosPanel
+          metas: (
+            <WhenTabActive tab="metas">
+              <PlanMetas
+                plan={plan}
+                adjustment={adjustment}
+                extras={extras}
+                today={today}
+                latestValues={latestValues}
+                goals={goals}
+                checks={checks}
+                onSaveGoal={saveGoal}
+                onDeleteGoal={deleteGoal}
+                onToggleCheck={toggleCheck}
+                notify={showToast}
+              />
+            </WhenTabActive>
+          ),
+          ajuste: (
+            <WhenTabActive tab="ajuste">
+              <PlanAjuste adjustment={adjustment} measurements={measurements} hdlMinimum={extras.hdlMinimum} today={today} hasMark={hasMark} onToggleMark={toggleMark} />
+            </WhenTabActive>
+          ),
+          dieta: (
+            <WhenTabActive tab="dieta">
+              <PlanDieta
+                plan={plan}
+                adjustment={adjustment}
+                allergyMatches={allergyMatches}
+                hasMark={hasMark}
+                onToggleMark={toggleMark}
+                shoppingIds={marks.filter((mark) => mark.kind === "shopping").map((mark) => mark.item_key)}
+                notify={showToast}
+              />
+            </WhenTabActive>
+          ),
+          ejercicio: (
+            <WhenTabActive tab="ejercicio">
+              <PlanEjercicio plan={plan} adjustment={adjustment} extras={extras} today={today} activities={activities} onAddActivity={addActivity} notify={showToast} />
+            </WhenTabActive>
+          ),
+          consejos: (
+            <WhenTabActive tab="consejos">
+              <PlanConsejos plan={plan} areas={adjustment.compliance.areas} extras={extras} today={today} hasMark={hasMark} onToggleMark={toggleMark} />
+            </WhenTabActive>
+          )
         }}
       />
-    </div>
+      {toastElement}
+    </>
   );
 }

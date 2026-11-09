@@ -86,6 +86,7 @@ export interface ComplianceArea {
   status: AreaStatus;
   value: string;
   goal: string;
+  progress: number | null; // de 0 a 1, para las barras de avance
 }
 
 export type ComplianceLevel = "high" | "medium" | "low" | "unknown";
@@ -135,6 +136,10 @@ export interface AdjustmentData {
 
 function fmt(n: number) {
   return n.toLocaleString("es-ES", { maximumFractionDigits: 1 });
+}
+
+function ratioOf(value: number, goal: number) {
+  return goal > 0 ? Math.min(1, value / goal) : 0;
 }
 
 function roundTo5(n: number) {
@@ -305,7 +310,7 @@ function buildNextGoal(t: TrendInternal, hdlMinimum: number): NextControlGoal | 
 // Meta de actividad (según cómo te fue la semana anterior)
 // ---------------------------------------------------------------------------
 
-function computeActivityAdjustment(
+export function computeActivityAdjustment(
   baseMinutes: number,
   previousWeekMinutes: number,
   previousRecordedDays: number
@@ -454,9 +459,10 @@ function buildCompliance(
           label: "Medicamentos",
           status: taken / scheduled >= MEDICATION_GOAL_RATIO ? "met" : "not_met",
           value: `${taken} de ${scheduled} tomas`,
-          goal: medsGoal
+          goal: medsGoal,
+          progress: ratioOf(taken, scheduled * MEDICATION_GOAL_RATIO)
         }
-      : { key: "meds", label: "Medicamentos", status: "no_data", value: "Sin tomas programadas", goal: medsGoal }
+      : { key: "meds", label: "Medicamentos", status: "no_data", value: "Sin tomas programadas", goal: medsGoal, progress: null }
   );
 
   // Agua
@@ -468,9 +474,10 @@ function buildCompliance(
           label: "Agua",
           status: summary.water.metDays >= WATER_GOAL_DAYS ? "met" : "not_met",
           value: `${summary.water.metDays} de 7 días`,
-          goal: waterGoal
+          goal: waterGoal,
+          progress: ratioOf(summary.water.metDays, WATER_GOAL_DAYS)
         }
-      : { key: "water", label: "Agua", status: "no_data", value: "Sin registro", goal: waterGoal }
+      : { key: "water", label: "Agua", status: "no_data", value: "Sin registro", goal: waterGoal, progress: null }
   );
 
   // Sueño
@@ -482,9 +489,10 @@ function buildCompliance(
           label: "Sueño",
           status: summary.sleep.average >= SLEEP_GOAL_HOURS ? "met" : "not_met",
           value: `${formatHours(summary.sleep.average)} h de promedio`,
-          goal: sleepGoal
+          goal: sleepGoal,
+          progress: ratioOf(summary.sleep.average, SLEEP_GOAL_HOURS)
         }
-      : { key: "sleep", label: "Sueño", status: "no_data", value: "Sin registro", goal: sleepGoal }
+      : { key: "sleep", label: "Sueño", status: "no_data", value: "Sin registro", goal: sleepGoal, progress: null }
   );
 
   // Actividad física
@@ -493,7 +501,8 @@ function buildCompliance(
     label: "Actividad física",
     status: summary.activity.totalMinutes >= goalMinutes ? "met" : "not_met",
     value: `${summary.activity.totalMinutes} min`,
-    goal: `${goalMinutes} min por semana`
+    goal: `${goalMinutes} min por semana`,
+    progress: ratioOf(summary.activity.totalMinutes, goalMinutes)
   });
 
   // Alimentación (diario)
@@ -505,9 +514,10 @@ function buildCompliance(
           label: "Alimentación",
           status: green > red ? "met" : "not_met",
           value: `${green} verde(s) y ${red} rojo(s)`,
-          goal: foodGoal
+          goal: foodGoal,
+          progress: green / (green + red)
         }
-      : { key: "food", label: "Alimentación", status: "no_data", value: "Sin alimentos de la guía en el diario", goal: foodGoal }
+      : { key: "food", label: "Alimentación", status: "no_data", value: "Sin alimentos de la guía en el diario", goal: foodGoal, progress: null }
   );
 
   // Con restricción de líquidos, el agua no se evalúa: el médico indica la cantidad.

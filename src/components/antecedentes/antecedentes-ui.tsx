@@ -15,7 +15,7 @@ import { Check, ChevronDown, CircleAlert, CircleCheck, Minus, Pencil, Plus, Sear
 import { UNIT_OPTIONS, localToday, sameText, type DurationUnit } from "@/lib/antecedentes";
 import { useDrawer } from "@/lib/use-drawer";
 
-export type Tone = "violet" | "rose" | "sky";
+export type Tone = "violet" | "rose" | "sky" | "emerald" | "orange" | "teal";
 
 const TONES: Record<Tone, { hero: string; solid: string; chipOn: string; focus: string; soft: string }> = {
   violet: {
@@ -38,6 +38,27 @@ const TONES: Record<Tone, { hero: string; solid: string; chipOn: string; focus: 
     chipOn: "border-sky-700 bg-sky-700 text-white",
     focus: "focus:border-sky-500 focus:ring-sky-100",
     soft: "bg-sky-100 text-sky-800"
+  },
+  emerald: {
+    hero: "from-emerald-800 via-emerald-700 to-lime-700",
+    solid: "bg-emerald-700 hover:bg-emerald-800 text-white",
+    chipOn: "border-emerald-700 bg-emerald-700 text-white",
+    focus: "focus:border-emerald-500 focus:ring-emerald-100",
+    soft: "bg-emerald-100 text-emerald-800"
+  },
+  orange: {
+    hero: "from-orange-800 via-orange-700 to-amber-700",
+    solid: "bg-orange-700 hover:bg-orange-800 text-white",
+    chipOn: "border-orange-700 bg-orange-700 text-white",
+    focus: "focus:border-orange-500 focus:ring-orange-100",
+    soft: "bg-orange-100 text-orange-900"
+  },
+  teal: {
+    hero: "from-teal-800 via-teal-700 to-cyan-700",
+    solid: "bg-teal-700 hover:bg-teal-800 text-white",
+    chipOn: "border-teal-700 bg-teal-700 text-white",
+    focus: "focus:border-teal-500 focus:ring-teal-100",
+    soft: "bg-teal-100 text-teal-800"
   }
 };
 
