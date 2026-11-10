@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { LogIn, Menu, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AppBackground } from "@/components/app-background";
+import { ReminderBell } from "@/components/medications/reminder-card";
 import { Greeting } from "@/components/shell/greeting";
 import { ProfilePanel } from "@/components/shell/profile-panel";
 import { SideMenu } from "@/components/shell/sidebar";
@@ -19,6 +20,7 @@ export function AppChrome({
   initialProfile,
   initialConditions,
   initialDismissed,
+  vapidPublicKey,
   children
 }: {
   title: string;
@@ -27,6 +29,7 @@ export function AppChrome({
   initialProfile: ProfileData | null;
   initialConditions: string[];
   initialDismissed: string[];
+  vapidPublicKey: string | null;
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -95,10 +98,10 @@ export function AppChrome({
               className="inline-flex h-11 items-center gap-2 rounded-full border border-black/10 bg-white px-4 text-sm font-semibold text-ink shadow-soft transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-accent/15"
             >
               <Menu className="h-5 w-5" />
-              Menú
+              <span className="chrome-menu-label">Menú</span>
             </button>
             {/* En celulares muy angostos se oculta el logo para que no se salga la barra. */}
-            <div className="hidden min-[360px]:block">
+            <div className="chrome-logo hidden min-[360px]:block">
               <div className="ab-logo" aria-hidden="true">
                 <span>♥</span>
               </div>
@@ -109,6 +112,8 @@ export function AppChrome({
             <div className="hidden md:block">
               <TextSizeControl />
             </div>
+
+            {userEmail ? <ReminderBell publicKey={vapidPublicKey} /> : null}
 
             {userEmail ? (
               <button

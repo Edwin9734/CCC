@@ -50,6 +50,10 @@ async function markTaken(data) {
       body: JSON.stringify({ doses: data.doses })
     });
     if (!response.ok) throw new Error("No se pudo marcar");
+
+    // Si la app está abierta, se actualiza sin tener que recargarla.
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    windows.forEach((client) => client.postMessage({ type: "doses-updated" }));
   } catch {
     // Si no se pudo (sin sesión o sin internet), se abre la app para marcarla ahí.
     await openApp(data.url);

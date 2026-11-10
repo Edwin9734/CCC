@@ -33,6 +33,7 @@ import {
 import { buildHabitDays } from "@/lib/habits-insights";
 import { addDays, toDateString } from "@/lib/date-utils";
 import { HABIT_TABS } from "@/lib/section-tabs";
+import { useIntakeSync } from "@/lib/use-intake-sync";
 import "./habits.css";
 
 const EMPTY_HABIT: DailyHabitValues = { water_glasses: 0, sleep_hours: null };
@@ -134,6 +135,22 @@ export function HabitsManager({
     });
   }, [date, today, loadedDays, loadRange, reloadKey]);
 
+  // Vuelve a leer solo las tomas, para no pisar agua o sueño que se estén guardando.
+  const intakeVersionRef = useRef(0);
+  useIntakeSync(async () => {
+    if (!today) return;
+    try {
+      await queueRef.current;
+      const version = intakeVersionRef.current;
+      const from = addDays(today, 1 - HISTORY_DAYS);
+      const data = await getHabitsData(supabase, from, today);
+      if (intakeVersionRef.current !== version) return;
+      setIntakes((prev) => [...prev.filter((i) => i.intake_date < from || i.intake_date > today), ...data.intakes]);
+    } catch {
+      // Sin conexión: se conserva lo que ya está en pantalla.
+    }
+  });
+
   const ready = date !== "" && loadedDays.has(date);
   const windowReady = today !== "" && loadedDays.has(today);
 
@@ -227,6 +244,7 @@ export function HabitsManager({
   };
 
   const handleMark = (dose: Dose, status: IntakeStatus) => {
+    intakeVersionRef.current += 1;
     const day = date;
     const same = (i: IntakeRow) => i.schedule_id === dose.scheduleId && i.intake_date === day;
     const existing = intakes.find(same);

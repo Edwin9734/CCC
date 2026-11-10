@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "@/components/antecedentes/antecedentes.css";
 import "@/components/habits/habits.css";
 import "@/components/plan/plan.css";
@@ -11,11 +11,12 @@ import { MedicationToday } from "@/components/medications/medication-today";
 import { ReminderCard } from "@/components/medications/reminder-card";
 import type { MedicationApi, MedicationSaveInput } from "@/components/medications/medication-ui";
 import { SectionTabs, WhenTabActive, useSectionTabs } from "@/components/shell/section-tabs";
-import { minutesNowInAppTimeZone, todayInAppTimeZone } from "@/lib/date-utils";
+import { addDays, minutesNowInAppTimeZone, todayInAppTimeZone } from "@/lib/date-utils";
+import { useIntakeSync } from "@/lib/use-intake-sync";
 import { buildDoses, type Dose } from "@/lib/habits-config";
 import { MEDICATION_TABS } from "@/lib/section-tabs";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { clearIntake, setIntake, type IntakeRow, type IntakeStatus } from "@/lib/supabase/habits";
+import { clearIntake, getHabitsData, setIntake, type IntakeRow, type IntakeStatus } from "@/lib/supabase/habits";
 import { createMedication, deleteMedication, getMedications, updateMedication, type MedicationWithSchedules } from "@/lib/supabase/medications";
 
 function TodayTab(props: Omit<React.ComponentProps<typeof MedicationToday>, "goToCabinet">) {
@@ -45,6 +46,10 @@ export function MedicationManager({
     const supabase = createSupabaseBrowserClient();
     return {
       list: () => getMedications(supabase),
+      listIntakes: async () => {
+        const today = todayInAppTimeZone();
+        return (await getHabitsData(supabase, addDays(today, -70), today)).intakes;
+      },
       save: async (input, id) => {
         if (id) await updateMedication(supabase, id, input);
         else await createMedication(supabase, input);
@@ -68,9 +73,25 @@ export function MedicationManager({
     return () => window.clearInterval(id);
   }, []);
 
+  const marksRef = useRef({ version: 0, saving: 0 });
+
+  // Una lectura que empezó antes de marcar una toma traería datos viejos: se descarta.
+  useIntakeSync(async () => {
+    setClock({ today: todayInAppTimeZone(), minutes: minutesNowInAppTimeZone() });
+    const version = marksRef.current.version;
+    try {
+      const rows = await api.listIntakes();
+      if (marksRef.current.saving === 0 && marksRef.current.version === version) setIntakes(rows);
+    } catch {
+      // Sin conexión: se conserva lo que ya está en pantalla.
+    }
+  });
+
   const dosesFor = (date: string) => buildDoses(medications, intakes, date, clock.today, clock.minutes);
 
   const markDose = async (dose: Dose, date: string, status: IntakeStatus | null) => {
+    marksRef.current.version += 1;
+    marksRef.current.saving += 1;
     const matches = (row: IntakeRow) => row.schedule_id === dose.scheduleId && row.intake_date === date;
     const previous = intakes.find(matches);
     const without = (list: IntakeRow[]) => list.filter((row) => !matches(row));
@@ -94,6 +115,8 @@ export function MedicationManager({
     } catch {
       setIntakes((current) => (previous ? [...without(current), previous] : without(current)));
       showToast(SAVE_ERROR, true);
+    } finally {
+      marksRef.current.saving -= 1;
     }
   };
 

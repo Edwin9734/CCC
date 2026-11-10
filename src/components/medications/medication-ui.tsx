@@ -16,6 +16,7 @@ export interface MedicationSaveInput {
 
 export interface MedicationApi {
   list: () => Promise<MedicationWithSchedules[]>;
+  listIntakes: () => Promise<IntakeRow[]>;
   save: (input: MedicationSaveInput, id?: string) => Promise<void>;
   remove: (id: string) => Promise<void>;
   setIntake: (dose: Dose, date: string, status: IntakeStatus) => Promise<IntakeRow>;

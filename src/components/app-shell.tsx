@@ -37,6 +37,7 @@ export async function AppShell({
       initialProfile={profile}
       initialConditions={conditions}
       initialDismissed={dismissed}
+      vapidPublicKey={process.env.VAPID_PUBLIC_KEY ?? null}
     >
       {children}
     </AppChrome>

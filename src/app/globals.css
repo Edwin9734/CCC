@@ -104,6 +104,16 @@ a {
   animation: ab-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+/* Barra superior con letra muy grande en celular: todos los botones deben caber */
+@media (max-width: 479px) {
+  html[data-text-size="4"] .chrome-logo,
+  html[data-text-size="5"] .chrome-logo,
+  html[data-text-size="4"] .chrome-menu-label,
+  html[data-text-size="5"] .chrome-menu-label {
+    display: none;
+  }
+}
+
 /* Título de página con subrayado de color */
 .ab-title::after {
   content: "";
