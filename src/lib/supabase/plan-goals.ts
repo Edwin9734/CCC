@@ -59,3 +59,10 @@ export function createPlanApi(supabase: SupabaseClient): PlanApi {
     addActivity: (input) => addActivity(supabase, { ...input, notes: input.notes ?? "" })
   };
 }
+
+// Solo la lista de compras (la comparten Mi plan y Dietas).
+export async function loadShoppingIds(supabase: SupabaseClient, userId: string) {
+  const { data, error } = await supabase.from("plan_marks").select("item_key").eq("user_id", userId).eq("kind", "shopping").limit(500);
+  if (error) throw error;
+  return (data as { item_key: string }[]).map((row) => row.item_key);
+}

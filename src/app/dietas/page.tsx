@@ -1,11 +1,12 @@
 import { AlertTriangle } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { AllergyManager } from "@/components/allergies/allergy-manager";
-import { DietBrowser } from "@/components/diet/diet-browser";
-import { DietInsightsPanel } from "@/components/diet/diet-insights-panel";
-import { DietMenu } from "@/components/diet/diet-menu";
+import { DietBoard } from "@/components/diet/diet-board";
 import { DietRecipes } from "@/components/diet/recipes-section";
-import { SectionTabs } from "@/components/shell/section-tabs";
+import { todayInAppTimeZone } from "@/lib/date-utils";
+import type { MealType } from "@/lib/diet-menu-data";
+import { getDiaryEntries } from "@/lib/supabase/food-diary";
+import { loadShoppingIds } from "@/lib/supabase/plan-goals";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getMeasurements, type MeasurementWithStatus } from "@/lib/supabase/measurements";
 import { getMedications, type MedicationWithSchedules } from "@/lib/supabase/medications";
@@ -32,8 +33,24 @@ export default async function DietasPage({
   let medications: MedicationWithSchedules[] = [];
   let allergies: AllergyRow[] = [];
   let reactions: AllergyReactionRow[] = [];
+  let shoppingIds: string[] = [];
+  let loggedToday: MealType[] = [];
+  const today = todayInAppTimeZone();
 
   if (data.user) {
+    try {
+      shoppingIds = await loadShoppingIds(supabase, data.user.id);
+    } catch (err) {
+      console.error("Error loading shopping list:", err);
+    }
+
+    try {
+      const entries = await getDiaryEntries(supabase, 60);
+      loggedToday = entries.filter((entry) => entry.eaten_on === today).map((entry) => entry.meal_type);
+    } catch (err) {
+      console.error("Error loading diary entries:", err);
+    }
+
     try {
       measurements = await getMeasurements(supabase, { limit: 50 });
     } catch (err) {
@@ -88,20 +105,16 @@ export default async function DietasPage({
           </div>
         ) : null}
 
-        <SectionTabs
-          tabs={DIET_TABS}
+        <DietBoard
           initialTab={initialTab}
-          panels={{
-            alergias: <AllergyManager initialAllergies={allergies} initialReactions={reactions} contacts={contacts} />,
-            guia: (
-              <>
-                <DietInsightsPanel insights={insights} allergyMatches={allergyMatches} />
-                <DietBrowser focusIds={insights.focusIds} allergyMatches={allergyMatches} />
-              </>
-            ),
-            menu: <DietMenu allergyNames={allergyNames} />,
-            recetas: <DietRecipes allergyNames={allergyNames} waterRestricted={Boolean(extras?.waterRestricted)} />
-          }}
+          allergiesPanel={<AllergyManager initialAllergies={allergies} initialReactions={reactions} contacts={contacts} />}
+          recipesPanel={<DietRecipes allergyNames={allergyNames} waterRestricted={Boolean(extras?.waterRestricted)} />}
+          insights={insights}
+          allergyMatches={allergyMatches}
+          allergyNames={allergyNames}
+          initialShopping={shoppingIds}
+          initialLogged={loggedToday}
+          today={today}
         />
       </div>
     </AppShell>

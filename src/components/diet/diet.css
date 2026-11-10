@@ -1,0 +1,42 @@
+/* Guía y Menú de Dietas. Las animaciones se apagan con "reducir movimiento" (al final). */
+
+/* Barra que queda fija debajo de la barra superior al bajar */
+.diet-sticky {
+  position: sticky;
+  top: calc(4.25rem + 1px);
+  z-index: 20;
+}
+
+.diet-nudge { animation: diet-nudge 1.6s ease-in-out infinite; }
+.menu-from-next { animation: menu-from-next 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.menu-from-prev { animation: menu-from-prev 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+
+@keyframes diet-nudge {
+  0%, 100% { transform: translateX(-3px); }
+  50% { transform: translateX(4px); }
+}
+@keyframes menu-from-next { from { opacity: 0; transform: translateX(40px); } }
+@keyframes menu-from-prev { from { opacity: 0; transform: translateX(-40px); } }
+
+.menu-day-short { display: none; }
+
+@media (max-width: 479px) {
+  html[data-text-size="3"] .menu-day-long,
+  html[data-text-size="4"] .menu-day-long,
+  html[data-text-size="5"] .menu-day-long {
+    display: none;
+  }
+  html[data-text-size="3"] .menu-day-short,
+  html[data-text-size="4"] .menu-day-short,
+  html[data-text-size="5"] .menu-day-short {
+    display: inline;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diet-nudge,
+  .menu-from-next,
+  .menu-from-prev {
+    animation: none !important;
+  }
+}

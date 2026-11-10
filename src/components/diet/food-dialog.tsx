@@ -45,31 +45,29 @@ export function FoodDialog({
         aria-modal="true"
         aria-labelledby="food-dialog-title"
         onClick={(event) => event.stopPropagation()}
-        className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-3xl bg-surface p-6 text-ink shadow-soft"
+        className="ant-modal max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-3xl bg-surface text-ink shadow-soft"
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-4">
-            <FoodImage id={item.id} size={112} rounded="rounded-2xl" className="bg-white p-1" />
-            <div>
-              <h2 id="food-dialog-title" className="text-xl font-semibold text-ink">
-                {item.name}
-              </h2>
-              <span className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-semibold ${BADGE[item.level]}`}>
-                {TRAFFIC_LABEL[item.level]}
-              </span>
-            </div>
-          </div>
-
+        {/* Foto grande arriba, para que se aprecie bien */}
+        <div className="relative bg-white">
+          <FoodImage id={item.id} size={480} eager fill rounded="rounded-none" className="max-h-[45dvh]" />
           <button
             type="button"
             onClick={onClose}
             data-autofocus
             aria-label="Cerrar"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/10 bg-white text-ink transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-accent/15"
+            className="absolute right-3 top-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-ink shadow-soft transition hover:bg-white focus:outline-none focus:ring-4 focus:ring-accent/25 active:scale-95"
           >
-            <X className="h-5 w-5" />
+            <X className="h-6 w-6" />
           </button>
         </div>
+
+        <div className="p-5 pt-4">
+          <h2 id="food-dialog-title" className="text-2xl font-bold leading-7 text-ink">
+            {item.name}
+          </h2>
+          <span className={`mt-2 inline-block rounded-full px-3 py-1 text-sm font-semibold ${BADGE[item.level]}`}>
+            {TRAFFIC_LABEL[item.level]}
+          </span>
 
         {allergies && allergies.length > 0 ? (
           <div className="mt-4 flex items-start gap-2 rounded-2xl bg-rose-100 p-3 text-sm font-semibold leading-6 text-rose-900">
@@ -94,6 +92,7 @@ export function FoodDialog({
         <p className="mt-4 text-xs leading-5 text-muted">
           Información general: no reemplaza la indicación de tu médico o nutricionista.
         </p>
+        </div>
       </section>
     </div>,
     document.body
