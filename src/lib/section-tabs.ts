@@ -56,6 +56,12 @@ export const MEDICATION_TABS: TabDef[] = [
   { key: "calendario", label: "Calendario", icon: "semana" }
 ];
 
+export const REPORT_TABS: TabDef[] = [
+  { key: "reporte", label: "Reporte", icon: "historial" },
+  { key: "tarjeta", label: "Tarjeta", icon: "reportes-tarjeta" },
+  { key: "guia", label: "Guía", icon: "guia" }
+];
+
 export const ANTECEDENTES_TABS: TabDef[] = [
   { key: "medicinas", label: "Medicinas", icon: "antecedentes-medicinas" },
   { key: "enfermedades", label: "Enfermedades", icon: "antecedentes-enfermedades" },

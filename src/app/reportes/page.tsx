@@ -1,26 +1,69 @@
 import { AppShell } from "@/components/app-shell";
-import { SectionCard } from "@/components/section-card";
-import { MeasurementChart } from "@/components/charts/measurement-chart";
-import { PDFExportButton } from "@/components/charts/pdf-export-button";
-import { PrintReportPanel } from "@/components/charts/print-report-panel";
-import { GuideReportSection } from "@/components/diet/guide-report-section";
+import { SWAPS } from "@/components/diet/diet-guide";
+import { GuideBuilder } from "@/components/reports/guide-builder";
+import { loadShoppingIds } from "@/lib/supabase/plan-goals";
+import { ReportsBoard } from "@/components/reports/reports-board";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getMeasurements, type MeasurementWithStatus } from "@/lib/supabase/measurements";
 import { getMedications, type MedicationWithSchedules } from "@/lib/supabase/medications";
-import { ReactionReportSection } from "@/components/allergies/reaction-report-section";
 import { getAllergies, getAllergyReactions, type AllergyReactionRow, type AllergyRow } from "@/lib/supabase/allergies";
+import { getHabitsDataForUser, type ActivityRow, type DailyHabitRow, type IntakeRow } from "@/lib/supabase/habits";
+import { listHistoryRows } from "@/lib/supabase/antecedentes";
 import { loadProfileForShell } from "@/lib/supabase/profile";
 import { buildDietInsights } from "@/lib/diet-insights";
 import { applyAllergyFilter, findAllergenMatches } from "@/lib/diet-allergens";
 import { LIQUID_HIDDEN_IDS, buildProfileExtras } from "@/lib/plan-profile";
-import { buildContacts, type ContactsInfo } from "@/lib/contacts";
-import { getStatusLabel } from "@/lib/ranges";
-import { formatDate } from "@/lib/date-utils";
-import type { ProfileData } from "@/lib/profile";
+import { buildContacts } from "@/lib/contacts";
+import { addDays, minutesNowInAppTimeZone, todayInAppTimeZone } from "@/lib/date-utils";
+import { buildDoses, computeWeekSummary } from "@/lib/habits-config";
+import { RISK_LABELS, computeRiskLevel, getLatestByMetric } from "@/lib/plan";
+import { durationText, type ConditionRow, type ExamRow } from "@/lib/antecedentes";
+import { SEX_OPTIONS, type ProfileData } from "@/lib/profile";
+import { REPORT_TABS, normalizeTab } from "@/lib/section-tabs";
+import { TEMPLATES, type ReportData, type TemplateKey } from "@/lib/report-builder";
 
-export default async function ReportesPage() {
+const DAY_LETTERS = ["L", "M", "Mi", "J", "V", "S", "D"];
+
+async function safe<T>(promise: Promise<T>, fallback: T, label: string): Promise<T> {
+  try {
+    return await promise;
+  } catch (err) {
+    console.error(`Error loading ${label}:`, err);
+    return fallback;
+  }
+}
+
+function ageFrom(birth: string | null, today: string) {
+  if (!birth) return null;
+  const [by, bm, bd] = birth.split("-").map(Number);
+  const [ty, tm, td] = today.split("-").map(Number);
+  return ty - by - (tm < bm || (tm === bm && td < bd) ? 1 : 0);
+}
+
+function scheduleText(med: MedicationWithSchedules) {
+  return [...med.medication_schedules]
+    .sort((a, b) => a.time_of_day.localeCompare(b.time_of_day))
+    .map((item) => {
+      const days = item.repeat_days?.length && item.repeat_days.length < 7 ? ` (${[...item.repeat_days].map(Number).sort((a, b) => a - b).map((day) => DAY_LETTERS[day - 1]).join(", ")})` : "";
+      return `${item.time_of_day.slice(0, 5)}${days}`;
+    })
+    .join(", ");
+}
+
+export default async function ReportesPage({
+  searchParams
+}: {
+  searchParams: Promise<{ tab?: string | string[]; plantilla?: string | string[] }>;
+}) {
+  const { tab, plantilla } = await searchParams;
+  const initialTab = normalizeTab(tab, REPORT_TABS, "reporte");
+  const rawTemplate = Array.isArray(plantilla) ? plantilla[0] : plantilla;
+  const initialTemplate: TemplateKey = TEMPLATES.some((item) => item.key === rawTemplate) ? (rawTemplate as TemplateKey) : "medico";
+
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.auth.getUser();
+  const today = todayInAppTimeZone();
+  const nowMinutes = minutesNowInAppTimeZone();
 
   let measurements: MeasurementWithStatus[] = [];
   let medications: MedicationWithSchedules[] = [];
@@ -28,32 +71,23 @@ export default async function ReportesPage() {
   let reactions: AllergyReactionRow[] = [];
   let profile: ProfileData | null = null;
   let conditionNames: string[] = [];
+  let historyConditions: ConditionRow[] = [];
+  let exams: ExamRow[] = [];
+  let shoppingIds: string[] = [];
+  let habitsData = { habits: [] as DailyHabitRow[], activities: [] as ActivityRow[], intakes: [] as IntakeRow[] };
 
   if (data.user) {
-    try {
-      measurements = await getMeasurements(supabase, { limit: 100 });
-    } catch (err) {
-      console.error("Error loading measurements:", err);
-    }
+    [measurements, medications, allergies, reactions, historyConditions, exams, habitsData] = await Promise.all([
+      safe(getMeasurements(supabase, { limit: 500 }), [] as MeasurementWithStatus[], "measurements"),
+      safe(getMedications(supabase), [] as MedicationWithSchedules[], "medications"),
+      safe(getAllergies(supabase), [] as AllergyRow[], "allergies"),
+      safe(getAllergyReactions(supabase), [] as AllergyReactionRow[], "allergy reactions"),
+      safe(listHistoryRows<ConditionRow>(supabase, "history_conditions"), [] as ConditionRow[], "history conditions"),
+      safe(listHistoryRows<ExamRow>(supabase, "history_exams"), [] as ExamRow[], "history exams"),
+      safe(getHabitsDataForUser(supabase, data.user.id, addDays(today, -29), today), habitsData, "habits")
+    ]);
 
-    try {
-      medications = await getMedications(supabase);
-    } catch (err) {
-      console.error("Error loading medications:", err);
-    }
-
-    try {
-      allergies = await getAllergies(supabase);
-    } catch (err) {
-      console.error("Error loading allergies:", err);
-    }
-
-    try {
-      reactions = await getAllergyReactions(supabase);
-    } catch (err) {
-      console.error("Error loading allergy reactions:", err);
-    }
-
+    shoppingIds = await safe(loadShoppingIds(supabase, data.user.id), [] as string[], "shopping list");
     const shell = await loadProfileForShell(supabase);
     profile = shell.profile;
     conditionNames = shell.conditions;
@@ -66,191 +100,77 @@ export default async function ReportesPage() {
   // Con restricción de líquidos (enfermedad renal o insuficiencia cardíaca) la guía no sugiere agua ni té verde.
   const extras = buildProfileExtras(profile, conditionNames);
   const hiddenLiquidIds: string[] = extras.waterRestricted ? LIQUID_HIDDEN_IDS : [];
-  const insights = applyAllergyFilter(
-    buildDietInsights(measurements, medications),
-    new Set([...Array.from(blockedIds), ...hiddenLiquidIds])
-  );
+  const insights = applyAllergyFilter(buildDietInsights(measurements, medications), new Set([...Array.from(blockedIds), ...hiddenLiquidIds]));
 
-  // Médico y contacto de emergencia, para el encabezado del reporte
-  const contacts: ContactsInfo | null = buildContacts(profile);
+  // Constancia de los últimos 30 días y resumen de la semana.
+  let taken = 0;
+  let total = 0;
+  for (let back = 0; back < 30; back += 1) {
+    for (const dose of buildDoses(medications, habitsData.intakes, addDays(today, -back), today, nowMinutes)) {
+      if (!(dose.due || dose.status !== null)) continue;
+      total += 1;
+      if (dose.status === "taken") taken += 1;
+    }
+  }
+  const habitsByDay = Object.fromEntries(habitsData.habits.map((row) => [row.habit_date, { water_glasses: row.water_glasses, sleep_hours: row.sleep_hours }]));
+  const week = computeWeekSummary({ today, nowMinutes, medications, habits: habitsByDay, activities: habitsData.activities, intakes: habitsData.intakes });
 
-  const totalMeasurements = measurements.length;
-  const lastMeasurement = measurements[0];
-  const dateRange = measurements.length > 0
-    ? `${formatDate(measurements[measurements.length - 1].measured_at)} - ${formatDate(measurements[0].measured_at)}`
-    : "Sin datos";
+  const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim();
+
+  const reportData: ReportData = {
+    today,
+    patient: {
+      name: name || null,
+      age: ageFrom(profile?.birth_date ?? null, today),
+      sex: SEX_OPTIONS.find((option) => option.value === profile?.sex)?.label ?? null,
+      weightLb: profile?.weight_lb ?? null,
+      heightCm: profile?.height_cm ?? null,
+      bmi: extras.bmi ? `${extras.bmi.value.toLocaleString("es-ES", { maximumFractionDigits: 1 })} (${extras.bmi.category})` : null
+    },
+    contacts: buildContacts(profile),
+    conditions: [...extras.antecedents.map((item) => item.label), ...extras.otherConditions],
+    riskLabel: RISK_LABELS[computeRiskLevel(getLatestByMetric(measurements.filter((row) => row.measured_at <= today)))],
+    hdlMinimum: extras.hdlMinimum,
+    measurements,
+    medications: medications.map((med) => ({ id: med.id, name: med.name, dosage: med.dosage, instructions: med.instructions, schedule: scheduleText(med) })),
+    adherence: { taken, total },
+    allergies: allergies.map((item) => ({ name: item.allergy_name, notes: item.notes })),
+    reactions,
+    historyConditions: historyConditions.map((row) => ({
+      name: row.name,
+      kind: row.kind,
+      duration: durationText(row, today),
+      symptoms: row.symptoms,
+      howCured: row.how_cured,
+      year: row.ended_year,
+      genetic: row.causes.includes("Genética o de familia")
+    })),
+    exams: [...exams]
+      .sort((a, b) => (b.exam_date ?? "").localeCompare(a.exam_date ?? ""))
+      .map((row) => ({ type: row.exam_type, date: row.exam_date, place: row.place, status: row.result_status, result: row.result_text })),
+    week: {
+      waterDays: week.water.metDays,
+      waterRestricted: extras.waterRestricted,
+      sleepAverage: week.sleep.average,
+      activityMinutes: week.activity.totalMinutes,
+      activeDays: week.activity.activeDays,
+      dosesTaken: week.doses.taken,
+      dosesScheduled: week.doses.scheduled
+    }
+  };
 
   return (
-    <AppShell
-      title="Reportes"
-      description="Exporta gráficas y tu historial de mediciones en formato PDF."
-      userEmail={data.user?.email ?? null}
-    >
-      <div id="report-content" className="space-y-6">
-        {/* Header del Reporte */}
-        <div className="rounded-2xl border border-black/10 bg-surface p-8">
-          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-2xl font-semibold text-ink sm:text-3xl">Reporte de Seguimiento</h2>
-              <p className="mt-2 text-muted">Sistema de Control de Colesterol para Adultos Mayores</p>
-            </div>
-            <div id="pdf-export-button">
-              <PDFExportButton elementId="report-content" fileName="reporte-colesterol" />
-            </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-xl bg-background p-4">
-              <p className="text-sm text-muted">Período</p>
-              <p className="mt-1 font-semibold text-ink">{dateRange}</p>
-            </div>
-            <div className="rounded-xl bg-background p-4">
-              <p className="text-sm text-muted">Mediciones</p>
-              <p className="mt-1 text-2xl font-bold text-accent">{totalMeasurements}</p>
-            </div>
-            <div className="rounded-xl bg-background p-4">
-              <p className="text-sm text-muted">Última medición</p>
-              <p className="mt-1 font-semibold text-ink">
-                {lastMeasurement ? formatDate(lastMeasurement.measured_at) : "—"}
-              </p>
-            </div>
-          </div>
-
-          {contacts ? (
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              {contacts.doctor ? (
-                <div className="rounded-xl bg-background p-4">
-                  <p className="text-sm text-muted">Médico</p>
-                  <p className="mt-1 font-semibold text-ink">{contacts.doctor.name ?? "—"}</p>
-                  {contacts.doctor.phone ? (
-                    <p className="text-sm text-muted">Tel. {contacts.doctor.phone}</p>
-                  ) : null}
-                </div>
-              ) : null}
-
-              {contacts.emergency ? (
-                <div className="rounded-xl bg-background p-4">
-                  <p className="text-sm text-muted">Contacto de emergencia</p>
-                  <p className="mt-1 font-semibold text-ink">
-                    {contacts.emergency.name ?? "—"}
-                    {contacts.emergency.relationship ? ` (${contacts.emergency.relationship})` : ""}
-                  </p>
-                  {contacts.emergency.phone ? (
-                    <p className="text-sm text-muted">Tel. {contacts.emergency.phone}</p>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
-
-        {/* Panel para elegir qué imprimir del reporte (no se imprime a sí mismo) */}
-        <div id="print-report-panel">
-          <PrintReportPanel />
-        </div>
-
-        {/* Guía de alimentación: encabezado, PDF e impresión (no sale en el reporte de mediciones) */}
-        <GuideReportSection
-          insights={insights}
-          allergyMatches={allergyMatches}
-          allergyNames={allergyNames}
-          hiddenIds={hiddenLiquidIds}
-          liquidNotice={extras.liquidNotice}
-        />
-
-        {/* Gráficas */}
-        <div id="report-evolucion">
-          <SectionCard
-            title="Evolución de Indicadores"
-            description="Tendencia de HDL, LDL y triglicéridos durante el período."
-          >
-            <div className="grid gap-6 lg:grid-cols-3">
-              <MeasurementChart measurements={measurements} metric="HDL" title="Colesterol HDL (Bueno)" />
-              <MeasurementChart measurements={measurements} metric="LDL" title="Colesterol LDL (Malo)" />
-              <MeasurementChart measurements={measurements} metric="TRIGLYCERIDES" title="Triglicéridos" />
-            </div>
-          </SectionCard>
-        </div>
-
-        {/* Tabla de Mediciones */}
-        <div id="report-historial">
-          <SectionCard
-            title="Historial Completo"
-            description="Todas las mediciones registradas en orden cronológico."
-          >
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-sm">
-                <thead className="bg-background text-muted">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-semibold">Fecha</th>
-                    <th className="px-4 py-3 text-left font-semibold">Indicador</th>
-                    <th className="px-4 py-3 text-right font-semibold">Valor</th>
-                    <th className="px-4 py-3 text-left font-semibold">Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {measurements.length > 0 ? (
-                    measurements.map((m) => (
-                      <tr key={m.id} className="border-t border-black/5">
-                        <td className="px-4 py-3 text-muted">{formatDate(m.measured_at)}</td>
-                        <td className="px-4 py-3 font-medium text-ink">{m.metric}</td>
-                        <td className="px-4 py-3 text-right font-semibold text-ink">{m.value} mg/dL</td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
-                            m.status === "LOW" ? "bg-blue-100 text-blue-700" :
-                            m.status === "NORMAL" ? "bg-green-100 text-green-700" :
-                            m.status === "PROTECTIVE" ? "bg-emerald-100 text-emerald-800" :
-                            m.status === "BORDERLINE" ? "bg-yellow-100 text-yellow-700" :
-                            m.status === "HIGH" ? "bg-orange-100 text-orange-700" :
-                            m.status === "CRITICAL" ? "border border-red-700 bg-red-100 font-bold text-red-900" :
-                            "bg-red-100 text-red-700"
-                          }`}>
-                            {getStatusLabel(m.status)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr className="border-t border-black/5">
-                      <td colSpan={4} className="px-4 py-8 text-center text-muted">
-                        No hay mediciones registradas aún.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </SectionCard>
-        </div>
-
-        {/* Reacciones alérgicas registradas en Dietas > Alergias */}
-        <div id="report-alergias" className="scroll-mt-24">
-          <ReactionReportSection reactions={reactions} />
-        </div>
-
-        {/* Notas Médicas */}
-        <div id="report-recomendaciones">
-          <SectionCard
-            title="Recomendaciones"
-            description="Consejos generales para el control del colesterol."
-          >
-            <div className="space-y-4">
-              <div className="rounded-xl bg-blue-50 p-4">
-                <p className="font-semibold text-blue-900">HDL (Colesterol Bueno)</p>
-                <p className="mt-1 text-sm text-blue-800">Mantener arriba de 40 mg/dL en hombres y 50 mg/dL en mujeres.</p>
-              </div>
-              <div className="rounded-xl bg-orange-50 p-4">
-                <p className="font-semibold text-orange-900">LDL (Colesterol Malo)</p>
-                <p className="mt-1 text-sm text-orange-800">Mantener bajo 130 mg/dL. Ideal bajo 100 mg/dL.</p>
-              </div>
-              <div className="rounded-xl bg-purple-50 p-4">
-                <p className="font-semibold text-purple-900">Triglicéridos</p>
-                <p className="mt-1 text-sm text-purple-800">Mantener bajo 150 mg/dL.</p>
-              </div>
-            </div>
-          </SectionCard>
-        </div>
-      </div>
+    <AppShell title="Reportes" description="Arma reportes para tu médico, tu tarjeta de bolsillo y tu guía de alimentación." userEmail={data.user?.email ?? null}>
+      <ReportsBoard
+        data={reportData}
+        initialTab={initialTab}
+        initialTemplate={initialTemplate}
+        guidePanel={
+          <GuideBuilder
+            data={{ today, patientName: reportData.patient.name, insights, allergyMatches, allergyNames, hiddenIds: hiddenLiquidIds, liquidNotice: extras.liquidNotice, shoppingIds, swaps: SWAPS }}
+          />
+        }
+      />
     </AppShell>
   );
 }

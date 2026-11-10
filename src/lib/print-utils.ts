@@ -1,4 +1,4 @@
-export type PrintTarget = "report" | "guide" | "allergy";
+export type PrintTarget = "report" | "guide" | "allergy" | "wallet";
 
 // Marca qué se va a imprimir (reporte o guía) y abre el diálogo de impresión.
 // La marca se quita sola cuando termina o se cancela la impresión.

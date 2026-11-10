@@ -504,7 +504,7 @@ function ReactionHistory({ reactions, onDelete }: { reactions: AllergyReactionRo
         ) : null}
         {reactions.length > 0 ? (
           <Link
-            href="/reportes#report-alergias"
+            href="/reportes?plantilla=alergias"
             className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-ink px-4 py-3 text-base font-semibold text-white transition active:scale-[0.98]"
           >
             <FileText className="h-5 w-5 shrink-0" aria-hidden="true" />

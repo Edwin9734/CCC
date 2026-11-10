@@ -1,0 +1,67 @@
+/* Reportes: hoja de vista previa, tarjeta de bolsillo y exportación. */
+
+.report-paper {
+  font-size: 14px;
+  line-height: 1.4;
+  padding: 1.6em;
+}
+.report-paper[data-large="true"] {
+  font-size: 17px;
+}
+
+/* Al crear el PDF: ancho de papel y sin animaciones */
+.report-exporting {
+  width: 720px !important;
+  max-width: none !important;
+}
+.report-exporting,
+.report-exporting * {
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (max-width: 479px) {
+  .report-paper {
+    padding: 1em;
+  }
+}
+
+/* Tarjeta que se voltea */
+.wallet-flip { perspective: 1400px; }
+.wallet-inner {
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.wallet-inner[data-flipped="true"] { transform: rotateY(180deg); }
+.wallet-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 0.8rem;
+}
+.wallet-back { transform: rotateY(180deg); }
+
+/* La hoja de la tarjeta existe fuera de la pantalla para poder imprimirla o guardarla */
+.wallet-print {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 190mm;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wallet-inner { transition: none; }
+}
+
+/* Celular con letra grande: las flechas de orden bajan a otra línea */
+@media (max-width: 479px) {
+  html[data-text-size="3"] .report-row,
+  html[data-text-size="4"] .report-row,
+  html[data-text-size="5"] .report-row {
+    flex-wrap: wrap;
+  }
+  html[data-text-size="3"] .report-row > [role="switch"],
+  html[data-text-size="4"] .report-row > [role="switch"],
+  html[data-text-size="5"] .report-row > [role="switch"] {
+    flex-basis: 100%;
+  }
+}

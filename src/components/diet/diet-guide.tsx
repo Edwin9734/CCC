@@ -26,7 +26,7 @@ const CATEGORIES: { key: Category; label: string; icon: typeof Apple }[] = [
 ];
 
 // Cambios sencillos: de un alimento a evitar a una opción mejor.
-const SWAPS: [string, string][] = [
+export const SWAPS: [string, string][] = [
   ["gaseosas", "agua"],
   ["jugos-industriales", "naranja"],
   ["reposteria", "manzana"],
