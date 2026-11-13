@@ -8,6 +8,9 @@ import { minutesNowInAppTimeZone, todayInAppTimeZone } from "@/lib/date-utils";
 import { buildAdjustedPlan, loadAdjustmentData } from "@/lib/plan-adjustment";
 import { HABIT_TABS, normalizeTab } from "@/lib/section-tabs";
 import type { MedicationWithSchedules } from "@/lib/supabase/medications";
+import type { ExerciseProfile } from "@/lib/exercise-recommendations";
+import { CONDITIONS, splitConditions } from "@/lib/health-conditions";
+import { getLatestByMetric } from "@/lib/plan";
 
 export default async function HabitosPage({
   searchParams
@@ -24,6 +27,7 @@ export default async function HabitosPage({
   let activityGoalMinutes: number | undefined;
   let waterNotice: string | null = null;
   let contacts: ContactsInfo | null = null;
+  let exerciseProfile: ExerciseProfile | null = null;
 
   if (data.user) {
     const today = todayInAppTimeZone();
@@ -41,6 +45,30 @@ export default async function HabitosPage({
     activityGoalMinutes = adjustment.activity.minutes;
     waterNotice = extras.liquidNotice;
     contacts = buildContacts(loaded.profile);
+
+    // Perfil para las rutinas recomendadas: edad, sexo, peso, enfermedades y últimos valores.
+    const latest = getLatestByMetric(loaded.measurements.filter((row) => row.measured_at <= today));
+    const { checked } = splitConditions(loaded.conditionNames);
+    const marked = CONDITIONS.filter((condition) => checked[condition.key]);
+    const birth = loaded.profile?.birth_date;
+    let age: number | null = null;
+    if (birth) {
+      const [by, bm, bd] = birth.split("-").map(Number);
+      const [ty, tm, td] = today.split("-").map(Number);
+      age = ty - by - (tm < bm || (tm === bm && td < bd) ? 1 : 0);
+    }
+    exerciseProfile = {
+      age,
+      sex: loaded.profile?.sex ?? null,
+      bmi: extras.bmi?.value ?? null,
+      conditions: marked.map((condition) => condition.key),
+      conditionLabels: marked.map((condition) => condition.label),
+      ldl: latest.LDL?.status ?? null,
+      tg: latest.TRIGLYCERIDES?.status ?? null,
+      hdl: latest.HDL?.status ?? null,
+      critical: Object.values(latest).some((row) => row?.status === "CRITICAL"),
+      goalMinutes: adjustment.activity.minutes
+    };
   }
 
   return (
@@ -56,6 +84,7 @@ export default async function HabitosPage({
           waterNotice={waterNotice}
           contacts={contacts}
           initialTab={initialTab}
+          exerciseProfile={exerciseProfile}
         />
       ) : (
         <SectionCard title="Inicia sesión" description="Necesitas una sesión activa para usar esta sección.">

@@ -239,3 +239,6 @@
     grid-column: auto;
   }
 }
+
+/* Botones fijos Mis actividades / Recomendadas: caben aun con letra muy grande en celular */
+.hab-toggle-text { font-size: min(1rem, 4.1vw); }

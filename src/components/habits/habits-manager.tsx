@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DayPickerBar } from "@/components/habits/day-picker-bar";
 import { MedicationIntakeCard } from "@/components/habits/medication-intake-card";
 import { ActivityCard } from "@/components/habits/activity-card";
+import { ActivityHub } from "@/components/habits/activity-hub";
+import type { ExerciseProfile } from "@/lib/exercise-recommendations";
 import { WaterSleepCard } from "@/components/habits/water-sleep-card";
 import { RoutineManager } from "@/components/habits/routine-manager";
 import { WeekSummaryCard } from "@/components/habits/week-summary-card";
@@ -47,13 +49,15 @@ export function HabitsManager({
   activityGoalMinutes,
   waterNotice,
   contacts,
-  initialTab
+  initialTab,
+  exerciseProfile = null
 }: {
   medications: MedicationWithSchedules[];
   activityGoalMinutes?: number;
   waterNotice?: string | null;
   contacts: ContactsInfo | null;
   initialTab: string;
+  exerciseProfile?: ExerciseProfile | null;
 }) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
@@ -341,13 +345,21 @@ export function HabitsManager({
             loading
           ),
           actividad: ready ? (
-            <ActivityCard
-              activities={dayActivities}
-              onAdd={handleAddActivity}
-              onDelete={handleDeleteActivity}
+            <ActivityHub
+              profile={exerciseProfile}
               weekMinutes={summary?.activity.totalMinutes ?? 0}
-              goalMinutes={activityGoalMinutes ?? ACTIVITY_WEEKLY_GOAL_MINUTES}
-              lastActivity={lastActivity}
+              dateLabel={date === today ? "hoy" : date.split("-").reverse().slice(0, 2).join("/")}
+              onAdd={handleAddActivity}
+              myActivities={
+                <ActivityCard
+                  activities={dayActivities}
+                  onAdd={handleAddActivity}
+                  onDelete={handleDeleteActivity}
+                  weekMinutes={summary?.activity.totalMinutes ?? 0}
+                  goalMinutes={activityGoalMinutes ?? ACTIVITY_WEEKLY_GOAL_MINUTES}
+                  lastActivity={lastActivity}
+                />
+              }
             />
           ) : (
             loading
